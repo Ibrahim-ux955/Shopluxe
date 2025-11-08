@@ -1069,9 +1069,9 @@ def cart():
         if 0 <= index < len(products):
             product = products[index].copy()
             product['quantity'] = quantity
-            product['index'] = index  # ✅ For template links
-            product['color'] = color  # ✅ Preserve chosen color
-            product['size'] = size    # ✅ Preserve chosen size
+            product['index'] = index
+            product['color'] = color
+            product['size'] = size
 
             # ✅ Ensure image exists
             if 'images' in product and product['images']:
@@ -1079,23 +1079,27 @@ def cart():
             elif 'image' in product:
                 product['image'] = product['image']
             else:
-                product['image'] = 'default.png'  # fallback if no image
+                product['image'] = 'default.png'
 
-            cart_items.append(product)  # ✅ Append only once
+            cart_items.append(product)
 
     # 🧮 Totals
     subtotal = sum(float(p['price']) * p['quantity'] for p in cart_items)
-    tax = round(subtotal * 0.10, 2)  # 💡 10% tax
-    total = round(subtotal + tax, 2)
+
+    # ✅ Accurate Paystack payout fee: 1.95% capped at GHS 50
+    payout_fee = round(min(subtotal * 0.0195, 50), 2)
+    total = round(subtotal + payout_fee, 2)
 
     return render_template(
         'cart.html',
         cart_items=cart_items,
         subtotal=subtotal,
-        tax=tax,
+        payout_fee=payout_fee,  # renamed variable
         total=total,
         active_page='cart'
     )
+
+
 
 @app.route('/clear-cart')
 def clear_cart():
