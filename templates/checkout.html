@@ -6,7 +6,7 @@
       <div class="card shadow p-4">
         <h3 class="text-center mb-4">🧾 Checkout</h3>
 
-        <form method="POST">
+        <form id="checkout-form">
           <div class="mb-3">
             <label class="form-label">Full Name</label>
             <input type="text" name="name" class="form-control" required>
@@ -22,7 +22,6 @@
             <input type="text" name="phone" class="form-control" required>
           </div>
 
-          <!-- 🕒 Hidden field for timezone -->
           <input type="hidden" name="timezone" id="timezone">
 
           <h5 class="mt-4">Items in Your Cart</h5>
@@ -40,7 +39,7 @@
           </ul>
 
           <div class="text-center">
-            <button type="submit" class="btn btn-success w-100">✅ Confirm Order</button>
+            <button type="submit" class="btn btn-success w-100">💳 Pay with Paystack</button>
           </div>
         </form>
       </div>
@@ -48,13 +47,48 @@
   </div>
 </div>
 
-<!-- 🕒 Script to auto-detect user's timezone -->
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    document.getElementById("timezone").value = tz;
-    console.log("Detected timezone:", tz);
+<!-- Include Paystack inline script -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
 
+<!-- 🕒 Auto-detect timezone -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  document.getElementById("timezone").value = tz;
+  console.log("Detected timezone:", tz);
+
+  const form = document.getElementById("checkout-form");
+  form.addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const name = form.name.value;
+    const email = form.email.value;
+    const phone = form.phone.value;
+    const amount = {{ total|int }}; // total from Flask template
+
+    // Initialize Paystack payment
+    const handler = PaystackPop.setup({
+      key: "{{ paystack_public_key }}",
+      email: email,
+      amount: amount * 100, // convert to pesewas
+      currency: "GHS",
+      ref: 'SHOPLUXE_' + Math.floor((Math.random() * 1000000000) + 1),
+      metadata: {
+        custom_fields: [
+          { display_name: "Full Name", variable_name: "full_name", value: name },
+          { display_name: "Phone Number", variable_name: "phone_number", value: phone }
+        ]
+      },
+      callback: function(response) {
+        // Redirect to backend verification
+        window.location.href = "/verify_payment?reference=" + response.reference;
+      },
+      onClose: function() {
+        alert("Payment cancelled.");
+      }
+    });
+    handler.openIframe();
   });
+});
 </script>
 {% endblock %}

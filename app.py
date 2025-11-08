@@ -15,6 +15,8 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from urllib.parse import unquote
 from urllib.parse import quote
 from flask import url_for
+from dotenv import load_dotenv
+load_dotenv()  # ✅ Load environment variables from .env (Render handles this automatically)
 
 
 
@@ -122,6 +124,14 @@ def save_orders(data):
 
 # Routes
 
+# Load Paystack keys from environment
+
+# ✅ Fetch Paystack keys from .env
+PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY")
+PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
+
+print("PAYSTACK_PUBLIC_KEY:", PAYSTACK_PUBLIC_KEY)  # 🔍 Debug: should start with pk_live_ or pk_test_
+
 
 
 
@@ -135,7 +145,6 @@ def index():
 
     # Normalize product data
     for p in products:
-        # Ensure timestamp is a datetime object and offset-aware
         if isinstance(p.get('timestamp'), str):
             try:
                 dt = datetime.fromisoformat(p['timestamp'])
@@ -150,7 +159,7 @@ def index():
         else:
             p['timestamp'] = current_time
 
-        # Ensure 'images' and 'image' fields exist
+        # Ensure images exist
         if 'images' not in p and 'image' in p:
             p['images'] = [p['image']]
         elif 'images' in p and 'image' not in p:
@@ -159,13 +168,13 @@ def index():
             p['images'] = []
             p['image'] = None
 
-    # Carousel / Featured Sections
+    # Product sections
     featured_products = [p for p in products if p.get('featured')]
     popular_products = sorted(products, key=lambda x: x.get('popularity', 0), reverse=True)[:8]
     new_products = sorted(products, key=lambda x: x['timestamp'], reverse=True)[:8]
     sale_products = [p for p in products if p.get('on_sale')]
 
-    # Apply search or category filters
+    # Apply search and filters
     filtered_products = []
     for p in products:
         name = p.get('name', '').lower()
@@ -190,11 +199,50 @@ def index():
         query=query,
         current_time=current_time,
         selected_category=category or 'all',
-        active_page='home'
+        active_page='home',
+        paystack_public_key=PAYSTACK_PUBLIC_KEY  # 👈 pass public key to template
     )
 
 
+# -------------------------------
+# 💳 Initialize Paystack Payment
+# -------------------------------
+@app.route('/initialize_payment', methods=['POST'])
+def initialize_payment():
+    data = request.get_json()
+    email = data.get('email')
+    amount = int(data.get('amount')) * 100  # convert to pesewas
 
+    headers = {
+        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "email": email,
+        "amount": amount,
+        "callback_url": url_for('verify_payment', _external=True)
+    }
+
+    response = requests.post('https://api.paystack.co/transaction/initialize', json=payload, headers=headers)
+    return jsonify(response.json())
+
+
+# -------------------------------
+# ✅ Verify Payment
+# -------------------------------
+@app.route('/verify_payment')
+def verify_payment():
+    reference = request.args.get('reference')
+
+    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
+    response = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
+    result = response.json()
+
+    if result.get('data', {}).get('status') == 'success':
+        return render_template("success.html", payment=result['data'])
+    else:
+        return render_template("failure.html", payment=result['data'])
 
 
 
