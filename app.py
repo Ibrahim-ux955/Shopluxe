@@ -240,9 +240,77 @@ def verify_payment():
     result = response.json()
 
     if result.get('data', {}).get('status') == 'success':
+        # ✅ Payment successful — now save the order
+        order = session.get('pending_order')
+
+        if order:
+            order['payment_status'] = 'Paid'
+            order['payment_reference'] = reference
+            order['paid_time'] = datetime.now(timezone.utc).isoformat()
+
+            orders_file = os.path.join(os.path.dirname(__file__), "data/orders.json")
+            if os.path.exists(orders_file):
+                with open(orders_file, 'r', encoding='utf-8') as f:
+                    try:
+                        existing_orders = json.load(f)
+                    except json.JSONDecodeError:
+                        existing_orders = []
+            else:
+                existing_orders = []
+
+            existing_orders.append(order)
+            with open(orders_file, 'w', encoding='utf-8') as f:
+                json.dump(existing_orders, f, indent=2)
+
+            # ✅ Optionally send admin + user emails
+            try:
+                name = order['name']
+                email = order['email']
+                total = order['total']
+                base_url = request.url_root.rstrip('/')
+                track_order_url = url_for('track_order', order_id=quote(order['id']), _external=True)
+
+                # Admin email
+                admin_html = render_template(
+                    'emails/admin_order_email.html',
+                    name=name,
+                    email=email,
+                    phone=order['phone'],
+                    product_name=''.join(
+                        f"<p>{i['name']} ({i['quantity']}x)</p>" for i in order['items']
+                    ),
+                    total=total,
+                    order_time=order['local_time'],
+                    track_order_url=track_order_url,
+                    base_url=base_url
+                )
+                send_email("vybezkhid7@gmail.com", "📦 New Paid Order - ShopLuxe", admin_html)
+
+                # User email
+                user_html = render_template(
+                    'emails/user_order_email.html',
+                    name=name,
+                    product_name=''.join(
+                        f"<p>{i['name']} ({i['quantity']}x)</p>" for i in order['items']
+                    ),
+                    total=total,
+                    order_time=order['local_time'],
+                    track_order_url=track_order_url
+                )
+                send_email(email, "✅ Payment Received - ShopLuxe", user_html)
+            except Exception as e:
+                print("⚠️ Email sending failed:", e)
+
+            # ✅ Clear session data
+            session.pop('pending_order', None)
+            session.pop('cart', None)
+
+        # ✅ Show success page
         return render_template("success.html", payment=result['data'])
+
     else:
         return render_template("failure.html", payment=result['data'])
+
 
 
 
@@ -1185,17 +1253,17 @@ def checkout():
             user_zone = ZoneInfo("UTC")
         local_time = utc_now.astimezone(user_zone)
         formatted_time = local_time.strftime("%b %d, %Y, %I:%M %p")
-        
+
         order_id = str(uuid.uuid4())
         base_url = request.url_root.rstrip('/')
 
-        # ✅ Save order with items including color and size
+        # ✅ Prepare order (not saving yet)
         order = {
             'id': order_id,
             'name': name,
             'email': email,
             'phone': phone,
-            'items': [  # ✅ renamed from 'products' → 'items' (to match template)
+            'items': [
                 {
                     "name": p["name"],
                     "price": p["price"],
@@ -1211,94 +1279,24 @@ def checkout():
             'timezone': timezone_str
         }
 
-        # ✅ Include color and size in order summary HTML
-        item_lines = [
-            f"""
-            <div style='display:flex;align-items:center;margin-bottom:10px;border:1px solid #eee;padding:8px;border-radius:10px;'>
-                <img src='{base_url}/static/shoes/{item['images'][0]}' 
-                     alt='{item['name']}' 
-                     style='width:60px;height:60px;object-fit:cover;border-radius:8px;margin-right:10px;'>
-                <div>
-                    <strong>{item['name']}</strong> (ID: {item['id']})<br>
-                    Color: {item.get('color', '-')} | Size: {item.get('size', '-')}<br>
-                    Qty: {item['quantity']} | GH₵ {item['price']}
-                </div>
-            </div>
-            """
-            for item in cart_items
-        ]
+        # ✅ Save order temporarily in session until payment is verified
+        session['pending_order'] = order
 
-        # ✅ Save to orders.json
-        orders_file = os.path.join(os.path.dirname(__file__), "data/orders.json")
-        if os.path.exists(orders_file):
-            with open(orders_file, 'r', encoding='utf-8') as f:
-                try:
-                    existing_orders = json.load(f)
-                except json.JSONDecodeError:
-                    existing_orders = []
-        else:
-            existing_orders = []
-
-        existing_orders.append(order)
-        with open(orders_file, 'w', encoding='utf-8') as f:
-            json.dump(existing_orders, f, indent=2)
-
-        try:
-            # Track Order URL
-            track_order_url = url_for('track_order', order_id=quote(order_id), _external=True)
-
-            # User email
-            user_html = render_template(
-                'emails/user_order_email.html',
-                name=name,
-                product_name=item_lines[0] if item_lines else '',
-                quantity=len(cart_items),
-                total=total,
-                order_time=formatted_time,
-                timezone=timezone_str,
-                track_order_url=track_order_url
-            )
-            send_email(email, "🧾 Order Confirmation - ShopLuxe", user_html)
-
-            # Admin email
-            admin_html = render_template(
-                'emails/admin_order_email.html',
-                name=name,
-                email=email,
-                phone=phone,
-                product_name=''.join(item_lines),
-                quantity=len(cart_items),
-                total=total,
-                order_time=formatted_time,
-                timezone=timezone_str,
-                order_id=order_id,
-                track_order_url=track_order_url,
-                base_url=base_url
-            )
-            send_email("vybezkhid7@gmail.com", "📦 New Order Received - ShopLuxe", admin_html)
-
-            flash("✅ Order placed successfully! Confirmation emails sent.")
-        except Exception as e:
-            print("❌ Order placed but email could not be sent:", e)
-            flash("⚠️ Order placed but email could not be sent.")
-
-        session.pop('cart', None)
-
-        # ✅ Fix for Jinja .items() conflict
-        order_data = dict(order)
-        if callable(order_data.get("items")):
-            order_data["order_items"] = order_data.pop("items", [])
-        else:
-            order_data["order_items"] = order_data.get("items", [])
-
-        return render_template('order_confirmation.html', order=order_data)
+        # ✅ Redirect to Paystack payment initialization
+        return render_template(
+            'payment.html',  # your template where Paystack is initialized
+            email=email,
+            amount=total,
+            paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY'),
+            reference=order_id
+        )
 
     return render_template(
-    'checkout.html',
-    cart_items=cart_items,
-    total=total,
-    paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY')  # 👈 add this line
-)
+        'checkout.html',
+        cart_items=cart_items,
+        total=total,
+        paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY')  # 👈 add this line
+    )
 
 
 
