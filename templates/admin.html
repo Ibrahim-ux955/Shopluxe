@@ -9,7 +9,10 @@
     <button class="btn btn-secondary" id="btn-all">📦 All Products</button>
     <button class="btn btn-success" id="btn-orders">🧾 All Orders</button>
     <button class="btn btn-info" id="btn-history">📜 Order History</button>
+    <button class="btn btn-dark" id="btn-payments">💳 Payments</button>
   </div>
+
+  
 
   <!-- Add New Product Section -->
   <div id="section-add" class="admin-section">
@@ -330,6 +333,77 @@
 </table>
   </div>
 </div>
+
+  <!-- 💳 Payments Section -->
+<div id="section-payments" class="admin-section" style="display:none;">
+  <h4 class="mb-3">All Payments</h4>
+
+  <!-- 🔍 Search Bar -->
+  <div class="mb-3">
+    <input type="text" id="search-payments" class="form-control" placeholder="Search by Order ID, Name or Reference..." />
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle" id="payments-table">
+      <thead class="table-light">
+        <tr>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Total (GH₵)</th>
+          <th>Payment Status</th>
+          <th>Reference</th>
+          <th>Paid Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders if o.payment_status == "Paid" %}
+        <tr>
+          <td><strong>{{ o.id }}</strong></td>
+          <td>{{ o.name }}</td>
+          <td>GH₵ {{ o.total }}</td>
+          <td><span class="badge bg-success">Paid</span></td>
+          <td>{{ o.payment_reference or '-' }}</td>
+          <td>{{ o.paid_time or '-' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- JS: Payments Button & Search -->
+<script>
+  // 🔍 Live Search for Payments
+  function setupSearch(inputId, tableId) {
+    const input = document.getElementById(inputId);
+    const table = document.getElementById(tableId);
+    if (!input || !table) return;
+
+    input.addEventListener('keyup', () => {
+      const filter = input.value.toLowerCase();
+      const rows = table.querySelectorAll('tbody tr');
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+      });
+    });
+  }
+  setupSearch('search-payments', 'payments-table');
+
+  // 💳 Payments Section Toggle
+  const btnPayments = document.getElementById('btn-payments');
+  const sectionPayments = document.getElementById('section-payments');
+
+  if (btnPayments && sectionPayments) {
+    btnPayments.addEventListener('click', () => {
+      // Hide all sections
+      document.querySelectorAll('.admin-section').forEach(sec => sec.style.display = 'none');
+      // Show payments section
+      sectionPayments.style.display = 'block';
+    });
+  }
+</script>
+
  
 
 <!-- 🧠 JS: Toggle + Search -->

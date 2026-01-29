@@ -10,6 +10,8 @@ from uuid import uuid4
 from datetime import datetime,timezone, timedelta 
 import resend
 from flask import Flask
+import requests
+
 
 from werkzeug.middleware.proxy_fix import ProxyFix
 from urllib.parse import unquote
@@ -245,6 +247,7 @@ def verify_payment():
 
         if order:
             order['payment_status'] = 'Paid'
+            order['status'] = 'Paid'  # ✅ Added so it shows correctly in admin
             order['payment_reference'] = reference
             order['paid_time'] = datetime.now(timezone.utc).isoformat()
 
@@ -310,6 +313,7 @@ def verify_payment():
 
     else:
         return render_template("failure.html", payment=result['data'])
+
 
 
 
@@ -603,6 +607,10 @@ def admin():
                 'size': order.get('size', '-')
             }]
 
+        # ✅ Mark paid orders clearly for display
+        if order.get('payment_status') == 'Paid' and order['status'] == 'Pending':
+            order['status'] = 'Paid'
+
         # Unified completed_time for template
         if order['status'] == 'Delivered':
             order['completed_time'] = order['delivered_time']
@@ -620,6 +628,7 @@ def admin():
         current_time=datetime.now(timezone.utc),
         active_page='admin'
     )
+
 
 
 
