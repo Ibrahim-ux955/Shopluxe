@@ -19,6 +19,14 @@
   overflow: hidden;
 }
 
+/* Remove background ONLY for the right details card */
+.col-lg-6.order-2 > .product-card{
+  background: transparent !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
 /* Sticky gallery like Temu */
 .product-gallery {
   position: sticky;
@@ -169,14 +177,41 @@ class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == produc
 
 <h3>{{ product.name }}</h3>
 
+<p class="text-muted">{{ product.description }}</p>
+
+<ul class="list-unstyled small mb-3">
+  <li><span class="text-success">✔</span> Original product</li>
+  <li><span class="text-success">✔</span> Quality checked</li>
+</ul>
+
+
 {% if product.on_sale %}
-<p class="text-muted text-decoration-line-through">GH₵ {{ product.price }}</p>
-<h4 class="text-danger">GH₵ {{ product.sale_price }}</h4>
+<div class="d-flex align-items-end gap-2 mb-2">
+
+  <span class="fw-bold text-danger" style="font-size:1.8rem;">
+    GH₵ {{ product.sale_price }}
+  </span>
+
+  <span class="text-muted text-decoration-line-through" style="font-size:0.95rem;">
+    GH₵ {{ product.price }}
+  </span>
+
+</div>
 {% else %}
-<h4 class="text-success">GH₵ {{ product.price }}</h4>
+<div class="mb-2">
+  <span class="fw-bold text-success" style="font-size:1.8rem;">
+    GH₵ {{ product.price }}
+  </span>
+</div>
 {% endif %}
 
-<p class="text-muted">{{ product.description }}</p>
+
+{% if product.stock %}
+<p class="small text-success mb-1">In stock</p>
+{% else %}
+<p class="small text-danger mb-1">Out of stock</p>
+{% endif %}
+
 
 {% if product.stock %}
 <small>Stock Level</small>
@@ -211,10 +246,31 @@ class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == produc
 <input type="hidden" name="size" id="selectedSize">
 <input type="hidden" name="color" id="selectedColor">
 
+<p class="small text-muted mb-3">
+🚚 Delivery in 2 – 4 working days
+</p>
+
+
 <button type="submit" class="add-cart-btn">
 🛒 Add To Cart
 <span id="cartLoader" class="spinner-border spinner-border-sm d-none"></span>
 </button>
+
+<div class="mb-3">
+
+  <p class="fw-semibold text-success mb-1">
+    🚚 Free shipping on all orders
+  </p>
+
+  <p class="small text-muted mb-1">
+  Delivery: <span id="deliveryDate"></span>
+</p>
+
+
+  
+
+</div>
+
 
 </form>
 
@@ -242,6 +298,29 @@ Add to Cart
 </div>
 
 <script>
+const deliveryEl = document.getElementById('deliveryDate');
+
+if (deliveryEl) {
+
+  const start = new Date();
+  const end = new Date();
+
+  end.setDate(start.getDate() + 4);
+
+  const startText = start.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  });
+
+  const endText = end.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  });
+
+  deliveryEl.textContent = `${startText}-${endText}`;
+}
+
+  
 document.addEventListener('DOMContentLoaded',()=>{
 
 const sizeInput=document.getElementById('selectedSize');
