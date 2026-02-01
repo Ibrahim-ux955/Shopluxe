@@ -46,7 +46,17 @@
 .main-img.loaded { filter: blur(0); }
 
 /* ================== Thumbnails ================== */
+.thumbs {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.thumbs::-webkit-scrollbar {
+  display: none;
+}
+
 .thumbs img {
+  flex: 0 0 auto;
   width: 64px;
   height: 64px;
   border-radius: 12px;
@@ -54,10 +64,12 @@
   border: 2px solid transparent;
   transition: .25s;
 }
+
 .thumbs img.active {
   border-color: var(--brand);
   box-shadow: 0 6px 14px rgba(0,0,0,.12);
 }
+
 
 /* ================== Size & Color ================== */
 .size-option,
@@ -161,7 +173,8 @@ class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == produc
 </button>
 </div>
 
-<div class="thumbs d-flex justify-content-center gap-2">
+<div class="thumbs d-flex gap-2 px-2">
+
 {% for img in product.images %}
 <img src="{{ url_for('static', filename='shoes/' + img) }}" class="thumb-img lazyload">
 {% endfor %}
@@ -242,7 +255,15 @@ class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == produc
 
 <form action="{{ url_for('add_to_cart', index=product.index) }}" method="POST" id="addToCartForm">
 
-<input type="hidden" name="quantity" value="1">
+<div class="mb-3">
+  <label class="small mb-1 d-block">Quantity</label>
+  <select name="quantity" class="form-select form-select-sm w-auto">
+    {% for i in range(1, 100) %}
+      <option value="{{ i }}">{{ i }}</option>
+    {% endfor %}
+  </select>
+</div>
+
 <input type="hidden" name="size" id="selectedSize">
 <input type="hidden" name="color" id="selectedColor">
 
@@ -266,11 +287,7 @@ class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == produc
   Delivery: <span id="deliveryDate"></span>
 </p>
 
-
-  
-
 </div>
-
 
 </form>
 
