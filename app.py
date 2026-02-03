@@ -1611,6 +1611,34 @@ def categories():
     ]
     return render_template('categories.html', categories=categories, active_page='categories')
 
+@app.route('/rate-product', methods=['POST'])
+def rate_product():
+
+    if 'user_id' not in session:
+        return jsonify({"success":False,"message":"Login required"})
+
+    data = request.get_json()
+    product_id = data['product_id']
+    rating = int(data['rating'])
+
+    with open('reviews.json','r') as f:
+        reviews = json.load(f)
+
+    # prevent double rating
+    for r in reviews:
+        if r['product_id'] == product_id and r['user_id'] == session['user_id']:
+            return jsonify({"success":False,"message":"Already rated"})
+
+    reviews.append({
+        "product_id": product_id,
+        "user_id": session['user_id'],
+        "rating": rating
+    })
+
+    with open('reviews.json','w') as f:
+        json.dump(reviews,f,indent=2)
+
+    return jsonify({"success":True})
 
 
 

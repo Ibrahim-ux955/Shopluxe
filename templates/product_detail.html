@@ -145,6 +145,10 @@
   .main-img {
     height: 300px;
   }
+  
+  .rating-stars i{
+    font-size: .95rem;
+  }
 
 }
 </style>
@@ -188,7 +192,34 @@ class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == produc
 
 <div class="product-card shadow">
 
-<h3>{{ product.name }}</h3>
+<h3 class="mb-1">{{ product.name }}</h3>
+
+<div class="d-flex align-items-center gap-2 mb-2">
+
+  <div class="rating-stars" id="ratingStars"
+       data-user-rated="{{ 'true' if user_rating else 'false' }}">
+
+    {% set display_rating = user_rating if user_rating else (product.rating or 0) %}
+
+    {% for i in range(1,6) %}
+      <i class="bi 
+        {% if i <= display_rating %}bi-star-fill{% else %}bi-star{% endif %}
+        text-warning rating-star"
+        data-value="{{ i }}"
+        style="cursor:pointer">
+      </i>
+    {% endfor %}
+
+  </div>
+
+  <small class="text-muted">
+    ({{ product.review_count or 0 }} reviews)
+  </small>
+
+</div>
+
+
+
 
 <p class="text-muted">{{ product.description }}</p>
 
@@ -337,6 +368,84 @@ if (deliveryEl) {
   deliveryEl.textContent = `${startText}-${endText}`;
 }
 
+const ratingStars = document.querySelectorAll('.rating-star');
+
+ratingStars.forEach(star => {
+  star.addEventListener('click', () => {
+
+    const rating = star.dataset.value;
+
+    fetch('/rate-product', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        product_id: "{{ product.id }}",
+        rating: rating
+      })
+    });
+
+    // Live UI update
+    ratingStars.forEach(s => {
+      s.classList.remove('bi-star-fill');
+      s.classList.add('bi-star');
+    });
+
+    for(let i = 0; i < rating; i++){
+      ratingStars[i].classList.remove('bi-star');
+      ratingStars[i].classList.add('bi-star-fill');
+    }
+
+  });
+});
+
+
+
+
+
+const starsBox = document.getElementById("ratingStars");
+const stars = document.querySelectorAll(".rating-star");
+
+const alreadyRated = starsBox.dataset.userRated === "true";
+
+// Lock rating if already rated
+if(alreadyRated){
+  stars.forEach(star=>{
+    star.style.pointerEvents = "none";
+    star.style.opacity = "0.6";
+  });
+}
+
+// Click handler
+stars.forEach(star=>{
+  star.addEventListener("click", ()=>{
+
+    if(alreadyRated) return;
+
+    const rating = star.dataset.value;
+
+    fetch("/rate-product", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        product_id: "{{ product.id }}",
+        rating: rating
+      })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+      if(data.success){
+        location.reload();
+      }else{
+        alert(data.message);
+      }
+    });
+
+  });
+});
+
+
+
+
   
 document.addEventListener('DOMContentLoaded',()=>{
 
@@ -381,6 +490,8 @@ alert("Please select size and color");
 loader.classList.remove('d-none');
 }
 });
+
+
 
 });
 </script>
