@@ -368,80 +368,59 @@ if (deliveryEl) {
   deliveryEl.textContent = `${startText}-${endText}`;
 }
 
-const ratingStars = document.querySelectorAll('.rating-star');
-
-ratingStars.forEach(star => {
-  star.addEventListener('click', () => {
-
-    const rating = star.dataset.value;
-
-    fetch('/rate-product', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        product_id: "{{ product.id }}",
-        rating: rating
-      })
-    });
-
-    // Live UI update
-    ratingStars.forEach(s => {
-      s.classList.remove('bi-star-fill');
-      s.classList.add('bi-star');
-    });
-
-    for(let i = 0; i < rating; i++){
-      ratingStars[i].classList.remove('bi-star');
-      ratingStars[i].classList.add('bi-star-fill');
-    }
-
-  });
-});
-
-
-
-
-
 const starsBox = document.getElementById("ratingStars");
 const stars = document.querySelectorAll(".rating-star");
 
-const alreadyRated = starsBox.dataset.userRated === "true";
+if(starsBox){
 
-// Lock rating if already rated
-if(alreadyRated){
-  stars.forEach(star=>{
-    star.style.pointerEvents = "none";
-    star.style.opacity = "0.6";
-  });
-}
+  const alreadyRated = starsBox.dataset.userRated === "true";
 
-// Click handler
-stars.forEach(star=>{
-  star.addEventListener("click", ()=>{
-
-    if(alreadyRated) return;
-
-    const rating = star.dataset.value;
-
-    fetch("/rate-product", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({
-        product_id: "{{ product.id }}",
-        rating: rating
-      })
-    })
-    .then(res=>res.json())
-    .then(data=>{
-      if(data.success){
-        location.reload();
-      }else{
-        alert(data.message);
-      }
+  // Lock UI if already rated
+  if(alreadyRated){
+    stars.forEach(star=>{
+      star.style.pointerEvents = "none";
+      star.style.opacity = "0.6";
     });
+  }
 
+  // Click handler
+  stars.forEach(star=>{
+    star.addEventListener("click", ()=>{
+
+      if(alreadyRated) return;
+
+      const rating = star.dataset.value;
+
+      fetch("/rate-product", {
+        method: "POST",
+        credentials: "same-origin",   // ✅ sends session cookie
+        headers: {
+          "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+          product_id: "{{ product.id }}",
+          rating: rating
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+
+        if(data.success){
+          location.reload();   // reload = correct stars + lock
+        } else {
+          alert(data.message || "Rating failed");
+        }
+
+      })
+      .catch(err=>{
+        console.error(err);
+        alert("Network error");
+      });
+
+    });
   });
-});
+
+}
 
 
 

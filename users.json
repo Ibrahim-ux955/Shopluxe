@@ -1,7 +1,8 @@
 [
-    {
-        "name": "Ibrahim Mohammed",
-        "email": "vybezkhid7@gmail.com",
-        "password": "scrypt:32768:8:1$yuwNRgYzgkOl1fNy$f5283f9ea83440ae4bee9bf273ed3c278eeccb6d803572e70ec74dfe01de19b5f830dd5b57f4731c6b9acde1b612a8916fe084d4e1001c0c1d518a3e42c5056f"
-    }
+  {
+    "id": "u1001",
+    "name": "Ibrahim Mohammed",
+    "email": "vybezkhid7@gmail.com",
+    "password": "scrypt:32768:8:1$yuwNRgYzgkOl1fNy$f5283f9ea83440ae4bee9bf273ed3c278eeccb6d803572e70ec74dfe01de19b5f830dd5b57f4731c6b9acde1b612a8916fe084d4e1001c0c1d518a3e42c5056f"
+  }
 ]

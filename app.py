@@ -700,20 +700,31 @@ ShopLuxe Team
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+
         email = request.form.get('email')
         password = request.form.get('password')
+
         users = load_users()
+
         user = next((u for u in users if u['email'] == email), None)
 
         if user and check_password_hash(user['password'], password):
-            session['user'] = {'name': user['name'], 'email': user['email']}
+
+            session.clear()
+
+            session['user_id'] = user['id']
+            session['user_name'] = user['name']
+            session['user_email'] = user['email']
+
             flash("✅ Logged in successfully.")
             return redirect(url_for('profile'))
+
         else:
             flash("❌ Invalid credentials.")
             return redirect(url_for('login'))
 
     return render_template('login.html')
+
 
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
