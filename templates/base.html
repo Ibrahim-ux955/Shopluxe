@@ -169,22 +169,22 @@ nav.navbar.fixed-bottom .container a small {
       {% endif %}
 
       <!-- Profile/Login (Desktop only) -->
-      {% if session.user %}
-        <div class="dropdown d-none d-md-block me-2">
-          <button class="btn btn-custom dropdown-toggle" type="button" data-bs-toggle="dropdown">
-            👤 {{ session.user.name }}
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="{{ url_for('profile') }}">My Profile</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
-          </ul>
-        </div>
-      {% else %}
-        <div class="d-none d-md-block me-2">
-          <a class="btn btn-custom me-2" href="{{ url_for('login') }}">Login</a>
-          <a class="btn btn-custom" href="{{ url_for('signup') }}">Sign Up</a>
-        </div>
-      {% endif %}
+      {% if session.get('user_id') %}
+  <div class="dropdown d-none d-md-block me-2">
+    <button class="btn btn-custom dropdown-toggle" type="button" data-bs-toggle="dropdown">
+      👤 {{ session.get('user_name') }}
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      <li><a class="dropdown-item" href="{{ url_for('profile') }}">My Profile</a></li>
+      <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+  </div>
+{% else %}
+  <div class="d-none d-md-block me-2">
+    <a class="btn btn-custom me-2" href="{{ url_for('login') }}">Login</a>
+    <a class="btn btn-custom" href="{{ url_for('signup') }}">Sign Up</a>
+  </div>
+{% endif %}
 
       <!-- 🛍️ Categories dropdown (Desktop only, on far right) -->
 <div class="dropdown d-none d-md-block">
@@ -417,7 +417,7 @@ document.addEventListener('cartChanged', updateCartCount);
     {{ session.get('wishlist', [])|length }}
   </span>
 <!-- Profile/Login for mobile -->
-{% if session.user %}
+{% if session.get('user_id') %}
   <a href="{{ url_for('profile') }}" class="{% if active_page == 'profile' %}active{% endif %}">
     <i class="bi bi-person-fill fs-5"></i>
     <small>Profile</small>
@@ -428,7 +428,6 @@ document.addEventListener('cartChanged', updateCartCount);
     <small>Login</small>
   </a>
 {% endif %}
-
 
 </div>
 </nav>

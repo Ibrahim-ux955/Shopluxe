@@ -1,21 +1,75 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
+<style>
+/* ===== Advanced Hero Carousel Style ===== */
+
+#heroCarousel {
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,.15);
+}
+
+.carousel-item {
+  position: relative;
+}
+
+.carousel-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.65),
+    rgba(0,0,0,0.15),
+    rgba(0,0,0,0)
+  );
+}
+
+.carousel-item img {
+  transform: scale(1);
+  transition: transform 6s ease;
+}
+
+.carousel-item.active img {
+  transform: scale(1.08);
+}
+
+.carousel-caption {
+  bottom: 15%;
+  backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.35) !important;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+}
+</style>
+
 <div class="container mt-5">
 
   <!-- Hero Carousel / Dynamic Products -->
   <div id="heroCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
     <div class="carousel-indicators">
-      {% set carousel_items = [
+      {% set raw_items = [
         ('🔥 Most Popular', popular_products|first),
         ('✨ New Arrival', new_products|first),
         ('💎 Featured', featured_products|first),
         ('💰 On Sale', sale_products|first)
       ] %}
-      {% for idx in range(carousel_items|length) %}
-        {% if carousel_items[idx][1] %}
-          <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ idx }}" class="{% if idx==0 %}active{% endif %}"></button>
+
+      {% set carousel_items = [] %}
+      {% for item in raw_items %}
+        {% if item[1] %}
+          {% do carousel_items.append(item) %}
         {% endif %}
+      {% endfor %}
+
+      {% for item in carousel_items %}
+        <button type="button"
+                data-bs-target="#heroCarousel"
+                data-bs-slide-to="{{ loop.index0 }}"
+                class="{% if loop.first %}active{% endif %}">
+        </button>
       {% endfor %}
     </div>
 
@@ -23,20 +77,23 @@
       {% for item in carousel_items %}
         {% set label = item[0] %}
         {% set product = item[1] %}
-        {% if product %}
-          <div class="carousel-item {% if loop.first %}active{% endif %}">
-            <img src="{{ url_for('static', filename='shoes/' + (product.image if product.get('image') else 'placeholder.jpg')) }}"
+        <div class="carousel-item {% if loop.first %}active{% endif %}">
+
+          <!-- ✅ clickable slide -->
+          <a href="{{ url_for('product_detail', product_id=product.id) }}">
+            <img src="{{ url_for('static', filename='shoes/' + (product.image if product.image else 'placeholder.jpg')) }}"
                  class="d-block w-100" alt="{{ product.name }}" style="height: 400px; object-fit: cover;">
-            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
-              <h5>{{ label }}</h5>
-              <p>{{ product.name }}
-                {% if product.on_sale and product.sale_price %}
-                  - GH₵ {{ product.sale_price }}
-                {% endif %}
-              </p>
-            </div>
+          </a>
+
+          <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
+            <h5>{{ label }}</h5>
+            <p>{{ product.name }}
+              {% if product.on_sale and product.sale_price %}
+                - GH₵ {{ product.sale_price }}
+              {% endif %}
+            </p>
           </div>
-        {% endif %}
+        </div>
       {% endfor %}
     </div>
 
