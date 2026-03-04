@@ -337,24 +337,65 @@ document.addEventListener('click', e => {
 <nav class="navbar fixed-bottom bg-white d-md-none border-top shadow-sm">
   <div class="container d-flex justify-content-around text-center py-1">
 
+    <!-- Mobile Bottom Navbar -->
+<nav class="navbar fixed-bottom bg-white d-md-none border-top shadow-sm">
+  <div class="container d-flex justify-content-around text-center py-1">
+
+    <!-- Home -->
     <a href="{{ url_for('home') }}" class="{% if active_page == 'home' %}active{% endif %}">
       <i class="bi bi-house-fill fs-5"></i>
       <small>Home</small>
     </a>
 
-    <!-- 🛍️ Categories (Goes to full page) -->
-<a href="{{ url_for('categories') }}" class="btn btn-link text-dark text-decoration-none {% if active_page == 'categories' %}active{% endif %}">
-  <div><i class="bi bi-grid-3x3-gap-fill fs-5"></i></div>
-  <small>Categories</small>
-</a>
+    <!-- Categories -->
+    <a href="{{ url_for('categories') }}" class="btn btn-link text-dark text-decoration-none {% if active_page == 'categories' %}active{% endif %}">
+      <div><i class="bi bi-grid-3x3-gap-fill fs-5"></i></div>
+      <small>Categories</small>
+    </a>
 
+    <!-- Cart with live count -->
+    <a href="{{ url_for('cart') }}" class="position-relative {% if active_page == 'cart' %}active{% endif %}">
+      <i class="bi bi-bag-fill fs-5"></i>
+      <small>Cart</small>
+      <span id="cart-count" class="position-absolute badge rounded-pill bg-danger text-white"
+            style="font-size: 0.65rem; top: 3px; right: 12px; transform: translate(25%, -25%);">
+        {{ session.get('cart', [])|length }}
+      </span>
+    </a>
 
+    <!-- Wishlist with live count -->
+    <a href="{{ url_for('wishlist') }}" class="position-relative {% if active_page == 'wishlist' %}active{% endif %}">
+      <i class="bi bi-heart fs-5"></i>
+      <small>Wishlist</small>
+      <span id="wishlist-count" class="position-absolute badge rounded-pill bg-danger text-white"
+            style="font-size: 0.65rem; top: 3px; right: 18px; transform: translate(25%, -25%);">
+        {{ session.get('wishlist', [])|length }}
+      </span>
+    </a>
 
-       <!-- 🛒 Cart Button (with live count) -->
-<a href="{{ url_for('cart') }}" class="position-relative {% if active_page == 'cart' %}active{% endif %}">
-  <i class="bi bi-bag-fill fs-5"></i>
-  <small>Cart</small>
+    <!-- Profile/Login -->
+    {% if session.get('user_id') %}
+      <a href="{{ url_for('profile') }}" class="{% if active_page == 'profile' %}active{% endif %}">
+        <i class="bi bi-person-fill fs-5"></i>
+        <small>Profile</small>
+      </a>
+    {% else %}
+      <a href="{{ url_for('login') }}" class="{% if active_page == 'login' %}active{% endif %}">
+        <i class="bi bi-box-arrow-in-right fs-5"></i>
+        <small>Login</small>
+      </a>
+    {% endif %}
 
+    <!-- Admin (visible only to admins) -->
+    {% if session.get('is_admin') %}
+      <a href="{{ url_for('admin_login') }}" class="position-relative d-flex flex-column align-items-center text-decoration-none text-dark">
+        <i class="bi bi-gear-fill fs-5"></i>
+        <small>Admin</small>
+      </a>
+    {% endif %}
+
+  </div>
+</nav>
    <span id="cart-count"
       class="position-absolute badge rounded-pill bg-danger text-white"
       style="
