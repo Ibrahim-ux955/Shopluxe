@@ -77,12 +77,17 @@
     </div>
   {% endif %}
 
+  {% set displayed_ids = [] %}
+
   <!-- Most Popular -->
   {% if popular_products %}
   <h4 class="mb-4 text-center text-dark">🔥 Most Popular</h4>
   <div class="row g-3">
     {% for product in popular_products %}
-      {% include 'partials/product_card.html' %}
+      {% if product.id not in displayed_ids %}
+        {% include 'partials/product_card.html' %}
+        {% do displayed_ids.append(product.id) %}
+      {% endif %}
     {% endfor %}
   </div>
   {% endif %}
@@ -92,7 +97,10 @@
   <h4 class="mb-4 mt-5 text-center text-dark">✨ New Arrivals</h4>
   <div class="row g-3">
     {% for product in new_products %}
-      {% include 'partials/product_card.html' %}
+      {% if product.id not in displayed_ids %}
+        {% include 'partials/product_card.html' %}
+        {% do displayed_ids.append(product.id) %}
+      {% endif %}
     {% endfor %}
   </div>
   {% endif %}
@@ -102,7 +110,10 @@
   <h4 class="mb-4 mt-5 text-center text-dark">💎 Featured Products</h4>
   <div class="row g-3">
     {% for product in featured_products %}
-      {% include 'partials/product_card.html' %}
+      {% if product.id not in displayed_ids %}
+        {% include 'partials/product_card.html' %}
+        {% do displayed_ids.append(product.id) %}
+      {% endif %}
     {% endfor %}
   </div>
   {% endif %}
@@ -112,7 +123,10 @@
   <h4 class="mb-4 mt-5 text-center text-dark">💰 Products On Sale</h4>
   <div class="row g-3">
     {% for product in sale_products %}
-      {% include 'partials/product_card.html' %}
+      {% if product.id not in displayed_ids %}
+        {% include 'partials/product_card.html' %}
+        {% do displayed_ids.append(product.id) %}
+      {% endif %}
     {% endfor %}
   </div>
   {% endif %}

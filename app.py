@@ -395,18 +395,7 @@ def live_search():
     return jsonify(filtered)
 
 
-# ✅ Set API key directly for testing (you can remove this later and use env var)
-resend.api_key = "re_hc8dC54W_99qkQMJq4UcVRErCEo6nsGDM"
 
-# ✅ Test email (you can comment this out later)
-r = resend.Emails.send({
-    "from": "onboarding@resend.dev",
-    "to": "vybezkhid7@gmail.com",
-    "subject": "Hello World",
-    "html": "<p>Congrats on sending your <strong>first email</strong>!</p>"
-})
-
-print("Test email sent:", r)
 
 # ✅ For production: use environment variable instead of hardcoding
 # (Set RESEND_API_KEY in Render environment variables)
@@ -426,8 +415,7 @@ def send_email(to, subject, html):
         print("❌ Email sending failed:", e)
 
 
-# ✅ Example call
-send_email("vybezkhid7@gmail.com", "New Order", "<p>New order received!</p>")
+
 
 
 @app.route('/filtered/<category>')
@@ -1653,8 +1641,9 @@ def rate_product():
 
 
 
-
+app.jinja_env.add_extension('jinja2.ext.do')
 
 if __name__ == "__main__":
+  
     app.run()
 
