@@ -230,83 +230,87 @@ def initialize_payment():
     return jsonify(response.json())
 
 
-# -------------------------------
-# ✅ Verify Payment
-# -------------------------------
+import os, json
+from datetime import datetime, timezone
+from flask import session, flash, redirect, url_for, render_template, request
+from urllib.parse import quote
+
 @app.route('/verify_payment')
 def verify_payment():
     reference = request.args.get('reference')
-
     headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
+
+    # ✅ Verify payment with Paystack API
     response = requests.get(f'https://api.paystack.co/transaction/verify/{reference}', headers=headers)
     result = response.json()
 
     if result.get('data', {}).get('status') == 'success':
-        # ✅ Payment successful — now save the order
+        # ✅ Payment successful — save the order
         order = session.get('pending_order')
 
-        if order:
-            order['payment_status'] = 'Paid'
-            order['status'] = 'Paid'  # ✅ Added so it shows correctly in admin
-            order['payment_reference'] = reference
-            order['paid_time'] = datetime.now(timezone.utc).isoformat()
+        if not order:
+            flash("⚠️ No pending order found.")
+            return redirect(url_for('checkout'))
 
-            orders_file = os.path.join(os.path.dirname(__file__), "data/orders.json")
-            if os.path.exists(orders_file):
-                with open(orders_file, 'r', encoding='utf-8') as f:
-                    try:
-                        existing_orders = json.load(f)
-                    except json.JSONDecodeError:
-                        existing_orders = []
-            else:
-                existing_orders = []
+        # Mark order as paid
+        order['status'] = 'Paid'
+        order['payment_status'] = 'Paid'
+        order['payment_reference'] = reference
+        order['paid_time'] = datetime.now(timezone.utc).isoformat()
 
-            existing_orders.append(order)
-            with open(orders_file, 'w', encoding='utf-8') as f:
-                json.dump(existing_orders, f, indent=2)
+        # Save order to orders.json
+        orders_file = os.path.join(os.path.dirname(__file__), "data/orders.json")
+        if os.path.exists(orders_file):
+            with open(orders_file, 'r', encoding='utf-8') as f:
+                try:
+                    existing_orders = json.load(f)
+                except json.JSONDecodeError:
+                    existing_orders = []
+        else:
+            existing_orders = []
 
-            # ✅ Optionally send admin + user emails
-            try:
-                name = order['name']
-                email = order['email']
-                total = order['total']
-                base_url = request.url_root.rstrip('/')
-                track_order_url = url_for('track_order', order_id=quote(order['id']), _external=True)
+        existing_orders.append(order)
+        with open(orders_file, 'w', encoding='utf-8') as f:
+            json.dump(existing_orders, f, indent=2)
 
-                # Admin email
-                admin_html = render_template(
-                    'emails/admin_order_email.html',
-                    name=name,
-                    email=email,
-                    phone=order['phone'],
-                    product_name=''.join(
-                        f"<p>{i['name']} ({i['quantity']}x)</p>" for i in order['items']
-                    ),
-                    total=total,
-                    order_time=order['local_time'],
-                    track_order_url=track_order_url,
-                    base_url=base_url
-                )
-                send_email("vybezkhid7@gmail.com", "📦 New Paid Order - ShopLuxe", admin_html)
+        # ✅ Optional: send emails to admin and user (your existing code)
+        try:
+            name = order['name']
+            email = order['email']
+            total = order['total']
+            base_url = request.url_root.rstrip('/')
+            track_order_url = url_for('track_order', order_id=quote(order['id']), _external=True)
 
-                # User email
-                user_html = render_template(
-                    'emails/user_order_email.html',
-                    name=name,
-                    product_name=''.join(
-                        f"<p>{i['name']} ({i['quantity']}x)</p>" for i in order['items']
-                    ),
-                    total=total,
-                    order_time=order['local_time'],
-                    track_order_url=track_order_url
-                )
-                send_email(email, "✅ Payment Received - ShopLuxe", user_html)
-            except Exception as e:
-                print("⚠️ Email sending failed:", e)
+            # Admin email
+            admin_html = render_template(
+                'emails/admin_order_email.html',
+                name=name,
+                email=email,
+                phone=order['phone'],
+                product_name=''.join(f"<p>{i['name']} ({i['quantity']}x)</p>" for i in order['items']),
+                total=total,
+                order_time=order['local_time'],
+                track_order_url=track_order_url,
+                base_url=base_url
+            )
+            send_email("vybezkhid7@gmail.com", "📦 New Paid Order - ShopLuxe", admin_html)
 
-            # ✅ Clear session data
-            session.pop('pending_order', None)
-            session.pop('cart', None)
+            # User email
+            user_html = render_template(
+                'emails/user_order_email.html',
+                name=name,
+                product_name=''.join(f"<p>{i['name']} ({i['quantity']}x)</p>" for i in order['items']),
+                total=total,
+                order_time=order['local_time'],
+                track_order_url=track_order_url
+            )
+            send_email(email, "✅ Payment Received - ShopLuxe", user_html)
+        except Exception as e:
+            print("⚠️ Email sending failed:", e)
+
+        # ✅ Clear session
+        session.pop('pending_order', None)
+        session.pop('cart', None)
 
         # ✅ Show success page
         return render_template("success.html", payment=result['data'])
@@ -314,8 +318,25 @@ def verify_payment():
     else:
         return render_template("failure.html", payment=result['data'])
 
+@app.route('/orders')
+def orders():
+    if not session.get('user_email'):
+        flash("Please login first.")
+        return redirect(url_for('login'))
 
+    orders_file = os.path.join(os.path.dirname(__file__), "data/orders.json")
+    if os.path.exists(orders_file):
+        with open(orders_file, 'r', encoding='utf-8') as f:
+            try:
+                all_orders = json.load(f)
+            except json.JSONDecodeError:
+                all_orders = []
+    else:
+        all_orders = []
 
+    # Show only paid orders for this user
+    user_orders = [o for o in all_orders if o['email'] == session['user_email'] and o['status'] in ['Paid','Delivered']]
+    return render_template("orders.html", orders=user_orders)
 
 
 
