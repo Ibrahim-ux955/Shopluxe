@@ -151,7 +151,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for o in orders | selectattr("status", "in", ["Pending", "Processing"]) | sort(attribute="local_time", reverse=True) %}
+        {% for o in orders | selectattr("status", "in", ["Pending", "Processing", "Paid"]) | sort(attribute="local_time", reverse=True) %}
         <tr>
           <!-- 🧾 Order ID -->
           <td><strong>{{ o.id }}</strong></td>
@@ -213,16 +213,15 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for item in o.get("items", o.get("products", [])) %}
-
-                  <tr>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.price }}</td>
-                    <td>{{ item.quantity or 1 }}</td>
-                    <td>{{ item.color or '-' }}</td>
-                    <td>{{ item.size or '-' }}</td>
-                  </tr>
-                  {% endfor %}
+                  {% for item in o.get("items", []) %}
+<tr>
+  <td>{{ item.name }}</td>
+  <td>{{ item.price }}</td>
+  <td>{{ item.quantity or 1 }}</td>
+  <td>{{ item.color or '-' }}</td>
+  <td>{{ item.size or '-' }}</td>
+</tr>
+{% endfor %}
                 </tbody>
               </table>
             </div>
