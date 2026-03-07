@@ -1,0 +1,85 @@
+[33mcommit 42a99b17a013d8fb42d126e4ce3645e80141d25b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Ibrahim Mohammed <vybezkhid7@gmail.com>
+Date:   Wed Mar 4 19:30:44 2026 +0000
+
+    admin
+
+[1mdiff --git a/templates/base.html b/templates/base.html[m
+[1mindex 7e27f0b..0d9c7f7 100644[m
+[1m--- a/templates/base.html[m
+[1m+++ b/templates/base.html[m
+[36m@@ -337,24 +337,65 @@[m [mdocument.addEventListener('click', e => {[m
+ <nav class="navbar fixed-bottom bg-white d-md-none border-top shadow-sm">[m
+   <div class="container d-flex justify-content-around text-center py-1">[m
+ [m
+[32m+[m[32m    <!-- Mobile Bottom Navbar -->[m
+[32m+[m[32m<nav class="navbar fixed-bottom bg-white d-md-none border-top shadow-sm">[m
+[32m+[m[32m  <div class="container d-flex justify-content-around text-center py-1">[m
+[32m+[m
+[32m+[m[32m    <!-- Home -->[m
+     <a href="{{ url_for('home') }}" class="{% if active_page == 'home' %}active{% endif %}">[m
+       <i class="bi bi-house-fill fs-5"></i>[m
+       <small>Home</small>[m
+     </a>[m
+ [m
+[31m-    <!-- 🛍️ Categories (Goes to full page) -->[m
+[31m-<a href="{{ url_for('categories') }}" class="btn btn-link text-dark text-decoration-none {% if active_page == 'categories' %}active{% endif %}">[m
+[31m-  <div><i class="bi bi-grid-3x3-gap-fill fs-5"></i></div>[m
+[31m-  <small>Categories</small>[m
+[31m-</a>[m
+[32m+[m[32m    <!-- Categories -->[m
+[32m+[m[32m    <a href="{{ url_for('categories') }}" class="btn btn-link text-dark text-decoration-none {% if active_page == 'categories' %}active{% endif %}">[m
+[32m+[m[32m      <div><i class="bi bi-grid-3x3-gap-fill fs-5"></i></div>[m
+[32m+[m[32m      <small>Categories</small>[m
+[32m+[m[32m    </a>[m
+[32m+[m
+[32m+[m[32m    <!-- Cart with live count -->[m
+[32m+[m[32m    <a href="{{ url_for('cart') }}" class="position-relative {% if active_page == 'cart' %}active{% endif %}">[m
+[32m+[m[32m      <i class="bi bi-bag-fill fs-5"></i>[m
+[32m+[m[32m      <small>Cart</small>[m
+[32m+[m[32m      <span id="cart-count" class="position-absolute badge rounded-pill bg-danger text-white"[m
+[32m+[m[32m            style="font-size: 0.65rem; top: 3px; right: 12px; transform: translate(25%, -25%);">[m
+[32m+[m[32m        {{ session.get('cart', [])|length }}[m
+[32m+[m[32m      </span>[m
+[32m+[m[32m    </a>[m
+ [m
+[32m+[m[32m    <!-- Wishlist with live count -->[m
+[32m+[m[32m    <a href="{{ url_for('wishlist') }}" class="position-relative {% if active_page == 'wishlist' %}active{% endif %}">[m
+[32m+[m[32m      <i class="bi bi-heart fs-5"></i>[m
+[32m+[m[32m      <small>Wishlist</small>[m
+[32m+[m[32m      <span id="wishlist-count" class="position-absolute badge rounded-pill bg-danger text-white"[m
+[32m+[m[32m            style="font-size: 0.65rem; top: 3px; right: 18px; transform: translate(25%, -25%);">[m
+[32m+[m[32m        {{ session.get('wishlist', [])|length }}[m
+[32m+[m[32m      </span>[m
+[32m+[m[32m    </a>[m
+ [m
+[32m+[m[32m    <!-- Profile/Login -->[m
+[32m+[m[32m    {% if session.get('user_id') %}[m
+[32m+[m[32m      <a href="{{ url_for('profile') }}" class="{% if active_page == 'profile' %}active{% endif %}">[m
+[32m+[m[32m        <i class="bi bi-person-fill fs-5"></i>[m
+[32m+[m[32m        <small>Profile</small>[m
+[32m+[m[32m      </a>[m
+[32m+[m[32m    {% else %}[m
+[32m+[m[32m      <a href="{{ url_for('login') }}" class="{% if active_page == 'login' %}active{% endif %}">[m
+[32m+[m[32m        <i class="bi bi-box-arrow-in-right fs-5"></i>[m
+[32m+[m[32m        <small>Login</small>[m
+[32m+[m[32m      </a>[m
+[32m+[m[32m    {% endif %}[m
+ [m
+[31m-       <!-- 🛒 Cart Button (with live count) -->[m
+[31m-<a href="{{ url_for('cart') }}" class="position-relative {% if active_page == 'cart' %}active{% endif %}">[m
+[31m-  <i class="bi bi-bag-fill fs-5"></i>[m
+[31m-  <small>Cart</small>[m
+[32m+[m[32m    <!-- Admin (visible only to admins) -->[m
+[32m+[m[32m    {% if session.get('is_admin') %}[m
+[32m+[m[32m      <a href="{{ url_for('admin_login') }}" class="position-relative d-flex flex-column align-items-center text-decoration-none text-dark">[m
+[32m+[m[32m        <i class="bi bi-gear-fill fs-5"></i>[m
+[32m+[m[32m        <small>Admin</small>[m
+[32m+[m[32m      </a>[m
+[32m+[m[32m    {% endif %}[m
+ [m
+[32m+[m[32m  </div>[m
+[32m+[m[32m</nav>[m
+    <span id="cart-count"[m
+       class="position-absolute badge rounded-pill bg-danger text-white"[m
+       style="[m

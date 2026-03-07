@@ -162,11 +162,11 @@ nav.navbar.fixed-bottom .container a small {
       </a>
 
       <!-- Admin (Visible on all screens if logged in) -->
-      {% if session.user %}
-        <a class="btn btn-custom me-2" href="{{ url_for('admin_login') }}">
-          ⚙️ Admin
-        </a>
-      {% endif %}
+      {% if session.get('is_admin') %}
+<a class="btn btn-custom me-2" href="{{ url_for('admin_login') }}">
+⚙️ Admin
+</a>
+{% endif %}
 
       <!-- Profile/Login (Desktop only) -->
       {% if session.get('user_id') %}

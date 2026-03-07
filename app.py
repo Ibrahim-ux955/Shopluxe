@@ -703,6 +703,7 @@ def login():
             session['user_id'] = user['id']
             session['user_name'] = user['name']
             session['user_email'] = user['email']
+            session['is_admin'] = user.get('is_admin', False)
 
             flash("✅ Logged in successfully.")
             return redirect(url_for('profile'))
