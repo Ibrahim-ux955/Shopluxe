@@ -257,6 +257,8 @@ def verify_payment():
         order['payment_status'] = 'Paid'
         order['payment_reference'] = reference
         order['paid_time'] = datetime.now(timezone.utc).isoformat()
+        # Save cart items as products for template
+        order['products'] = order.get('items', [])
 
         # Save order to orders.json
         orders_file = os.path.join(os.path.dirname(__file__), "data/orders.json")
