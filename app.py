@@ -1473,11 +1473,11 @@ def cancel_order(order_id):
 
 @app.route('/order_confirmation')
 def order_confirmation():
-    order_info = session.get('order_info')
-    if not order_info:
+    order = session.get('pending_order')
+    if not order:
         flash("⚠️ No order found.")
         return redirect(url_for('cart'))
-    return render_template('order_confirmation.html', order=order_info)
+    return render_template('order_confirmation.html', order=order)
 
 
 @app.route('/settings')
