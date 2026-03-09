@@ -97,7 +97,6 @@ def get_featured_products():
 # ✅ Define orders file path (consistent with your setup)
 ORDERS_FILE = os.path.join(os.path.dirname(__file__), "data/orders.json")
 
-# ✅ Load all orders safely
 def load_orders():
     try:
         with open(ORDERS_FILE, 'r') as f:
@@ -106,13 +105,11 @@ def load_orders():
         return []
 
     from datetime import datetime, timedelta
-
-    cleaned_orders = []
     now = datetime.now()
 
     for o in orders:
 
-        # ✅ Normalize timestamp formats for old entries
+        # Normalize old timestamp formats
         for key in ['delivered_time', 'cancelled_time', 'completed_time']:
             if key in o and isinstance(o[key], str) and 'T' in o[key]:
                 try:
@@ -120,22 +117,16 @@ def load_orders():
                 except Exception:
                     pass
 
-        # ✅ Remove unpaid orders older than 15 minutes
+        # Mark unpaid orders older than 15 mins as 'Expired'
         if o.get("payment_status") == "Unpaid":
             try:
                 order_time = datetime.fromisoformat(o.get("timestamp"))
                 if now - order_time > timedelta(minutes=15):
-                    continue  # skip expired order
+                    o['status'] = 'Expired'
             except Exception:
                 pass
 
-        cleaned_orders.append(o)
-
-    # ✅ Save cleaned orders
-    with open(ORDERS_FILE, 'w') as f:
-        json.dump(cleaned_orders, f, indent=4)
-
-    return cleaned_orders
+    return orders
 
 
 # ✅ Save orders back to file

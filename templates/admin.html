@@ -151,7 +151,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for o in orders | selectattr("status", "in", ["Pending", "Processing", "Paid"]) | sort(attribute="local_time", reverse=True) %}
+       {% for o in orders | selectattr("status", "in", ["Pending", "Processing", "Paid", "Expired"]) | sort(attribute="local_time", reverse=True) %}
         <tr>
           <!-- 🧾 Order ID -->
           <td><strong>{{ o.id }}</strong></td>
