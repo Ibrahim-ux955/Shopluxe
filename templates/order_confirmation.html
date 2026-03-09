@@ -13,7 +13,7 @@
 
         <h5 class="mt-4">Order Items</h5>
         <ul class="list-group mb-3">
-          {% for item in order['order_items'] %}
+          {% for item in order['items'] %}
             <li class="list-group-item d-flex justify-content-between">
               {{ item['name'] }} x{{ item['quantity'] }}
               <span>GH₵ {{ item['price'] }}</span>
