@@ -160,7 +160,7 @@
           <td>
             <div><strong>{{ o.name }}</strong></div>
             <ul class="mb-0 small text-muted ps-3">
-              {% for item in o.products %}
+              {% for item in o.items %}
                 <li>{{ item.name }} <span class="text-secondary">(x{{ item.quantity or 1 }})</span></li>
               {% endfor %}
             </ul>
@@ -312,7 +312,7 @@
             </tr>
           </thead>
           <tbody>
-            {% for item in o.get("items", o.get("products", [])) %}
+            {% for item in o.get("items", o.get("items", [])) %}
 
             <tr>
               <td>{{ item.name }}</td>
