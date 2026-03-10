@@ -354,10 +354,13 @@ def verify_payment():
 
 @app.route('/orders')
 def orders():
-    if not session.get('user_email'):
+    # 1️⃣ Ensure user is logged in
+    user_email = session.get('user_email')
+    if not user_email:
         flash("Please login first.")
         return redirect(url_for('login'))
 
+    # 2️⃣ Load all orders
     orders_file = os.path.join(os.path.dirname(__file__), "data/orders.json")
     if os.path.exists(orders_file):
         with open(orders_file, 'r', encoding='utf-8') as f:
@@ -368,8 +371,31 @@ def orders():
     else:
         all_orders = []
 
-    # Show only paid orders for this user
-    user_orders = [o for o in all_orders if o['email'] == session['user_email'] and o['status'] in ['Paid','Delivered']]
+    # 3️⃣ Filter orders for this user
+    user_orders = [o for o in all_orders if o.get('email', '').strip().lower() == user_email.strip().lower()]
+
+    # 4️⃣ Normalize products/items for template
+    for order in user_orders:
+        # Support legacy orders with 'items'
+        if 'items' in order and not order.get('products'):
+            order['products'] = order['items']
+
+        # Fallback for very old single-product orders
+        if not order.get('products'):
+            order['products'] = [{
+                'name': order.get('product_name', 'Unknown Product'),
+                'price': order.get('total', 0),
+                'quantity': order.get('quantity', 1),
+                'color': order.get('color', '-'),
+                'size': order.get('size', '-')
+            }]
+
+        # Ensure displayable status
+        order['display_status'] = order.get('status', 'Pending')
+        if order.get('payment_status') == 'Paid' and order['status'] == 'Pending':
+            order['display_status'] = 'Paid'
+
+    # 5️⃣ Render template
     return render_template("orders.html", orders=user_orders)
 
 

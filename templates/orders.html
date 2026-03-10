@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>My Orders</h2>
+
+{% if orders %}
+  {% for order in orders %}
+    <div class="order-card" style="border:1px solid #ccc; padding:15px; margin-bottom:10px;">
+      <h4>Order #{{ order.id }}</h4>
+      <p>Status: <strong>{{ order.display_status }}</strong></p>
+      <p>Placed: {{ order.local_time }}</p>
+      <ul>
+        {% for item in order.products %}
+          <li>{{ item.name }} x{{ item.quantity }} - {{ item.color }}, {{ item.size }}</li>
+        {% endfor %}
+      </ul>
+      <p><strong>Total:</strong> ₵{{ order.total }}</p>
+      {% if order.display_status == 'Pending' %}
+        <p style="color:orange;">Payment Pending</p>
+      {% elif order.display_status == 'Paid' %}
+        <p style="color:green;">Payment Received</p>
+      {% elif order.display_status == 'Delivered' %}
+        <p style="color:blue;">Delivered</p>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% else %}
+  <p>You have no orders yet.</p>
+{% endif %}
+
+{% endblock %}
