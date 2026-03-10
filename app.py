@@ -354,48 +354,15 @@ def verify_payment():
 
 @app.route('/orders')
 def orders():
-    # 1️⃣ Ensure user is logged in
-    user_email = session.get('user_email')
-    if not user_email:
+    if not session.get('user_email'):
         flash("Please login first.")
         return redirect(url_for('login'))
 
-    # 2️⃣ Load all orders
-    orders_file = os.path.join(os.path.dirname(__file__), "data/orders.json")
-    if os.path.exists(orders_file):
-        with open(orders_file, 'r', encoding='utf-8') as f:
-            try:
-                all_orders = json.load(f)
-            except json.JSONDecodeError:
-                all_orders = []
-    else:
-        all_orders = []
+    all_orders = load_orders()
 
-    # 3️⃣ Filter orders for this user
-    user_orders = [o for o in all_orders if o.get('email', '').strip().lower() == user_email.strip().lower()]
-
-    # 4️⃣ Normalize products/items for template
-    for order in user_orders:
-        # Support legacy orders with 'items'
-        if 'items' in order and not order.get('products'):
-            order['products'] = order['items']
-
-        # Fallback for very old single-product orders
-        if not order.get('products'):
-            order['products'] = [{
-                'name': order.get('product_name', 'Unknown Product'),
-                'price': order.get('total', 0),
-                'quantity': order.get('quantity', 1),
-                'color': order.get('color', '-'),
-                'size': order.get('size', '-')
-            }]
-
-        # Ensure displayable status
-        order['display_status'] = order.get('status', 'Pending')
-        if order.get('payment_status') == 'Paid' and order['status'] == 'Pending':
-            order['display_status'] = 'Paid'
-
-    # 5️⃣ Render template
+    # Show all orders for this user
+    user_orders = [o for o in all_orders if o['email'] == session['user_email']]
+    
     return render_template("orders.html", orders=user_orders)
 
 
@@ -581,6 +548,7 @@ def admin_login():
     return render_template('admin_login.html')
 
 
+# -------- Admin Dashboard Route --------
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if not session.get('admin_logged_in'):
@@ -697,7 +665,6 @@ def admin():
         current_time=datetime.now(timezone.utc),
         active_page='admin'
     )
-
 
 
 
@@ -1309,7 +1276,7 @@ def checkout():
     products = load_data()
     cart_items = []
 
-    # ✅ Build cart items with color, size, and quantity
+    # ✅ Build cart items with color, size, quantity, and images
     for item in cart:
         index = item.get("index")
         quantity = item.get("quantity", 1)
@@ -1322,6 +1289,7 @@ def checkout():
             product['id'] = products[index].get('id', index)
             product['color'] = color
             product['size'] = size
+            product['images'] = products[index].get('images', [])  # ✅ include images
             cart_items.append(product)
 
     total = sum(float(p['price']) * p['quantity'] for p in cart_items)
@@ -1348,7 +1316,7 @@ def checkout():
 
         order_id = str(uuid.uuid4())
 
-        # ✅ Create order
+        # ✅ Create order with images included
         order = {
             'id': order_id,
             'name': name,
@@ -1361,7 +1329,8 @@ def checkout():
                     "price": p["price"],
                     "quantity": p["quantity"],
                     "color": p.get("color", "-"),
-                    "size": p.get("size", "-")
+                    "size": p.get("size", "-"),
+                    "images": p.get("images", [])  # ✅ ensures images persist
                 }
                 for p in cart_items
             ],
@@ -1373,7 +1342,8 @@ def checkout():
                     "price": p["price"],
                     "quantity": p["quantity"],
                     "color": p.get("color", "-"),
-                    "size": p.get("size", "-")
+                    "size": p.get("size", "-"),
+                    "images": p.get("images", [])  # ✅ include images for admin
                 }
                 for p in cart_items
             ],
@@ -1387,7 +1357,7 @@ def checkout():
             'timezone': timezone_str
         }
 
-        # ✅ Save order immediately (Amazon-style)
+        # ✅ Save order immediately
         orders = load_orders()
         orders.append(order)
         save_orders(orders)
@@ -1412,24 +1382,16 @@ def checkout():
     )
 
 
-
-
 @app.route('/track-order/<order_id>')
 def track_order(order_id):
     order_id = unquote(order_id)
-    orders_file = "data/orders.json"  # or persistent path on Render
-    if not os.path.exists(orders_file):
-        return "No orders found.", 404
+    orders = load_orders()
 
-    with open(orders_file, "r") as f:
-        orders = json.load(f)
-
-    order = next((o for o in orders if str(o["id"]) == str(order_id)), None)
+    order = next((o for o in orders if o["id"] == order_id), None)
     if not order:
         return "Order not found.", 404
 
     return render_template("track_order.html", order=order)
-
 
 # ✅ Mark an order as delivered
 @app.route('/mark_delivered/<order_id>', methods=['POST'])
