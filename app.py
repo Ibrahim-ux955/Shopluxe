@@ -50,12 +50,20 @@ mail = Mail(app)
 
 # Helper functions
 def load_data():
-    if not os.path.exists(DATA_FILE): return []
-    with open(DATA_FILE, 'r') as f: return json.load(f)
+    try:
+        if not os.path.exists(DATA_FILE):
+            return []
+
+        with open(DATA_FILE, "r") as f:
+            return json.load(f)
+
+    except (json.JSONDecodeError, FileNotFoundError):
+        return []
 
 
 def save_data(data):
-    with open(DATA_FILE, 'w') as f: json.dump(data, f, indent=4)
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f, indent=4)
 
 def load_restock_requests():
     if not os.path.exists(RESTOCK_FILE): return []

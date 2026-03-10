@@ -1,1 +1,23 @@
-[]
+[
+    {
+        "id": "b3bdfa2e-8713-4b14-bba5-a75b26910fe9",
+        "name": "Gamepad",
+        "price": "80",
+        "sale_price": null,
+        "on_sale": false,
+        "featured": false,
+        "category": "Shoes",
+        "description": "",
+        "stock": 5,
+        "colors": [
+            "blue"
+        ],
+        "sizes": [
+            "45"
+        ],
+        "images": [
+            "11afc4c6-5c83-4c06-b8af-1c7d121f5f2e.jpg"
+        ],
+        "timestamp": "2026-03-10T11:33:35.533871+00:00"
+    }
+]

@@ -79,11 +79,12 @@
         {% set product = item[1] %}
         <div class="carousel-item {% if loop.first %}active{% endif %}">
 
-          <!-- ✅ clickable slide -->
           <a href="{{ url_for('product_detail', product_id=product.id) }}">
-            <img src="{{ url_for('static', filename='shoes/' + (product.image if product.image else 'placeholder.jpg')) }}"
-                 class="d-block w-100" alt="{{ product.name }}" style="height: 400px; object-fit: cover;">
-          </a>
+  <img src="{{ url_for('static', filename='shoes/' + (product.images[0] if product.images else 'placeholder.jpg')) }}"
+       class="d-block w-100"
+       alt="{{ product.name }}"
+       style="height: 400px; object-fit: cover;">
+</a>
 
           <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
             <h5>{{ label }}</h5>
