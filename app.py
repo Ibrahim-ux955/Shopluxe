@@ -38,6 +38,7 @@ REVIEWS_FILE = 'reviews.json'
 USERS_FILE = 'users.json'
 ADMIN_PASSWORD = 'Mohammed_@3'
 
+
 # Email config
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
@@ -133,6 +134,8 @@ def load_orders():
                     o['status'] = 'Expired'
             except Exception:
                 pass
+
+    save_orders(orders)
 
     return orders
 
@@ -256,62 +259,75 @@ from urllib.parse import quote
 
 @app.route('/verify_payment')
 def verify_payment():
-    reference = request.args.get('reference')
-    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
 
-    # Verify payment with Paystack
+    reference = request.args.get('reference')
+
+    headers = {
+        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"
+    }
+
+    # Verify transaction with Paystack
     response = requests.get(
-        f'https://api.paystack.co/transaction/verify/{reference}',
+        f"https://api.paystack.co/transaction/verify/{reference}",
         headers=headers
     )
+
     result = response.json()
 
-    if result.get('data', {}).get('status') == 'success':
+    if result.get("data", {}).get("status") == "success":
 
-        order = session.get('pending_order')
+        order = session.get("pending_order")
 
         if not order:
             flash("⚠️ No pending order found.")
-            return redirect(url_for('checkout'))
+            return redirect(url_for("checkout"))
 
-        # Load existing orders
+        # ✅ Load existing orders
         orders = load_orders()
 
-        # Find the order and update it
-        for o in orders:
-            if o['id'] == order['id']:
-                o['status'] = 'Paid'
-                o['payment_status'] = 'Paid'
-                o['payment_reference'] = reference
-                o['paid_time'] = datetime.now(timezone.utc).isoformat()
-                o['products'] = o.get('items', [])
+        # ✅ Update order details after successful payment
+        order["status"] = "Paid"
+        order["payment_status"] = "Paid"
+        order["payment_reference"] = reference
+        order["paid_time"] = datetime.now(timezone.utc).isoformat()
 
-        # Save updated orders
+        # Ensure products field exists
+        order["products"] = order.get("items", [])
+
+        # ✅ Save order to orders.json
+        orders.append(order)
+
         save_orders(orders)
+        print("ORDER SAVED:", order)
 
-        # Send emails
+        # ---------------- EMAILS ---------------- #
+
         try:
-            name = order['name']
-            email = order['email']
-            total = order['total']
-            base_url = request.url_root.rstrip('/')
+
+            name = order["name"]
+            email = order["email"]
+            total = order["total"]
+
+            base_url = request.url_root.rstrip("/")
+
             track_order_url = url_for(
-                'track_order',
-                order_id=quote(order['id']),
+                "track_order",
+                order_id=quote(order["id"]),
                 _external=True
             )
 
             # Admin email
             admin_html = render_template(
-                'emails/admin_order_email.html',
+                "emails/admin_order_email.html",
                 name=name,
                 email=email,
-                phone=order['phone'],
-                product_name=''.join(
-                    f"<p>{i['name']} ({i['quantity']}x)</p>" for i in order['items']
+                phone=order["phone"],
+                product_name="".join(
+                    f"<p>{i['name']} ({i['quantity']}x)</p>"
+                    for i in order["items"]
                 ),
                 total=total,
-                order_time=order['local_time'],
+                order_time=order["local_time"],
                 track_order_url=track_order_url,
                 base_url=base_url
             )
@@ -324,13 +340,14 @@ def verify_payment():
 
             # User email
             user_html = render_template(
-                'emails/user_order_email.html',
+                "emails/user_order_email.html",
                 name=name,
-                product_name=''.join(
-                    f"<p>{i['name']} ({i['quantity']}x)</p>" for i in order['items']
+                product_name="".join(
+                    f"<p>{i['name']} ({i['quantity']}x)</p>"
+                    for i in order["items"]
                 ),
                 total=total,
-                order_time=order['local_time'],
+                order_time=order["local_time"],
                 track_order_url=track_order_url
             )
 
@@ -343,14 +360,17 @@ def verify_payment():
         except Exception as e:
             print("⚠️ Email sending failed:", e)
 
-        # Clear session
-        session.pop('pending_order', None)
-        session.pop('cart', None)
+        # ✅ Clear session after order is saved
+        session.pop("pending_order", None)
+        session.pop("cart", None)
 
-        return render_template("success.html", payment=result['data'])
+        return render_template("success.html", payment=result["data"])
 
     else:
-        return render_template("failure.html", payment=result.get('data', {}))
+        return render_template(
+            "failure.html",
+            payment=result.get("data", {})
+        )
 
 @app.route('/orders')
 def orders():
@@ -1289,12 +1309,13 @@ def checkout():
             product['id'] = products[index].get('id', index)
             product['color'] = color
             product['size'] = size
-            product['images'] = products[index].get('images', [])  # ✅ include images
+            product['images'] = products[index].get('images', [])
             cart_items.append(product)
 
     total = sum(float(p['price']) * p['quantity'] for p in cart_items)
 
     if request.method == 'POST':
+
         name = request.form.get('name')
         email = request.form.get('email')
         phone = request.form.get('phone')
@@ -1316,7 +1337,7 @@ def checkout():
 
         order_id = str(uuid.uuid4())
 
-        # ✅ Create order with images included
+        # ✅ Create order (NOT saved yet)
         order = {
             'id': order_id,
             'name': name,
@@ -1330,12 +1351,11 @@ def checkout():
                     "quantity": p["quantity"],
                     "color": p.get("color", "-"),
                     "size": p.get("size", "-"),
-                    "images": p.get("images", [])  # ✅ ensures images persist
+                    "images": p.get("images", [])
                 }
                 for p in cart_items
             ],
 
-            # used by admin template
             'products': [
                 {
                     "name": p["name"],
@@ -1343,7 +1363,7 @@ def checkout():
                     "quantity": p["quantity"],
                     "color": p.get("color", "-"),
                     "size": p.get("size", "-"),
-                    "images": p.get("images", [])  # ✅ include images for admin
+                    "images": p.get("images", [])
                 }
                 for p in cart_items
             ],
@@ -1357,15 +1377,10 @@ def checkout():
             'timezone': timezone_str
         }
 
-        # ✅ Save order immediately
-        orders = load_orders()
-        orders.append(order)
-        save_orders(orders)
-
-        # Save to session for payment verification
+        # ✅ Save order only in session (temporary)
         session['pending_order'] = order
 
-        # Redirect to Paystack payment page
+        # Go to Paystack payment page
         return render_template(
             'payment.html',
             email=email,
@@ -1380,7 +1395,6 @@ def checkout():
         total=total,
         paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY')
     )
-
 
 @app.route('/track-order/<order_id>')
 def track_order(order_id):
