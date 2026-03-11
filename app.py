@@ -1305,7 +1305,7 @@ def checkout():
     products = load_data()
     cart_items = []
 
-    # ✅ Build cart items with color, size, quantity, and images
+    # Build cart items
     for item in cart:
         index = item.get("index")
         quantity = item.get("quantity", 1)
@@ -1346,13 +1346,11 @@ def checkout():
 
         order_id = str(uuid.uuid4())
 
-        # ✅ Create order (NOT saved yet)
         order = {
             'id': order_id,
             'name': name,
             'email': email,
             'phone': phone,
-
             'items': [
                 {
                     "name": p["name"],
@@ -1364,7 +1362,6 @@ def checkout():
                 }
                 for p in cart_items
             ],
-
             'products': [
                 {
                     "name": p["name"],
@@ -1376,26 +1373,23 @@ def checkout():
                 }
                 for p in cart_items
             ],
-
             'total': total,
             'status': 'Pending',
             'payment_status': 'Unpaid',
-
             'timestamp': utc_now.isoformat(),
             'local_time': formatted_time,
             'timezone': timezone_str
         }
 
-       # Save order to file
-orders = load_orders()
-orders.append(order)
-save_orders(orders)
+        # ✅ Save order to file
+        orders = load_orders()
+        orders.append(order)
+        save_orders(orders)
 
-# Also keep session
-session['pending_order'] = order
+        # ✅ Keep session
+        session['pending_order'] = order
 
-
-        # Go to Paystack payment page
+        # Go to Paystack
         return render_template(
             'payment.html',
             email=email,
@@ -1407,8 +1401,7 @@ session['pending_order'] = order
     return render_template(
         'checkout.html',
         cart_items=cart_items,
-        total=total,
-        paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY')
+        total=total
     )
 
 @app.route('/track-order/<order_id>')
