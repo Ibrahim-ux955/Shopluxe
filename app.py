@@ -1401,7 +1401,7 @@ def checkout():
     return render_template(
         'checkout.html',
         cart_items=cart_items,
-        total=total
+        total=total,
         paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY')
     )
 
