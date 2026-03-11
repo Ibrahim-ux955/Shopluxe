@@ -234,8 +234,10 @@ def index():
 @app.route('/initialize_payment', methods=['POST'])
 def initialize_payment():
     data = request.get_json()
+
     email = data.get('email')
-    amount = int(data.get('amount')) * 100  # convert to pesewas
+    amount = int(data.get('amount')) * 100
+    reference = data.get('reference')  # ✅ important
 
     headers = {
         "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
@@ -245,10 +247,16 @@ def initialize_payment():
     payload = {
         "email": email,
         "amount": amount,
+        "reference": reference,  # ✅ send order reference
         "callback_url": url_for('verify_payment', _external=True)
     }
 
-    response = requests.post('https://api.paystack.co/transaction/initialize', json=payload, headers=headers)
+    response = requests.post(
+        "https://api.paystack.co/transaction/initialize",
+        json=payload,
+        headers=headers
+    )
+
     return jsonify(response.json())
 
 
