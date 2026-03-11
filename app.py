@@ -372,7 +372,8 @@ def verify_payment():
         session.pop("pending_order", None)
         session.pop("cart", None)
 
-        return render_template("success.html", payment=result["data"])
+        return redirect(url_for("order_confirmation", reference=reference))
+
 
     else:
         return render_template(
@@ -1537,11 +1538,23 @@ def cancel_order(order_id):
 
 @app.route('/order_confirmation')
 def order_confirmation():
-    order = session.get('pending_order')
+
+    reference = request.args.get("reference")
+
+    orders = load_orders()
+
+    order = None
+
+    for o in orders:
+        if o["id"] == reference:
+            order = o
+            break
+
     if not order:
-        flash("⚠️ No order found.")
+        flash("⚠️ Order not found.")
         return redirect(url_for('cart'))
-    return render_template('order_confirmation.html', order=order)
+
+    return render_template("order_confirmation.html", order=order)
 
 
 @app.route('/settings')
