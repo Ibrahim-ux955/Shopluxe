@@ -1402,6 +1402,7 @@ def checkout():
         'checkout.html',
         cart_items=cart_items,
         total=total
+        paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY')
     )
 
 @app.route('/track-order/<order_id>')
