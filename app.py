@@ -1386,8 +1386,14 @@ def checkout():
             'timezone': timezone_str
         }
 
-        # ✅ Save order only in session (temporary)
-        session['pending_order'] = order
+       # Save order to file
+orders = load_orders()
+orders.append(order)
+save_orders(orders)
+
+# Also keep session
+session['pending_order'] = order
+
 
         # Go to Paystack payment page
         return render_template(
