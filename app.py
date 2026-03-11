@@ -110,27 +110,30 @@ from datetime import datetime, timedelta
 ORDERS_FILE = os.path.join(os.path.dirname(__file__), "data/orders.json")
 
 
+import os, json
+from datetime import datetime, timezone, timedelta
+
+ORDERS_FILE = os.path.join(os.path.dirname(__file__), "data/orders.json")
+
 def load_orders():
-    """Load all orders from JSON file, normalize timestamps, and mark expired orders."""
     try:
         with open(ORDERS_FILE, 'r') as f:
             orders = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-        orders = []
+        return []
 
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
 
     for o in orders:
-
-        # 1️⃣ Normalize old timestamp formats
-        for key in ['delivered_time', 'cancelled_time', 'completed_time', 'paid_time', 'timestamp', 'local_time']:
+        # Normalize old timestamps
+        for key in ['delivered_time', 'cancelled_time', 'completed_time', 'paid_time']:
             if key in o and isinstance(o[key], str) and 'T' in o[key]:
                 try:
                     o[key] = datetime.fromisoformat(o[key]).strftime("%Y-%m-%d %H:%M:%S")
                 except Exception:
                     pass
 
-        # 2️⃣ Mark unpaid orders older than 15 mins as 'Expired'
+        # Expire unpaid orders older than 15 mins
         if o.get("payment_status") == "Unpaid":
             try:
                 order_time = datetime.fromisoformat(o.get("timestamp"))
@@ -139,18 +142,10 @@ def load_orders():
             except Exception:
                 pass
 
-        # 3️⃣ Ensure backward compatibility: make sure products field exists
-        if "products" not in o and "items" in o:
-            o["products"] = o["items"]
-
-    # Save updates back to file (optional but keeps data consistent)
     save_orders(orders)
-
     return orders
 
-
 def save_orders(data):
-    """Save orders list to JSON file."""
     with open(ORDERS_FILE, 'w') as f:
         json.dump(data, f, indent=4)
 
@@ -240,32 +235,44 @@ def index():
 # -------------------------------
 # 💳 Initialize Paystack Payment
 # -------------------------------
+from uuid import uuid4
+
 @app.route('/initialize_payment', methods=['POST'])
 def initialize_payment():
     data = request.get_json()
-
     email = data.get('email')
     amount = int(data.get('amount')) * 100
-    reference = data.get('reference')  # ✅ important
+    reference = str(uuid4())  # unique reference for this order
 
-    headers = {
-        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
-        "Content-Type": "application/json"
+    # Build the pending order
+    pending_order = {
+        "id": str(uuid4()),
+        "name": data.get("name"),
+        "email": email,
+        "phone": data.get("phone"),
+        "items": data.get("items"),   # cart items
+        "total": data.get("amount"),
+        "status": "Pending",
+        "payment_status": "Unpaid",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "local_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "payment_reference": reference
     }
 
+    orders = load_orders()
+    orders.append(pending_order)
+    save_orders(orders)
+
+    # Initialize Paystack
+    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"}
     payload = {
         "email": email,
         "amount": amount,
-        "reference": reference,  # ✅ send order reference
+        "reference": reference,
         "callback_url": url_for('verify_payment', _external=True)
     }
 
-    response = requests.post(
-        "https://api.paystack.co/transaction/initialize",
-        json=payload,
-        headers=headers
-    )
-
+    response = requests.post("https://api.paystack.co/transaction/initialize", json=payload, headers=headers)
     return jsonify(response.json())
 
 
@@ -276,41 +283,24 @@ from urllib.parse import quote
 
 @app.route('/verify_payment')
 def verify_payment():
-
     reference = request.args.get('reference')
 
-    headers = {
-        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"
-    }
-
-    # Verify transaction with Paystack
-    response = requests.get(
-        f"https://api.paystack.co/transaction/verify/{reference}",
-        headers=headers
-    )
-
+    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
+    response = requests.get(f"https://api.paystack.co/transaction/verify/{reference}", headers=headers)
     result = response.json()
 
+    # Payment success
     if result.get("data", {}).get("status") == "success":
+        orders = load_orders()
 
-        order = session.get("pending_order")
+        # ✅ Find the order by pending_order in session OR by id
+        order = session.get("pending_order") or next((o for o in orders if o.get("id") == reference), None)
 
         if not order:
             flash("⚠️ No pending order found.")
             return redirect(url_for("checkout"))
 
-        # Load existing orders
-        orders = load_orders()
-
-        # ✅ Prevent duplicate orders
-        existing_refs = [o.get("payment_reference") for o in orders]
-        if reference in existing_refs:
-            print("⚠️ Order already saved for reference:", reference)
-            session.pop("pending_order", None)
-            session.pop("cart", None)
-            return redirect(url_for("order_confirmation", reference=reference))
-
-        # Update order details after successful payment
+        # Update order details after payment
         order["status"] = "Paid"
         order["payment_status"] = "Paid"
         order["payment_reference"] = reference
@@ -320,10 +310,11 @@ def verify_payment():
         order["products"] = order.get("items", [])
         order["items"] = None  # optional cleanup
 
-        # Save order to orders.json
-        orders.append(order)
+        # Update orders.json
+        if order not in orders:
+            orders.append(order)  # if session order was not saved yet
         save_orders(orders)
-        print("ORDER SAVED:", order)
+        print("ORDER UPDATED:", order)
 
         # ---------------- EMAILS ---------------- #
         try:
@@ -331,12 +322,7 @@ def verify_payment():
             email = order["email"]
             total = order["total"]
             base_url = request.url_root.rstrip("/")
-
-            track_order_url = url_for(
-                "track_order",
-                order_id=quote(order["id"]),
-                _external=True
-            )
+            track_order_url = url_for("track_order", order_id=quote(order["id"]), _external=True)
 
             # Admin email
             admin_html = render_template(
@@ -344,54 +330,37 @@ def verify_payment():
                 name=name,
                 email=email,
                 phone=order.get("phone", "-"),
-                product_name="".join(
-                    f"<p>{i['name']} ({i.get('quantity', 1)}x)</p>"
-                    for i in order["products"]
-                ),
+                product_name="".join(f"<p>{i['name']} ({i.get('quantity', 1)}x)</p>" for i in order["products"]),
                 total=total,
                 order_time=order.get("local_time", "-"),
                 track_order_url=track_order_url,
                 base_url=base_url
             )
-            send_email(
-                "vybezkhid7@gmail.com",
-                "📦 New Paid Order - ShopLuxe",
-                admin_html
-            )
+            send_email("vybezkhid7@gmail.com", "📦 New Paid Order - ShopLuxe", admin_html)
 
             # User email
             user_html = render_template(
                 "emails/user_order_email.html",
                 name=name,
-                product_name="".join(
-                    f"<p>{i['name']} ({i.get('quantity', 1)}x)</p>"
-                    for i in order["products"]
-                ),
+                product_name="".join(f"<p>{i['name']} ({i.get('quantity', 1)}x)</p>" for i in order["products"]),
                 total=total,
                 order_time=order.get("local_time", "-"),
                 track_order_url=track_order_url
             )
-            send_email(
-                email,
-                "✅ Payment Received - ShopLuxe",
-                user_html
-            )
-
+            send_email(email, "✅ Payment Received - ShopLuxe", user_html)
         except Exception as e:
             print("⚠️ Email sending failed:", e)
 
-        # Clear session after order is saved
+        # ✅ Clear pending order from session
         session.pop("pending_order", None)
         session.pop("cart", None)
 
         return redirect(url_for("order_confirmation", reference=reference))
 
+    # Payment failed
     else:
-        # Payment failed
-        return render_template(
-            "failure.html",
-            payment=result.get("data", {})
-        )
+        return render_template("failure.html", payment=result.get("data", {}))
+
 
 
 @app.route('/orders')
@@ -617,9 +586,10 @@ def admin():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
 
+    # Load data
     products = load_data()
     reviews = load_reviews()
-    orders = load_orders()
+    orders = load_orders()  # ✅ loads all orders, including pending
 
     # ---------------------- ADD NEW PRODUCT ---------------------- #
     if request.method == 'POST':
@@ -685,8 +655,10 @@ def admin():
 
     # ---------------------- NORMALIZE ORDERS ---------------------- #
     for order in orders:
+        # Ensure essential fields exist
         order['id'] = order.get('id', str(uuid4()))
         order['status'] = order.get('status', 'Pending')
+        order['payment_status'] = order.get('payment_status', 'Unpaid')
         order['local_time'] = order.get('local_time', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         order['delivered_time'] = order.get('delivered_time', '')
         order['cancelled_time'] = order.get('cancelled_time') or (
@@ -707,6 +679,15 @@ def admin():
                 'size': order.get('size', '-')
             }]
 
+        # Expire unpaid orders older than 15 mins
+        if order.get("payment_status") == "Unpaid":
+            try:
+                order_time = datetime.fromisoformat(order.get("timestamp"))
+                if datetime.now(timezone.utc) - order_time > timedelta(minutes=15):
+                    order['status'] = 'Expired'
+            except Exception:
+                pass
+
         # Mark paid orders clearly for display
         if order.get('payment_status') == 'Paid' and order['status'] == 'Pending':
             order['status'] = 'Paid'
@@ -716,6 +697,8 @@ def admin():
             order['completed_time'] = order['delivered_time']
         elif order['status'] == 'Cancelled':
             order['completed_time'] = order['cancelled_time']
+        elif order['status'] == 'Paid':
+            order['completed_time'] = order.get('paid_time', order['local_time'])
         else:
             order['completed_time'] = ''
 
@@ -1333,11 +1316,11 @@ from zoneinfo import ZoneInfo
 # -------- Checkout Route --------
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
-    cart = get_cart()
+    cart = get_cart()  # load cart from session or cookies
     products = load_data()
     cart_items = []
 
-    # Build cart items
+    # ------------------ Build cart items ------------------ #
     for item in cart:
         index = item.get("index")
         quantity = item.get("quantity", 1)
@@ -1361,6 +1344,7 @@ def checkout():
         phone = request.form.get('phone')
         timezone_str = request.form.get('timezone', 'UTC')
 
+        # ------------------ Validate ------------------ #
         if not name or not email or not phone:
             flash("❌ All fields are required.")
             return redirect(url_for('checkout'))
@@ -1377,6 +1361,7 @@ def checkout():
 
         order_id = str(uuid.uuid4())
 
+        # ------------------ Build order ------------------ #
         order = {
             'id': order_id,
             'name': name,
@@ -1400,23 +1385,25 @@ def checkout():
             'timezone': timezone_str
         }
 
-        # Save order to file
-        orders = load_orders()
+        # ------------------ Save pending order ------------------ #
+        orders = load_orders()  # load existing orders
         orders.append(order)
         save_orders(orders)
 
-        # Keep session
+        # Keep pending order in session for verification
         session['pending_order'] = order
+        session.modified = True  # ensures session is updated
 
-        # Render Paystack payment page
+        # ------------------ Render Paystack payment page ------------------ #
         return render_template(
             'payment.html',
             email=email,
-            amount=total,
+            amount=int(total * 100),  # Paystack expects amount in kobo
             paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY'),
             reference=order_id
         )
 
+    # ------------------ GET method ------------------ #
     return render_template(
         'checkout.html',
         cart_items=cart_items,
