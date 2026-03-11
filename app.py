@@ -103,30 +103,34 @@ def get_featured_products():
     products_sorted = sorted(products, key=lambda x: x.get('timestamp', ''), reverse=True)
     return products_sorted[:4]  # Returns top 4 newest products
   
+import os, json
+from datetime import datetime, timedelta
+
 # ✅ Define orders file path (consistent with your setup)
 ORDERS_FILE = os.path.join(os.path.dirname(__file__), "data/orders.json")
 
+
 def load_orders():
+    """Load all orders from JSON file, normalize timestamps, and mark expired orders."""
     try:
         with open(ORDERS_FILE, 'r') as f:
             orders = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-        return []
+        orders = []
 
-    from datetime import datetime, timedelta
     now = datetime.now()
 
     for o in orders:
 
-        # Normalize old timestamp formats
-        for key in ['delivered_time', 'cancelled_time', 'completed_time']:
+        # 1️⃣ Normalize old timestamp formats
+        for key in ['delivered_time', 'cancelled_time', 'completed_time', 'paid_time', 'timestamp', 'local_time']:
             if key in o and isinstance(o[key], str) and 'T' in o[key]:
                 try:
                     o[key] = datetime.fromisoformat(o[key]).strftime("%Y-%m-%d %H:%M:%S")
                 except Exception:
                     pass
 
-        # Mark unpaid orders older than 15 mins as 'Expired'
+        # 2️⃣ Mark unpaid orders older than 15 mins as 'Expired'
         if o.get("payment_status") == "Unpaid":
             try:
                 order_time = datetime.fromisoformat(o.get("timestamp"))
@@ -135,13 +139,18 @@ def load_orders():
             except Exception:
                 pass
 
+        # 3️⃣ Ensure backward compatibility: make sure products field exists
+        if "products" not in o and "items" in o:
+            o["products"] = o["items"]
+
+    # Save updates back to file (optional but keeps data consistent)
     save_orders(orders)
 
     return orders
 
 
-# ✅ Save orders back to file
 def save_orders(data):
+    """Save orders list to JSON file."""
     with open(ORDERS_FILE, 'w') as f:
         json.dump(data, f, indent=4)
 
@@ -290,10 +299,18 @@ def verify_payment():
             flash("⚠️ No pending order found.")
             return redirect(url_for("checkout"))
 
-        # ✅ Load existing orders
+        # Load existing orders
         orders = load_orders()
 
-        # ✅ Update order details after successful payment
+        # ✅ Prevent duplicate orders
+        existing_refs = [o.get("payment_reference") for o in orders]
+        if reference in existing_refs:
+            print("⚠️ Order already saved for reference:", reference)
+            session.pop("pending_order", None)
+            session.pop("cart", None)
+            return redirect(url_for("order_confirmation", reference=reference))
+
+        # Update order details after successful payment
         order["status"] = "Paid"
         order["payment_status"] = "Paid"
         order["payment_reference"] = reference
@@ -301,21 +318,18 @@ def verify_payment():
 
         # Ensure products field exists
         order["products"] = order.get("items", [])
+        order["items"] = None  # optional cleanup
 
-        # ✅ Save order to orders.json
+        # Save order to orders.json
         orders.append(order)
-
         save_orders(orders)
         print("ORDER SAVED:", order)
 
         # ---------------- EMAILS ---------------- #
-
         try:
-
             name = order["name"]
             email = order["email"]
             total = order["total"]
-
             base_url = request.url_root.rstrip("/")
 
             track_order_url = url_for(
@@ -329,17 +343,16 @@ def verify_payment():
                 "emails/admin_order_email.html",
                 name=name,
                 email=email,
-                phone=order["phone"],
+                phone=order.get("phone", "-"),
                 product_name="".join(
-                    f"<p>{i['name']} ({i['quantity']}x)</p>"
-                    for i in order["items"]
+                    f"<p>{i['name']} ({i.get('quantity', 1)}x)</p>"
+                    for i in order["products"]
                 ),
                 total=total,
-                order_time=order["local_time"],
+                order_time=order.get("local_time", "-"),
                 track_order_url=track_order_url,
                 base_url=base_url
             )
-
             send_email(
                 "vybezkhid7@gmail.com",
                 "📦 New Paid Order - ShopLuxe",
@@ -351,14 +364,13 @@ def verify_payment():
                 "emails/user_order_email.html",
                 name=name,
                 product_name="".join(
-                    f"<p>{i['name']} ({i['quantity']}x)</p>"
-                    for i in order["items"]
+                    f"<p>{i['name']} ({i.get('quantity', 1)}x)</p>"
+                    for i in order["products"]
                 ),
                 total=total,
-                order_time=order["local_time"],
+                order_time=order.get("local_time", "-"),
                 track_order_url=track_order_url
             )
-
             send_email(
                 email,
                 "✅ Payment Received - ShopLuxe",
@@ -368,31 +380,53 @@ def verify_payment():
         except Exception as e:
             print("⚠️ Email sending failed:", e)
 
-        # ✅ Clear session after order is saved
+        # Clear session after order is saved
         session.pop("pending_order", None)
         session.pop("cart", None)
 
         return redirect(url_for("order_confirmation", reference=reference))
 
-
     else:
+        # Payment failed
         return render_template(
             "failure.html",
             payment=result.get("data", {})
         )
 
+
 @app.route('/orders')
 def orders():
     if not session.get('user_email'):
-        flash("Please login first.")
+        flash("❌ Please login first.")
         return redirect(url_for('login'))
 
     all_orders = load_orders()
 
-    # Show all orders for this user
-    user_orders = [o for o in all_orders if o['email'] == session['user_email']]
-    
+    # Show all orders for this logged-in user
+    user_orders = [o for o in all_orders if o.get('email') == session['user_email']]
+
+    # Normalize orders for display
+    for order in user_orders:
+        order['status'] = order.get('status', 'Pending')
+        order['payment_status'] = order.get('payment_status', 'Unpaid')
+        order['local_time'] = order.get('local_time', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+        # Support both 'items' and 'products'
+        if 'items' in order and not order.get('products'):
+            order['products'] = order['items']
+
+        # Fallback for legacy single-item orders
+        if not order.get('products'):
+            order['products'] = [{
+                'name': order.get('product_name', 'Unknown Product'),
+                'price': order.get('total', 0),
+                'quantity': order.get('quantity', 1),
+                'color': order.get('color', '-'),
+                'size': order.get('size', '-')
+            }]
+
     return render_template("orders.html", orders=user_orders)
+
 
 
 
@@ -659,11 +693,11 @@ def admin():
             order['local_time'] if order['status'] == 'Cancelled' else ''
         )
 
-        # 🧠 Support both 'items' and 'products'
+        # Support both 'items' and 'products'
         if 'items' in order and not order.get('products'):
             order['products'] = order['items']
 
-        # 🧩 Fallback for legacy single-item orders
+        # Fallback for legacy single-item orders
         if not order.get('products'):
             order['products'] = [{
                 'name': order.get('product_name', 'Unknown Product'),
@@ -673,7 +707,7 @@ def admin():
                 'size': order.get('size', '-')
             }]
 
-        # ✅ Mark paid orders clearly for display
+        # Mark paid orders clearly for display
         if order.get('payment_status') == 'Paid' and order['status'] == 'Pending':
             order['status'] = 'Paid'
 
@@ -694,8 +728,6 @@ def admin():
         current_time=datetime.now(timezone.utc),
         active_page='admin'
     )
-
-
 
 
 
@@ -1324,7 +1356,6 @@ def checkout():
     total = sum(float(p['price']) * p['quantity'] for p in cart_items)
 
     if request.method == 'POST':
-
         name = request.form.get('name')
         email = request.form.get('email')
         phone = request.form.get('phone')
@@ -1359,19 +1390,7 @@ def checkout():
                     "color": p.get("color", "-"),
                     "size": p.get("size", "-"),
                     "images": p.get("images", [])
-                }
-                for p in cart_items
-            ],
-            'products': [
-                {
-                    "name": p["name"],
-                    "price": p["price"],
-                    "quantity": p["quantity"],
-                    "color": p.get("color", "-"),
-                    "size": p.get("size", "-"),
-                    "images": p.get("images", [])
-                }
-                for p in cart_items
+                } for p in cart_items
             ],
             'total': total,
             'status': 'Pending',
@@ -1381,15 +1400,15 @@ def checkout():
             'timezone': timezone_str
         }
 
-        # ✅ Save order to file
+        # Save order to file
         orders = load_orders()
         orders.append(order)
         save_orders(orders)
 
-        # ✅ Keep session
+        # Keep session
         session['pending_order'] = order
 
-        # Go to Paystack
+        # Render Paystack payment page
         return render_template(
             'payment.html',
             email=email,

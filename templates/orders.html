@@ -7,20 +7,39 @@
   {% for order in orders %}
     <div class="order-card" style="border:1px solid #ccc; padding:15px; margin-bottom:10px;">
       <h4>Order #{{ order.id }}</h4>
-      <p>Status: <strong>{{ order.display_status }}</strong></p>
+      <p>Status: 
+        <strong style="color:
+          {% if order.status == 'Pending' %}orange
+          {% elif order.status == 'Paid' %}green
+          {% elif order.status == 'Delivered' %}blue
+          {% elif order.status == 'Cancelled' %}red
+          {% else %}black{% endif %}
+        ">{{ order.status }}</strong>
+      </p>
       <p>Placed: {{ order.local_time }}</p>
+      
       <ul>
         {% for item in order.products %}
-          <li>{{ item.name }} x{{ item.quantity }} - {{ item.color }}, {{ item.size }}</li>
+          <li>
+            {{ item.name }} x{{ item.quantity }}
+            {% if item.color != '-' %} - {{ item.color }}{% endif %}
+            {% if item.size != '-' %} | Size: {{ item.size }}{% endif %}
+          </li>
         {% endfor %}
       </ul>
+
       <p><strong>Total:</strong> ₵{{ order.total }}</p>
-      {% if order.display_status == 'Pending' %}
+
+      {% if order.payment_status == 'Unpaid' %}
         <p style="color:orange;">Payment Pending</p>
-      {% elif order.display_status == 'Paid' %}
+      {% elif order.payment_status == 'Paid' %}
         <p style="color:green;">Payment Received</p>
-      {% elif order.display_status == 'Delivered' %}
+      {% endif %}
+
+      {% if order.status == 'Delivered' %}
         <p style="color:blue;">Delivered</p>
+      {% elif order.status == 'Cancelled' %}
+        <p style="color:red;">Cancelled</p>
       {% endif %}
     </div>
   {% endfor %}
