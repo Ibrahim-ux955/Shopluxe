@@ -2,330 +2,477 @@
 
 {% block content %}
 <style>
-  .product-card {
-    border-radius: 16px;
-    overflow: hidden;
-    background: #fff;
-    padding: 20px;
+:root {
+  --brand: #198754;
+  --glass: rgba(255,255,255,0.75);
+  --blur: blur(14px);
+}
+
+/* ================== Product Card ================== */
+.product-card {
+  border-radius: 22px;
+  background: linear-gradient(180deg,#ffffff,#f8f9fb);
+  backdrop-filter: var(--blur);
+  padding: 24px;
+  border: 1px solid rgba(0,0,0,.05);
+  animation: fadeUp .6s ease;
+  overflow: hidden;
+}
+
+/* Remove background ONLY for the right details card */
+.col-lg-6.order-2 > .product-card{
+  background: transparent !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Sticky gallery like Temu */
+.product-gallery {
+  position: sticky;
+  top: 90px;
+}
+
+/* ================== Main Image ================== */
+.main-img {
+  width: 100%;
+  height: 420px;
+  object-fit: cover;
+  border-radius: 18px;
+  transition: transform .4s ease, filter .3s ease;
+  cursor: zoom-in;
+  filter: blur(10px);
+}
+.main-img.loaded { filter: blur(0); }
+
+/* ================== Thumbnails ================== */
+.thumbs {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.thumbs img {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: .25s;
+}
+
+.thumbs img.active {
+  border-color: var(--brand);
+  box-shadow: 0 6px 14px rgba(0,0,0,.12);
+}
+
+
+/* ================== Size & Color ================== */
+.size-option,
+.color-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.size-option {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f1f3f5;
+  font-weight: 600;
+}
+.size-option.active {
+  background: var(--brand);
+  color: #fff;
+}
+
+.color-option {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.1);
+}
+.color-option.active {
+  box-shadow: 0 0 0 3px var(--brand);
+}
+
+/* ================== Add To Cart ================== */
+.add-cart-btn {
+  width: 100%;
+  background: linear-gradient(135deg,#198754,#0d6efd);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 1.1rem;
+}
+
+/* ================== Stock ================== */
+.stock-bar {
+  height: 10px;
+  border-radius: 8px;
+  background: #e9ecef;
+}
+.stock-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg,var(--brand),#0d6efd);
+}
+
+/* ================== Delivery Badge ================== */
+.delivery-badge {
+  background: linear-gradient(90deg,#0dcaf0,#198754);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: .8rem;
+}
+
+/* ================== Mobile Optimization ================== */
+@media(max-width:768px){
+
+  .product-gallery {
+    position: static;
   }
 
   .main-img {
-    width: 100%;
-    height: 380px;
-    object-fit: cover;
-    border-radius: 14px;
-    transition: opacity 0.3s ease;
+    height: 300px;
+  }
+  
+  .rating-stars i{
+    font-size: .95rem;
   }
 
-  .thumbs img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: all 0.2s ease;
-  }
-
-  .thumbs img.active {
-    border-color: #198754;
-  }
-
-  .size-option,
-  .color-option {
-    display: inline-block;
-    margin: 0 5px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: all 0.2s ease;
-  }
-
-  .size-option.active,
-  .color-option.active {
-    border-color: #198754;
-  }
-
-  .size-option {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    background: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-  }
-
-  .color-option {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-  }
-
-  .add-cart-btn {
-    width: 100%;
-    background-color: #198754;
-    color: white;
-    font-size: 1.2rem;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 0;
-    transition: transform 0.2s ease, background 0.3s ease;
-  }
-
-  .add-cart-btn:hover {
-    background-color: #157347;
-    transform: scale(1.02);
-  }
-
-  .product-info h2 {
-    font-weight: 700;
-  }
-
-  .related-item img {
-    border-radius: 10px;
-    object-fit: cover;
-  }
+}
 </style>
 
-<div class="container mt-5 mb-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="product-card shadow">
+<div class="container-fluid px-lg-5 mt-4 mb-5">
 
-        <!-- ✅ Image Container (makes heart button position correctly) -->
-            <div class="position-relative">
-  <!-- ✅ Main Product Image -->
-  <img id="mainImage"
-       src="{{ url_for('static', filename='shoes/' + product.images[0]) }}"
-       alt="{{ product.name }}"
-       class="main-img mb-3">
+<div class="row">
 
-      <!-- ❤️ Wishlist Toggle Button -->
+<!-- ================= LEFT COLUMN (IMAGES) ================= -->
+<div class="col-lg-6 col-md-12 order-1">
+
+<div class="product-card product-gallery shadow">
+
+<div class="delivery-badge mb-2">Delivery in 2-4 days</div>
+
+<div class="position-relative">
+<img id="mainImage"
+src="{{ url_for('static', filename='shoes/' + product.images[0]) }}"
+class="main-img mb-3 lazyload">
+
 <button id="wishlistBtn"
-        class="btn btn-light position-absolute top-0 end-0 m-3 rounded-circle shadow-sm"
-        style="z-index: 10; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;"
-        data-product-id="{{ product.id }}">
-  
-  {% set in_wishlist = false %}
-  {% for p in session.get('wishlist', []) %}
-    {% if p.id == product.id %}
-      {% set in_wishlist = true %}
-    {% endif %}
-  {% endfor %}
-
-  <i id="wishlistIcon" class="bi bi-heart{% if in_wishlist %}-fill text-danger{% endif %} fs-5"></i>
+class="btn btn-light position-absolute top-0 end-0 m-3 rounded-circle"
+data-product-id="{{ product.id }}">
+<i id="wishlistIcon"
+class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == product.id %}-fill text-danger{% endif %}{% endfor %} fs-5"></i>
 </button>
 </div>
 
-<!-- ✅ AJAX Wishlist Script -->
+<div class="thumbs d-flex gap-2 px-2">
+
+{% for img in product.images %}
+<img src="{{ url_for('static', filename='shoes/' + img) }}" class="thumb-img lazyload">
+{% endfor %}
+</div>
+
+</div>
+</div>
+
+<!-- ================= RIGHT COLUMN (DETAILS) ================= -->
+<div class="col-lg-6 col-md-12 order-2">
+
+<div class="product-card shadow">
+
+<h3 class="mb-1">{{ product.name }}</h3>
+
+<div class="d-flex align-items-center gap-2 mb-2">
+
+  <div class="rating-stars" id="ratingStars"
+       data-user-rated="{{ 'true' if user_rating else 'false' }}">
+
+    {% set display_rating = user_rating if user_rating else (product.rating or 0) %}
+
+    {% for i in range(1,6) %}
+      <i class="bi 
+        {% if i <= display_rating %}bi-star-fill{% else %}bi-star{% endif %}
+        text-warning rating-star"
+        data-value="{{ i }}"
+        style="cursor:pointer">
+      </i>
+    {% endfor %}
+
+  </div>
+
+  <small class="text-muted">
+    ({{ product.review_count or 0 }} reviews)
+  </small>
+
+</div>
+
+
+
+
+<p class="text-muted">{{ product.description }}</p>
+
+<ul class="list-unstyled small mb-3">
+  <li><span class="text-success">✔</span> Original product</li>
+  <li><span class="text-success">✔</span> Quality checked</li>
+</ul>
+
+
+{% if product.on_sale %}
+<div class="d-flex align-items-end gap-2 mb-2">
+
+  <span class="fw-bold text-danger" style="font-size:1.8rem;">
+    GH₵ {{ product.sale_price }}
+  </span>
+
+  <span class="text-muted text-decoration-line-through" style="font-size:0.95rem;">
+    GH₵ {{ product.price }}
+  </span>
+
+</div>
+{% else %}
+<div class="mb-2">
+  <span class="fw-bold text-success" style="font-size:1.8rem;">
+    GH₵ {{ product.price }}
+  </span>
+</div>
+{% endif %}
+
+
+{% if product.stock %}
+<p class="small text-success mb-1">In stock</p>
+{% else %}
+<p class="small text-danger mb-1">Out of stock</p>
+{% endif %}
+
+
+{% if product.stock %}
+<small>Stock Level</small>
+<div class="stock-bar mb-3">
+<div class="stock-bar-fill" style="width: {{ product.stock_percentage }}%"></div>
+</div>
+{% endif %}
+
+<!-- Sizes -->
+{% if product.sizes %}
+<h6>Size</h6>
+<div class="mb-3">
+{% for size in product.sizes %}
+<span class="size-option">{{ size }}</span>
+{% endfor %}
+</div>
+{% endif %}
+
+<!-- Colors -->
+{% if product.colors %}
+<h6>Color</h6>
+<div class="mb-3">
+{% for color in product.colors %}
+<span class="color-option" style="background:{{ color | lower }}" title="{{ color }}"></span>
+{% endfor %}
+</div>
+{% endif %}
+
+<form action="{{ url_for('add_to_cart', index=product.index) }}" method="POST" id="addToCartForm">
+
+<div class="mb-3">
+  <label class="small mb-1 d-block">Quantity</label>
+  <select name="quantity" class="form-select form-select-sm w-auto">
+    {% for i in range(1, 100) %}
+      <option value="{{ i }}">{{ i }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<input type="hidden" name="size" id="selectedSize">
+<input type="hidden" name="color" id="selectedColor">
+
+<p class="small text-muted mb-3">
+🚚 Delivery in 2 – 4 working days
+</p>
+
+
+<button type="submit" class="add-cart-btn">
+🛒 Add To Cart
+<span id="cartLoader" class="spinner-border spinner-border-sm d-none"></span>
+</button>
+
+<div class="mb-3">
+
+  <p class="fw-semibold text-success mb-1">
+    🚚 Free shipping on all orders
+  </p>
+
+  <p class="small text-muted mb-1">
+  Delivery: <span id="deliveryDate"></span>
+</p>
+
+</div>
+
+</form>
+
+</div>
+</div>
+
+</div>
+
+</div>
+
+<!-- MOBILE FLOAT BAR -->
+<div class="d-md-none fixed-bottom bg-white border-top p-3">
+<div class="d-flex justify-content-between align-items-center">
+<div>
+<small>Price</small>
+<div class="fw-bold text-success">
+GH₵ {{ product.sale_price if product.on_sale else product.price }}
+</div>
+</div>
+<button onclick="document.querySelector('#addToCartForm button').click()"
+class="btn btn-success rounded-pill px-4">
+Add to Cart
+</button>
+</div>
+</div>
+
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('wishlistBtn');
-  const icon = document.getElementById('wishlistIcon');
+const deliveryEl = document.getElementById('deliveryDate');
 
-  if (!btn) return; // Safety check
+if (deliveryEl) {
 
-  btn.addEventListener('click', function(e) {
-    e.preventDefault();
-    const productId = this.getAttribute('data-product-id');
+  const start = new Date();
+  const end = new Date();
 
-    fetch(`/toggle_wishlist_ajax/${productId}`, {
-      method: 'POST',
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        // Toggle the heart icon color instantly
-        if (data.in_wishlist) {
-          icon.classList.add('bi-heart-fill', 'text-danger');
-          icon.classList.remove('bi-heart');
+  end.setDate(start.getDate() + 4);
+
+  const startText = start.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  });
+
+  const endText = end.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  });
+
+  deliveryEl.textContent = `${startText}-${endText}`;
+}
+
+const starsBox = document.getElementById("ratingStars");
+const stars = document.querySelectorAll(".rating-star");
+
+if(starsBox){
+
+  const alreadyRated = starsBox.dataset.userRated === "true";
+
+  // Lock UI if already rated
+  if(alreadyRated){
+    stars.forEach(star=>{
+      star.style.pointerEvents = "none";
+      star.style.opacity = "0.6";
+    });
+  }
+
+  // Click handler
+  stars.forEach(star=>{
+    star.addEventListener("click", ()=>{
+
+      if(alreadyRated) return;
+
+      const rating = star.dataset.value;
+
+      fetch("/rate-product", {
+        method: "POST",
+        credentials: "same-origin",   // ✅ sends session cookie
+        headers: {
+          "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+          product_id: "{{ product.id }}",
+          rating: rating
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+
+        if(data.success){
+          location.reload();   // reload = correct stars + lock
         } else {
-          icon.classList.remove('bi-heart-fill', 'text-danger');
-          icon.classList.add('bi-heart');
+          alert(data.message || "Rating failed");
         }
 
-        // 🔴 Update live navbar count
-        updateWishlistCount();
+      })
+      .catch(err=>{
+        console.error(err);
+        alert("Network error");
+      });
 
-        // 🎉 Optional floating alert
-        const alert = document.createElement('div');
-        alert.className = 'position-fixed top-0 start-50 translate-middle-x alert alert-light border shadow-sm';
-        alert.style.zIndex = 2000;
-        alert.innerHTML = data.message;
-        document.body.appendChild(alert);
-        setTimeout(() => alert.remove(), 1500);
-      }
-    })
-    .catch(err => console.error('Wishlist toggle error:', err));
+    });
   });
+
+}
+
+
+
+
+  
+document.addEventListener('DOMContentLoaded',()=>{
+
+const sizeInput=document.getElementById('selectedSize');
+const colorInput=document.getElementById('selectedColor');
+const mainImage=document.getElementById('mainImage');
+const thumbs=document.querySelectorAll('.thumb-img');
+const form=document.getElementById('addToCartForm');
+const loader=document.getElementById('cartLoader');
+
+mainImage.onload=()=>mainImage.classList.add('loaded');
+
+thumbs.forEach(t=>{
+t.onclick=()=>{
+mainImage.src=t.src;
+thumbs.forEach(x=>x.classList.remove('active'));
+t.classList.add('active');
+}
 });
 
-// ✅ Global function to update wishlist count dynamically
-function updateWishlistCount() {
-  fetch('/wishlist_count')
-    .then(res => res.json())
-    .then(data => {
-      const badge = document.getElementById('wishlist-count');
-      if (badge) {
-        badge.textContent = data.count > 0 ? data.count : '';
-      }
-    })
-    .catch(err => console.error('Wishlist count update failed:', err));
+document.querySelectorAll('.size-option').forEach(el=>{
+el.onclick=()=>{
+document.querySelectorAll('.size-option').forEach(x=>x.classList.remove('active'));
+el.classList.add('active');
+sizeInput.value=el.textContent.trim();
 }
+});
+
+document.querySelectorAll('.color-option').forEach(el=>{
+el.onclick=()=>{
+document.querySelectorAll('.color-option').forEach(x=>x.classList.remove('active'));
+el.classList.add('active');
+colorInput.value=el.title;
+}
+});
+
+form.addEventListener('submit',e=>{
+if(!sizeInput.value || !colorInput.value){
+e.preventDefault();
+alert("Please select size and color");
+}else{
+loader.classList.remove('d-none');
+}
+});
+
+
+
+});
 </script>
 
-<!-- ✅ Optional subtle bounce animation -->
-<style>
-@keyframes pop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.3); }
-  100% { transform: scale(1); }
-}
-.bi-heart-fill {
-  animation: pop 0.2s ease-in-out;
-}
-</style>
-
-
-
-
-        <!-- ✅ Thumbnails -->
-        <div class="thumbs d-flex justify-content-center gap-2 mb-3">
-          {% for img in product.images %}
-          <img src="{{ url_for('static', filename='shoes/' + img) }}" alt="thumb" class="thumb-img">
-          {% endfor %}
-        </div>
-
-        <!-- ✅ Product Info -->
-        <div class="product-info text-center">
-          <h2 class="mb-1">{{ product.name }}</h2>
-
-          {% if product.on_sale and product.sale_price %}
-          <p class="mb-1 text-muted text-decoration-line-through fs-5">GH₵ {{ product.price }}</p>
-          <p class="text-danger fw-bold fs-4">GH₵ {{ product.sale_price }}</p>
-          {% else %}
-          <p class="text-success fw-bold fs-4">GH₵ {{ product.price }}</p>
-          {% endif %}
-
-          {% if product.description %}
-          <p class="text-muted">{{ product.description }}</p>
-          {% endif %}
-        </div>
-
-        <!-- ✅ Sizes -->
-        {% if product.sizes %}
-        <div class="text-center mt-3">
-          <h6 class="fw-bold">Size</h6>
-          <div>
-            {% for size in product.sizes %}
-            <span class="size-option {% if loop.first %}active{% endif %}">{{ size }}</span>
-            {% endfor %}
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- ✅ Colors -->
-        {% if product.colors %}
-        <div class="text-center mt-3">
-          <h6 class="fw-bold">Color</h6>
-          <div>
-            {% for color in product.colors %}
-            <span class="color-option {% if loop.first %}active{% endif %}" 
-                  style="background: {{ color | lower }};" 
-                  title="{{ color }}"></span>
-            {% endfor %}
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- ✅ Add to Cart -->
-{% if product.stock is defined %}
-{% if product.stock > 0 %}
-<form action="{{ url_for('add_to_cart', index=product.index) }}" method="POST" class="mt-4" id="addToCartForm">
-  <input type="hidden" name="quantity" value="1">
-  <input type="hidden" name="color" id="selectedColor" value="-">
-  <input type="hidden" name="size" id="selectedSize" value="-">
-
-  <button type="submit" class="add-cart-btn">
-    🛒 Add to Cart
-  </button>
-</form>
-{% else %}
-<p class="text-danger text-center mt-3">Out of Stock</p>
-{% endif %}
-{% endif %}
-</div>
-</div>
-</div>
-
-<!-- ✅ Related Products -->
-<hr class="my-5">
-<h4 class="text-center mb-4">🛍️ Related Products</h4>
-<div class="row justify-content-center">
-  {% if related %}
-  {% for item in related %}
-  <div class="col-6 col-md-4 col-lg-3 mb-4 text-center">
-    <a href="{{ url_for('product_detail', product_id=item.id) }}" class="text-decoration-none text-dark">
-      <div class="card border-0 shadow-sm h-100 related-item">
-        <img src="{{ url_for('static', filename='shoes/' + item.images[0]) }}" alt="{{ item.name }}"
-          style="width: 100%; aspect-ratio: 1/1;">
-        <div class="p-2">
-          <p class="fw-semibold mb-1" style="font-size: 15px;">{{ item.name }}</p>
-          {% if item.on_sale and item.sale_price %}
-          <p class="mb-0">
-            <span class="text-muted text-decoration-line-through small">GH₵ {{ item.price }}</span><br>
-            <span class="text-danger fw-bold">GH₵ {{ item.sale_price }}</span>
-          </p>
-          {% else %}
-          <p class="text-success fw-bold mb-0">GH₵ {{ item.price }}</p>
-          {% endif %}
-        </div>
-      </div>
-    </a>
-  </div>
-  {% endfor %}
-  {% else %}
-  <p class="text-center text-muted">No related products found.</p>
-  {% endif %}
-</div>
-</div>
-
-<!-- ✅ JS for thumbnail and selection -->
-<script>
-  const mainImage = document.getElementById('mainImage');
-  const thumbs = document.querySelectorAll('.thumb-img');
-  thumbs.forEach(thumb => {
-    thumb.addEventListener('click', function () {
-      mainImage.style.opacity = 0;
-      setTimeout(() => {
-        mainImage.src = this.src;
-        mainImage.style.opacity = 1;
-      }, 150);
-      thumbs.forEach(t => t.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-  if (thumbs.length > 0) thumbs[0].classList.add('active');
-
-  const colorInput = document.getElementById('selectedColor');
-  const sizeInput = document.getElementById('selectedSize');
-
-  document.querySelectorAll('.size-option').forEach(el => {
-    el.addEventListener('click', () => {
-      document.querySelectorAll('.size-option').forEach(e => e.classList.remove('active'));
-      el.classList.add('active');
-      sizeInput.value = el.textContent.trim();
-    });
-  });
-
-  document.querySelectorAll('.color-option').forEach(el => {
-    el.addEventListener('click', () => {
-      document.querySelectorAll('.color-option').forEach(e => e.classList.remove('active'));
-      el.classList.add('active');
-      colorInput.value = el.getAttribute('title');
-    });
-  });
-</script>
 {% endblock %}

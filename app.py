@@ -908,6 +908,8 @@ def product_detail(product_id):
     )
 
 
+
+
 @app.route('/submit_review/<int:index>', methods=['POST'])
 def submit_review(index):
     name = request.form.get('name')
