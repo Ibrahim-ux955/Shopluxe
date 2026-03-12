@@ -323,27 +323,39 @@ def verify_payment():
     # ---------------- PAYMENT SUCCESS ---------------- #
     if payment_data.get("status") == "success":
 
-        # Extract customer details from Paystack response
-        # This assumes your checkout passes metadata (name, email, etc.) to Paystack
         customer = payment_data.get("customer", {})
         metadata = payment_data.get("metadata", {})
 
         name = metadata.get("name") or customer.get("first_name") or "Customer"
         email = metadata.get("email") or customer.get("email")
         phone = metadata.get("phone") or "-"
-        amount = payment_data.get("amount", 0) / 100  # Paystack amount is in kobo
-        items = metadata.get("items", [])  # pass items in metadata when creating payment
-
-        # Generate a simple order ID from reference
+        amount = payment_data.get("amount", 0) / 100
+        items = metadata.get("items", [])
         order_id = reference
 
-        # Track order URL
         track_order_url = url_for("track_order", order_id=order_id, _external=True)
-
-        # Build product list HTML
         product_list = "".join(
             f"<p>{i['name']} ({i.get('quantity',1)}x)</p>" for i in items
         )
+
+        # ------------------ SAVE ORDER ------------------ #
+        new_order = {
+            "id": order_id,
+            "name": name,
+            "email": email,
+            "phone": phone,
+            "amount": amount,
+            "total": amount,        # ✅ added for admin panel
+            "products": items,      # ✅ changed from "items" to "products"
+            "status": "Paid",
+            "payment_status": "Paid",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "order_time": datetime.now().strftime("%b %d, %Y, %I:%M %p"),
+            "local_time": datetime.now().strftime("%b %d, %Y, %I:%M %p")
+        }
+        orders = load_orders()
+        orders.append(new_order)
+        save_orders(orders)
 
         # ------------------ SEND ADMIN EMAIL ------------------ #
         try:
@@ -379,7 +391,6 @@ def verify_payment():
     else:
         return render_template("failure.html", payment=payment_data)
       
-      
 
 @app.route('/orders')
 def orders():
@@ -396,7 +407,7 @@ def orders():
     for order in user_orders:
         order['status'] = order.get('status', 'Pending')
         order['payment_status'] = order.get('payment_status', 'Unpaid')
-        order['local_time'] = order.get('local_time', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        order['local_time'] = order.get('local_time') or order.get('order_time', 'N/A')
 
         # Support both 'items' and 'products'
         if 'items' in order and not order.get('products'):

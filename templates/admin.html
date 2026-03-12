@@ -171,10 +171,14 @@
               <span class="badge bg-warning text-dark">Pending</span>
             {% elif o.status == "Processing" %}
               <span class="badge bg-info text-dark">Processing</span>
+            {% elif o.status == "Paid" %}
+              <span class="badge bg-success">Paid</span>
+            {% elif o.status == "Expired" %}
+              <span class="badge bg-secondary">Expired</span>
             {% endif %}
           </td>
 
-          <td>{{ o.local_time }}</td>
+          <td>{{ o.order_time }}</td>
 
           <td>
             <div class="d-flex flex-column flex-md-row gap-2">
