@@ -340,7 +340,7 @@ def verify_payment():
                 order = next((o for o in orders if str(o.get("id")).strip() == session_order_id), None)
 
         if not order:
-            flash("⚠️ Order not found. Please contact support.")
+            flash("⚠️ Order not found. Please contact support ")
             return redirect(url_for("checkout"))
 
         # ------------------ Update order ------------------ #
