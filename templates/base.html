@@ -2,46 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
   <meta name="google-site-verification" content="6-q4p5ou0N7gjjUczzPcIw6UT_-zwYvjyHRX19ScmCU">
 
-
-  <!-- SEO Title -->
   <title>Shopluxe — Online Shopping in Ghana</title>
-
-  <!-- SEO Description -->
   <meta name="description" content="Buy quality products online at Shopluxe. Fast delivery, secure payment and trusted shopping experience in Ghana.">
-
-  <!-- Keywords (optional but helpful) -->
   <meta name="keywords" content="Shopluxe, online shop Ghana, ecommerce Ghana, buy products online">
-
-  <!-- Mobile Friendly -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 
-  <!-- Social Preview (WhatsApp / Facebook) -->
   <meta property="og:title" content="Shopluxe — Online Shopping in Ghana">
   <meta property="og:description" content="Buy quality products online with fast delivery and secure payment.">
   <meta property="og:url" content="https://shopluxe.online">
   <meta property="og:type" content="website">
 
-  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
   <style>
-
-    .category-dropdown:hover .dropdown-menu {
-      display: block;
-    }
-    .category-icon {
-      width: 20px;
-      margin-right: 8px;
+    body {
+      background-color: #f8f9fa;
+      min-height: 100vh;
     }
 
-    /* Clean buttons */
     .btn-custom {
       background-color: transparent;
       border: 1px solid #ccc;
@@ -52,168 +35,123 @@
       color: #000;
     }
 
-    .bg-wallpaper {
-      background: url("{{ url_for('static', filename='banner/wallpaper.jpg') }}") center/cover no-repeat fixed;
-      min-height: 100vh;
+    nav.navbar .container a,
+    nav.navbar .navbar-brand span,
+    nav.navbar .dropdown-toggle {
+      color: #666 !important;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    nav.navbar .container a:hover,
+    nav.navbar .navbar-brand:hover span,
+    nav.navbar .dropdown-toggle:hover {
+      color: #ff6600 !important;
+    }
+    nav.navbar .container a.active,
+    nav.navbar .container a.active i {
+      color: #ff6600 !important;
+      font-weight: 600;
     }
 
-    /* Navbar Links */
-nav.navbar .container a,
-nav.navbar .navbar-brand span,
-nav.navbar .dropdown-toggle {
-  color: #666 !important;
-  text-decoration: none;
-  transition: color 0.3s;
-}
+    /* Bottom nav */
+    nav.navbar.fixed-bottom .container a {
+      color: #666;
+      text-align: center;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    nav.navbar.fixed-bottom .container a.active,
+    nav.navbar.fixed-bottom .container a.active i {
+      color: #ff6600 !important;
+      font-weight: 600;
+    }
+    nav.navbar.fixed-bottom .container a small {
+      margin-top: 2px;
+      display: block;
+      font-size: 11px;
+    }
 
-nav.navbar .container a:hover,
-nav.navbar .navbar-brand:hover span,
-nav.navbar .dropdown-toggle:hover {
-  color: #ff6600 !important;
-}
-
-nav.navbar .container a.active,
-nav.navbar .container a.active i {
-  color: #ff6600 !important;
-  font-weight: 600;
-}
-
-/* Cart badge */
-nav.navbar .container a.cart {
-  position: relative;
-}
-
-nav.navbar .container a.cart .badge {
-  position: absolute;
-  top: 0;
-  right: 12px;
-  font-size: 10px;
-  background-color: #000;
-  color: white;
-  border-radius: 50%;
-  padding: 2px 5px;
-}
-
-/* Bottom nav */
-nav.navbar.fixed-bottom {
-  position: fixed !important;
-  bottom: 0;
-  width: 100%;
-  z-index: 1030;
-}
-
-nav.navbar.fixed-bottom .container a {
-  color: #666;
-  text-align: center;
-  font-size: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1; /* Ensures all 4 links take equal space */
-  text-decoration: none;
-  transition: color 0.3s;
-}
-
-nav.navbar.fixed-bottom .container a.active,
-nav.navbar.fixed-bottom .container a.active i {
-  color: #ff6600 !important;
-  font-weight: 600;
-}
-
-nav.navbar.fixed-bottom .container a small {
-  margin-top: 2px;
-  display: block;
-  font-size: 11px;
-}
-
-/* Mobile search full width */
-@media (max-width: 767px) {
-  .search-btn {
-    display: none !important;
-  }
-  .search-input {
-    width: 100% !important;
-    margin-right: 0 !important;
-  }
-}
-
+    /* Add bottom padding so content doesn't hide behind bottom nav */
+    .container.mt-4.mb-5 {
+      padding-bottom: 70px;
+    }
   </style>
 </head>
 
-<body class="bg-wallpaper">
+<body>
 
 <!-- Top Navbar -->
 <nav class="navbar bg-white shadow-sm">
   <div class="container-fluid d-flex align-items-center justify-content-between">
-    
+
     <!-- Brand -->
     <a class="navbar-brand d-flex align-items-center text-dark fw-bold" href="/">
       <img src="{{ url_for('static', filename='logo/shopluxe.png') }}" alt="ShopLuxe" style="height: 40px;">
       <span class="ms-2">ShopLuxe</span>
     </a>
 
-    <!-- Right Side Content -->
-    <div class="d-flex align-items-center ms-auto">
-      
+    <!-- Right Side -->
+    <div class="d-flex align-items-center ms-auto gap-2">
+
       <!-- Cart (Desktop only) -->
-      <a class="btn btn-custom me-2 d-none d-md-inline" href="{{ url_for('cart') }}">
+      <a class="btn btn-custom d-none d-md-inline" href="{{ url_for('cart') }}">
         🛒 Cart ({{ session.cart|length if session.cart else 0 }})
       </a>
 
-      <!-- Admin (Visible on all screens if logged in) -->
+      <!-- Admin -->
       {% if session.get('is_admin') %}
-<a class="btn btn-custom me-2" href="{{ url_for('admin_login') }}">
-⚙️ Admin
-</a>
-{% endif %}
+        <a class="btn btn-custom" href="{{ url_for('admin_login') }}">⚙️ Admin</a>
+      {% endif %}
 
       <!-- Profile/Login (Desktop only) -->
       {% if session.get('user_id') %}
-  <div class="dropdown d-none d-md-block me-2">
-    <button class="btn btn-custom dropdown-toggle" type="button" data-bs-toggle="dropdown">
-      👤 {{ session.get('user_name') }}
-    </button>
-    <ul class="dropdown-menu dropdown-menu-end">
-      <li><a class="dropdown-item" href="{{ url_for('profile') }}">My Profile</a></li>
-      <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
-    </ul>
-  </div>
-{% else %}
-  <div class="d-none d-md-block me-2">
-    <a class="btn btn-custom me-2" href="{{ url_for('login') }}">Login</a>
-    <a class="btn btn-custom" href="{{ url_for('signup') }}">Sign Up</a>
-  </div>
-{% endif %}
+        <div class="dropdown d-none d-md-block">
+          <button class="btn btn-custom dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            👤 {{ session.get('user_name') }}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ url_for('profile') }}">My Profile</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+          </ul>
+        </div>
+      {% else %}
+        <div class="d-none d-md-flex gap-2">
+          <a class="btn btn-custom" href="{{ url_for('login') }}">Login</a>
+          <a class="btn btn-custom" href="{{ url_for('signup') }}">Sign Up</a>
+        </div>
+      {% endif %}
 
-      <!-- 🛍️ Categories dropdown (Desktop only, on far right) -->
-<div class="dropdown d-none d-md-block">
-  <button class="btn btn-custom dropdown-toggle" type="button" data-bs-toggle="dropdown">
-    🛍️ Categories
-  </button>
-  <ul class="dropdown-menu dropdown-menu-end">
-    <li><a class="dropdown-item" href="{{ url_for('filtered', category='Shoes') }}">Shoes</a></li>
-    <li><a class="dropdown-item" href="{{ url_for('filtered', category='Tops') }}">Tops</a></li>
-    <li><a class="dropdown-item" href="{{ url_for('filtered', category='Bottoms') }}">Bottoms</a></li>
-    <li><a class="dropdown-item" href="{{ url_for('filtered', category='Men') }}">Men's</a></li>
-    <li><a class="dropdown-item" href="{{ url_for('filtered', category='Women') }}">Women's</a></li>
-    <li><a class="dropdown-item" href="{{ url_for('filtered', category='Kids') }}">Kid's</a></li>
-    <li><a class="dropdown-item" href="{{ url_for('filtered', category='Accessories') }}">Accessories</a></li>
-  </ul>
-</div>
-</div>
+      <!-- Categories (Desktop only) -->
+      <div class="dropdown d-none d-md-block">
+        <button class="btn btn-custom dropdown-toggle" type="button" data-bs-toggle="dropdown">
+          🛍️ Categories
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Shoes') }}">Shoes</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Tops') }}">Tops</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Bottoms') }}">Bottoms</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Men') }}">Men's</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Women') }}">Women's</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Kids') }}">Kid's</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Accessories') }}">Accessories</a></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
 </nav>
 
-
-
-
-
-
-
+<!-- Search Bar (Home page only) -->
 {% if active_page == 'home' %}
 <div class="container mt-3 position-relative" style="max-width: 700px;">
   <div class="input-group shadow-sm">
-    <input 
+    <input
       id="amazon-live-search"
       type="search"
       class="form-control py-2 px-3"
@@ -225,8 +163,7 @@ nav.navbar.fixed-bottom .container a small {
     </button>
   </div>
 
-  <!-- 🧩 Amazon-style dropdown -->
-  <div id="amazon-search-results" 
+  <div id="amazon-search-results"
        class="list-group position-absolute w-100 mt-1 bg-white border rounded shadow-sm"
        style="z-index: 2000; display: none; max-height: 320px; overflow-y: auto;">
   </div>
@@ -240,69 +177,46 @@ let searchTimeout = null;
 
 function renderResults(data, query) {
   if (!data.length) {
-    resultsBox.innerHTML = `
-      <div class="list-group-item text-center text-muted py-2">
-        No results found for "<strong>${query}</strong>"
-      </div>`;
+    resultsBox.innerHTML = `<div class="list-group-item text-center text-muted py-2">No results found for "<strong>${query}</strong>"</div>`;
     resultsBox.style.display = 'block';
     return;
   }
-
   let html = '';
   data.forEach(p => {
     html += `
-      <a href="/product/${p.id}" 
-         class="list-group-item list-group-item-action d-flex align-items-center py-2">
-        <img src="${p.image_url}" 
-             alt="${p.name}" 
-             style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; margin-right: 10px;">
+      <a href="/product/${p.id}" class="list-group-item list-group-item-action d-flex align-items-center py-2">
+        <img src="${p.image_url}" alt="${p.name}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; margin-right: 10px;">
         <div class="fw-semibold text-truncate" style="max-width: 400px;">${p.name}</div>
       </a>`;
   });
-
   resultsBox.innerHTML = html;
   resultsBox.style.display = 'block';
 }
 
 function performSearch() {
   const query = searchInput.value.trim();
-  if (!query) {
-    resultsBox.style.display = 'none';
-    return;
-  }
-
+  if (!query) { resultsBox.style.display = 'none'; return; }
   fetch(`/live_search?q=${encodeURIComponent(query)}`)
     .then(res => res.json())
     .then(data => renderResults(data, query))
     .catch(() => {
-      resultsBox.innerHTML = `
-        <div class="list-group-item text-danger text-center">
-          ⚠️ Error loading results
-        </div>`;
+      resultsBox.innerHTML = `<div class="list-group-item text-danger text-center">⚠️ Error loading results</div>`;
       resultsBox.style.display = 'block';
     });
 }
 
-// ⏳ Debounce search
 searchInput.addEventListener('input', () => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(performSearch, 300);
 });
-
-// 🔘 Manual trigger
 searchBtn.addEventListener('click', performSearch);
-
-// 🧭 Hide dropdown when clicking outside
 document.addEventListener('click', e => {
-  if (!e.target.closest('.container')) {
-    resultsBox.style.display = 'none';
-  }
+  if (!e.target.closest('.container')) resultsBox.style.display = 'none';
 });
 </script>
 {% endif %}
 
-
-<!-- Main content -->
+<!-- Main Content -->
 <div class="container mt-4 mb-5">
   {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -313,31 +227,6 @@ document.addEventListener('click', e => {
 </div>
 
 <!-- Bottom Navigation (Mobile Only) -->
-<nav class="navbar fixed-bottom bg-light d-md-none border-top shadow-sm">
-  <div class="container d-flex justify-content-around text-center py-1">
-    <!-- Categories -->
-    <div class="dropup">
-      <button class="btn btn-link text-dark text-decoration-none dropdown-toggle {% if active_page == 'categories' %}active{% endif %}" type="button" data-bs-toggle="dropdown">
-        <div><i class="bi bi-list-ul"></i></div>
-        <small>Categories</small>
-      </button>
-      <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="{{ url_for('filtered', category='Shoes') }}">Shoes</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('filtered', category='Tops') }}">Tops</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('filtered', category='Bottoms') }}">Bottoms</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('filtered', category='Men') }}">Men's</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('filtered', category='Women') }}">Women's</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('filtered', category='Kids') }}">Kid's</a></li>
-        <li><a class="dropdown-item" href="{{ url_for('filtered', category='Accessories') }}">Accessories</a>
-        </li>
-      </ul>
-    </div>
-
-      <!-- Bottom Navigation -->
-<nav class="navbar fixed-bottom bg-white d-md-none border-top shadow-sm">
-  <div class="container d-flex justify-content-around text-center py-1">
-
-    <!-- Mobile Bottom Navbar -->
 <nav class="navbar fixed-bottom bg-white d-md-none border-top shadow-sm">
   <div class="container d-flex justify-content-around text-center py-1">
 
@@ -348,12 +237,12 @@ document.addEventListener('click', e => {
     </a>
 
     <!-- Categories -->
-    <a href="{{ url_for('categories') }}" class="btn btn-link text-dark text-decoration-none {% if active_page == 'categories' %}active{% endif %}">
-      <div><i class="bi bi-grid-3x3-gap-fill fs-5"></i></div>
+    <a href="{{ url_for('categories') }}" class="{% if active_page == 'categories' %}active{% endif %}">
+      <i class="bi bi-grid-3x3-gap-fill fs-5"></i>
       <small>Categories</small>
     </a>
 
-    <!-- Cart with live count -->
+    <!-- Cart -->
     <a href="{{ url_for('cart') }}" class="position-relative {% if active_page == 'cart' %}active{% endif %}">
       <i class="bi bi-bag-fill fs-5"></i>
       <small>Cart</small>
@@ -363,7 +252,7 @@ document.addEventListener('click', e => {
       </span>
     </a>
 
-    <!-- Wishlist with live count -->
+    <!-- Wishlist -->
     <a href="{{ url_for('wishlist') }}" class="position-relative {% if active_page == 'wishlist' %}active{% endif %}">
       <i class="bi bi-heart fs-5"></i>
       <small>Wishlist</small>
@@ -386,9 +275,9 @@ document.addEventListener('click', e => {
       </a>
     {% endif %}
 
-    <!-- Admin (visible only to admins) -->
+    <!-- Admin (mobile) -->
     {% if session.get('is_admin') %}
-      <a href="{{ url_for('admin_login') }}" class="position-relative d-flex flex-column align-items-center text-decoration-none text-dark">
+      <a href="{{ url_for('admin_login') }}">
         <i class="bi bi-gear-fill fs-5"></i>
         <small>Admin</small>
       </a>
@@ -396,27 +285,15 @@ document.addEventListener('click', e => {
 
   </div>
 </nav>
-   <span id="cart-count"
-      class="position-absolute badge rounded-pill bg-danger text-white"
-      style="
-        font-size: 0.65rem;
-        top: 3px;
-        right: 12px;
-        transform: translate(25%, -25%);
-      ">
-  {{ session.get('cart', [])|length }}
-</span>
-</a>
 
+<!-- Live Count Scripts -->
 <script>
 function updateWishlistCount() {
   fetch('/wishlist_count')
     .then(res => res.json())
     .then(data => {
-      const countBadge = document.getElementById('wishlist-count');
-      if (countBadge) {
-        countBadge.textContent = data.count > 0 ? data.count : '';
-      }
+      const badge = document.getElementById('wishlist-count');
+      if (badge) badge.textContent = data.count > 0 ? data.count : '';
     });
 }
 
@@ -424,72 +301,13 @@ function updateCartCount() {
   fetch('/cart_count')
     .then(res => res.json())
     .then(data => {
-      const cartBadge = document.getElementById('cart-count');
-      if (cartBadge) {
-        cartBadge.textContent = data.count > 0 ? data.count : '';
-      }
+      const badge = document.getElementById('cart-count');
+      if (badge) badge.textContent = data.count > 0 ? data.count : '';
     });
 }
 
-// 🔄 Listen for global live update events
 document.addEventListener('wishlistChanged', updateWishlistCount);
 document.addEventListener('cartChanged', updateCartCount);
-</script>
-
-
-
-
-
-    <a href="{{ url_for('wishlist') }}" 
-   class="{% if active_page == 'wishlist' %}active{% endif %} position-relative d-flex flex-column align-items-center text-decoration-none text-dark">
-  
-  <i class="bi bi-heart fs-5"></i>
-  <small>Wishlist</small>
-
-  <!-- ❤️ Live count badge -->
-  <span id="wishlist-count"
-        class="position-absolute badge rounded-pill bg-danger text-white"
-        style="
-          font-size: 0.65rem;
-          top: 3px;
-          right: 18px;
-          transform: translate(25%, -25%);
-        ">
-    {{ session.get('wishlist', [])|length }}
-  </span>
-<!-- Profile/Login for mobile -->
-{% if session.get('user_id') %}
-  <a href="{{ url_for('profile') }}" class="{% if active_page == 'profile' %}active{% endif %}">
-    <i class="bi bi-person-fill fs-5"></i>
-    <small>Profile</small>
-  </a>
-{% else %}
-  <a href="{{ url_for('login') }}" class="{% if active_page == 'login' %}active{% endif %}">
-    <i class="bi bi-box-arrow-in-right fs-5"></i>
-    <small>Login</small>
-  </a>
-{% endif %}
-
-</div>
-</nav>
-
-<!-- ✅ Live Update Script -->
-<script>
-function updateWishlistCount() {
-  fetch('/wishlist_count')
-    .then(res => res.json())
-    .then(data => {
-      const countBadge = document.getElementById('wishlist-count');
-      if (countBadge) {
-        countBadge.textContent = data.count > 0 ? data.count : '';
-      }
-    });
-}
-
-// Listen for global wishlist toggle events
-document.addEventListener('wishlistChanged', updateWishlistCount);
-
-// (Optional) periodic refresh every 8 seconds
 setInterval(updateWishlistCount, 8000);
 </script>
 

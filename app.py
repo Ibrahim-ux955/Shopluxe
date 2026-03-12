@@ -333,10 +333,23 @@ def verify_payment():
         items = metadata.get("items", [])
         order_id = reference
 
+        # ✅ FIX 1: Duplicate order prevention
+        orders = load_orders()
+        if any(o.get("id") == order_id for o in orders):
+            return redirect(url_for("order_confirmation", reference=order_id))
+
         track_order_url = url_for("track_order", order_id=order_id, _external=True)
         product_list = "".join(
             f"<p>{i['name']} ({i.get('quantity',1)}x)</p>" for i in items
         )
+
+        # ✅ FIX 2: Stock deduction
+        products = load_data()
+        for item in items:
+            for product in products:
+                if product.get("name") == item.get("name"):
+                    product["stock"] = max(0, int(product.get("stock", 0)) - int(item.get("quantity", 1)))
+        save_data(products)
 
         # ------------------ SAVE ORDER ------------------ #
         new_order = {
@@ -345,17 +358,19 @@ def verify_payment():
             "email": email,
             "phone": phone,
             "amount": amount,
-            "total": amount,        # ✅ added for admin panel
-            "products": items,      # ✅ changed from "items" to "products"
+            "total": amount,
+            "products": items,
             "status": "Paid",
             "payment_status": "Paid",
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "order_time": datetime.now().strftime("%b %d, %Y, %I:%M %p"),
             "local_time": datetime.now().strftime("%b %d, %Y, %I:%M %p")
         }
-        orders = load_orders()
         orders.append(new_order)
         save_orders(orders)
+
+        # ✅ FIX 3: Clear cart after payment
+        session.pop('cart', None)
 
         # ------------------ SEND ADMIN EMAIL ------------------ #
         try:
@@ -390,7 +405,6 @@ def verify_payment():
     # ---------------- PAYMENT FAILED ---------------- #
     else:
         return render_template("failure.html", payment=payment_data)
-      
 
 @app.route('/orders')
 def orders():
