@@ -304,26 +304,46 @@ from datetime import datetime, timezone
 from flask import session, flash, redirect, url_for, render_template, request
 from urllib.parse import quote
 
+from urllib.parse import unquote
+
 @app.route('/verify_payment')
 def verify_payment():
-    reference = request.args.get('reference')
+    # ------------------ Get reference safely ------------------ #
+    reference = unquote(request.args.get('reference', '')).strip()
+    if not reference:
+        flash("⚠️ Payment reference is missing.")
+        return redirect(url_for("checkout"))
+
     headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
 
-    # Verify transaction with Paystack
-    response = requests.get(f"https://api.paystack.co/transaction/verify/{reference}", headers=headers)
-    result = response.json()
+    # ------------------ Verify transaction with Paystack ------------------ #
+    try:
+        response = requests.get(f"https://api.paystack.co/transaction/verify/{reference}", headers=headers)
+        response.raise_for_status()
+        result = response.json()
+    except Exception as e:
+        print("⚠️ Paystack verification failed:", e)
+        flash("⚠️ Payment verification failed. Please contact support.")
+        return redirect(url_for("checkout"))
 
-    if result.get("data", {}).get("status") == "success":
-
-        # Look up the order by reference in orders.json
+    # ------------------ Check if payment was successful ------------------ #
+    payment_data = result.get("data", {})
+    if payment_data.get("status") == "success":
+        # Load orders and search safely
         orders = load_orders()
-        order = next((o for o in orders if o.get("id") == reference), None)
+        order = next((o for o in orders if str(o.get("id")).strip() == reference), None)
+
+        if not order:
+            # Also check session fallback if order was just created
+            session_order_id = session.get('pending_order_id')
+            if session_order_id and session_order_id == reference:
+                order = next((o for o in orders if str(o.get("id")).strip() == session_order_id), None)
 
         if not order:
             flash("⚠️ Order not found. Please contact support.")
             return redirect(url_for("checkout"))
 
-        # Update order details
+        # ------------------ Update order ------------------ #
         order["status"] = "Paid"
         order["payment_status"] = "Paid"
         order["payment_reference"] = reference
@@ -332,7 +352,7 @@ def verify_payment():
 
         save_orders(orders)
 
-        # Send emails (same as before)
+        # ------------------ Send emails ------------------ #
         try:
             name = order["name"]
             email = order["email"]
@@ -368,13 +388,14 @@ def verify_payment():
         except Exception as e:
             print("⚠️ Email sending failed:", e)
 
+        # Clear pending order session
+        session.pop('pending_order_id', None)
+
         return redirect(url_for("order_confirmation", reference=reference))
 
-    # Payment failed
+    # ------------------ Payment failed ------------------ #
     else:
-        return render_template("failure.html", payment=result.get("data", {}))
-
-
+        return render_template("failure.html", payment=payment_data)
 
 
 @app.route('/orders')
@@ -1332,7 +1353,7 @@ from zoneinfo import ZoneInfo
 # -------- Checkout Route --------
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
-    cart = get_cart()  # load cart from session or cookies
+    cart = get_cart()
     products = load_data()
     cart_items = []
 
@@ -1352,8 +1373,14 @@ def checkout():
             product['images'] = products[index].get('images', [])
             cart_items.append(product)
 
-    total = sum(float(p['price']) * p['quantity'] for p in cart_items)
+    # Prevent empty checkout
+    if not cart_items:
+        flash("⚠️ Your cart is empty.")
+        return redirect(url_for("cart"))
 
+    total = sum(float(p.get('price', 0)) * p['quantity'] for p in cart_items)
+
+    # ------------------ POST: Place Order ------------------ #
     if request.method == 'POST':
         name = request.form.get('name')
         email = request.form.get('email')
@@ -1375,7 +1402,8 @@ def checkout():
         local_time = utc_now.astimezone(user_zone)
         formatted_time = local_time.strftime("%b %d, %Y, %I:%M %p")
 
-        order_id = str(uuid.uuid4())
+        # Better readable order ID
+        order_id = "ORD-" + uuid.uuid4().hex[:10].upper()
 
         # ------------------ Build order ------------------ #
         order = {
@@ -1402,30 +1430,30 @@ def checkout():
         }
 
         # ------------------ Save pending order ------------------ #
-        orders = load_orders()  # load existing orders
+        orders = load_orders()
         orders.append(order)
         save_orders(orders)
 
-        # Keep pending order in session for verification
-        session['pending_order'] = order
-        session.modified = True  # ensures session is updated
+        # Store only the ID in session (safer)
+        session['pending_order_id'] = order_id
+        session.modified = True
 
         # ------------------ Render Paystack payment page ------------------ #
         return render_template(
             'payment.html',
             email=email,
-            amount=int(total * 100),  # Paystack expects amount in kobo
-            paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY'),
-            reference=order_id
+            amount=int(total * 100),  # Paystack uses kobo
+            reference=order_id,
+            paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY')
         )
 
     # ------------------ GET method ------------------ #
     return render_template(
-    'checkout.html',
-    cart_items=cart_items,
-    total=total,
-    paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY')
-)
+        'checkout.html',
+        cart_items=cart_items,
+        total=total,
+        paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY')
+    )
 
 @app.route('/track-order/<order_id>')
 def track_order(order_id):
