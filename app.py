@@ -49,6 +49,29 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
 mail = Mail(app)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Helper functions
 def load_data():
     try:
@@ -284,39 +307,32 @@ from urllib.parse import quote
 @app.route('/verify_payment')
 def verify_payment():
     reference = request.args.get('reference')
-
     headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
+
+    # Verify transaction with Paystack
     response = requests.get(f"https://api.paystack.co/transaction/verify/{reference}", headers=headers)
     result = response.json()
 
-    # Payment success
     if result.get("data", {}).get("status") == "success":
-        orders = load_orders()
 
-        # ✅ Find the order by pending_order in session OR by id
-        order = session.get("pending_order") or next((o for o in orders if o.get("id") == reference), None)
+        # Look up the order by reference in orders.json
+        orders = load_orders()
+        order = next((o for o in orders if o.get("id") == reference), None)
 
         if not order:
-            flash("⚠️ No pending order found.")
+            flash("⚠️ Order not found. Please contact support.")
             return redirect(url_for("checkout"))
 
-        # Update order details after payment
+        # Update order details
         order["status"] = "Paid"
         order["payment_status"] = "Paid"
         order["payment_reference"] = reference
         order["paid_time"] = datetime.now(timezone.utc).isoformat()
-
-        # Ensure products field exists
         order["products"] = order.get("items", [])
-        order["items"] = None  # optional cleanup
 
-        # Update orders.json
-        if order not in orders:
-            orders.append(order)  # if session order was not saved yet
         save_orders(orders)
-        print("ORDER UPDATED:", order)
 
-        # ---------------- EMAILS ---------------- #
+        # Send emails (same as before)
         try:
             name = order["name"]
             email = order["email"]
@@ -330,7 +346,7 @@ def verify_payment():
                 name=name,
                 email=email,
                 phone=order.get("phone", "-"),
-                product_name="".join(f"<p>{i['name']} ({i.get('quantity', 1)}x)</p>" for i in order["products"]),
+                product_name="".join(f"<p>{i['name']} ({i.get('quantity',1)}x)</p>" for i in order["products"]),
                 total=total,
                 order_time=order.get("local_time", "-"),
                 track_order_url=track_order_url,
@@ -342,24 +358,22 @@ def verify_payment():
             user_html = render_template(
                 "emails/user_order_email.html",
                 name=name,
-                product_name="".join(f"<p>{i['name']} ({i.get('quantity', 1)}x)</p>" for i in order["products"]),
+                product_name="".join(f"<p>{i['name']} ({i.get('quantity',1)}x)</p>" for i in order["products"]),
                 total=total,
                 order_time=order.get("local_time", "-"),
                 track_order_url=track_order_url
             )
             send_email(email, "✅ Payment Received - ShopLuxe", user_html)
+
         except Exception as e:
             print("⚠️ Email sending failed:", e)
-
-        # ✅ Clear pending order from session
-        session.pop("pending_order", None)
-        session.pop("cart", None)
 
         return redirect(url_for("order_confirmation", reference=reference))
 
     # Payment failed
     else:
         return render_template("failure.html", payment=result.get("data", {}))
+
 
 
 
@@ -1405,11 +1419,12 @@ def checkout():
 
     # ------------------ GET method ------------------ #
     return render_template(
-        'checkout.html',
-        cart_items=cart_items,
-        total=total,
-        paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY')
-    )
+    'checkout.html',
+    cart_items=cart_items,
+    total=total,
+    paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY'),
+    order_id=order_id
+)
 
 @app.route('/track-order/<order_id>')
 def track_order(order_id):
