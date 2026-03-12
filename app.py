@@ -308,79 +308,64 @@ from urllib.parse import unquote
 
 @app.route('/verify_payment')
 def verify_payment():
-    # ------------------ Get reference safely ------------------ #
-    reference = unquote(request.args.get('reference', '')).strip()
-    if not reference:
-        flash("⚠️ Payment reference is missing.")
-        return redirect(url_for("checkout"))
 
+    reference = request.args.get('reference')
     headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
 
-    # ------------------ Verify transaction with Paystack ------------------ #
-    try:
-        response = requests.get(f"https://api.paystack.co/transaction/verify/{reference}", headers=headers)
-        response.raise_for_status()
-        result = response.json()
-    except Exception as e:
-        print("⚠️ Paystack verification failed:", e)
-        flash("⚠️ Payment verification failed. Please contact support.")
-        return redirect(url_for("checkout"))
-
-    # ------------------ Check if payment was successful ------------------ #
+    # Verify transaction with Paystack
+    response = requests.get(
+        f"https://api.paystack.co/transaction/verify/{reference}",
+        headers=headers
+    )
+    result = response.json()
     payment_data = result.get("data", {})
+
+    # ---------------- PAYMENT SUCCESS ---------------- #
     if payment_data.get("status") == "success":
-        # Load orders and search safely
-        orders = load_orders()
-        order = next((o for o in orders if str(o.get("id")).strip() == reference), None)
 
-        if not order:
-            # Also check session fallback if order was just created
-            session_order_id = session.get('pending_order_id')
-            if session_order_id and session_order_id == reference:
-                order = next((o for o in orders if str(o.get("id")).strip() == session_order_id), None)
+        # Extract customer details from Paystack response
+        # This assumes your checkout passes metadata (name, email, etc.) to Paystack
+        customer = payment_data.get("customer", {})
+        metadata = payment_data.get("metadata", {})
 
-        if not order:
-            flash("⚠️ Order not found. Please contact support ")
-            return redirect(url_for("checkout"))
+        name = metadata.get("name") or customer.get("first_name") or "Customer"
+        email = metadata.get("email") or customer.get("email")
+        phone = metadata.get("phone") or "-"
+        amount = payment_data.get("amount", 0) / 100  # Paystack amount is in kobo
+        items = metadata.get("items", [])  # pass items in metadata when creating payment
 
-        # ------------------ Update order ------------------ #
-        order["status"] = "Paid"
-        order["payment_status"] = "Paid"
-        order["payment_reference"] = reference
-        order["paid_time"] = datetime.now(timezone.utc).isoformat()
-        order["products"] = order.get("items", [])
+        # Generate a simple order ID from reference
+        order_id = reference
 
-        save_orders(orders)
+        # Track order URL
+        track_order_url = url_for("track_order", order_id=order_id, _external=True)
 
-        # ------------------ Send emails ------------------ #
+        # Build product list HTML
+        product_list = "".join(
+            f"<p>{i['name']} ({i.get('quantity',1)}x)</p>" for i in items
+        )
+
+        # ------------------ SEND ADMIN EMAIL ------------------ #
         try:
-            name = order["name"]
-            email = order["email"]
-            total = order["total"]
-            base_url = request.url_root.rstrip("/")
-            track_order_url = url_for("track_order", order_id=quote(order["id"]), _external=True)
-
-            # Admin email
             admin_html = render_template(
                 "emails/admin_order_email.html",
                 name=name,
                 email=email,
-                phone=order.get("phone", "-"),
-                product_name="".join(f"<p>{i['name']} ({i.get('quantity',1)}x)</p>" for i in order["products"]),
-                total=total,
-                order_time=order.get("local_time", "-"),
-                track_order_url=track_order_url,
-                base_url=base_url
+                phone=phone,
+                product_name=product_list,
+                total=amount,
+                order_time=datetime.now().strftime("%b %d, %Y, %I:%M %p"),
+                track_order_url=track_order_url
             )
-            send_email("vybezkhid7@gmail.com", "📦 New Paid Orders - ShopLuxe", admin_html)
+            send_email("vybezkhid7@gmail.com", "📦 New Paid Order - ShopLuxe", admin_html)
 
-            # User email
+            # ------------------ SEND USER EMAIL ------------------ #
             user_html = render_template(
                 "emails/user_order_email.html",
                 name=name,
-                product_name="".join(f"<p>{i['name']} ({i.get('quantity',1)}x)</p>" for i in order["products"]),
-                total=total,
-                order_time=order.get("local_time", "-"),
+                product_name=product_list,
+                total=amount,
+                order_time=datetime.now().strftime("%b %d, %Y, %I:%M %p"),
                 track_order_url=track_order_url
             )
             send_email(email, "✅ Payment Received - ShopLuxe", user_html)
@@ -388,15 +373,11 @@ def verify_payment():
         except Exception as e:
             print("⚠️ Email sending failed:", e)
 
-        # Clear pending order session
-        session.pop('pending_order_id', None)
+        return redirect(url_for("order_confirmation", reference=order_id))
 
-        return redirect(url_for("order_confirmation", reference=reference))
-
-    # ------------------ Payment failed ------------------ #
+    # ---------------- PAYMENT FAILED ---------------- #
     else:
         return render_template("failure.html", payment=payment_data)
-
 
 @app.route('/orders')
 def orders():
@@ -1373,21 +1354,18 @@ def checkout():
             product['images'] = products[index].get('images', [])
             cart_items.append(product)
 
-    # Prevent empty checkout
     if not cart_items:
         flash("⚠️ Your cart is empty.")
         return redirect(url_for("cart"))
 
     total = sum(float(p.get('price', 0)) * p['quantity'] for p in cart_items)
 
-    # ------------------ POST: Place Order ------------------ #
     if request.method == 'POST':
         name = request.form.get('name')
         email = request.form.get('email')
         phone = request.form.get('phone')
         timezone_str = request.form.get('timezone', 'UTC')
 
-        # ------------------ Validate ------------------ #
         if not name or not email or not phone:
             flash("❌ All fields are required.")
             return redirect(url_for('checkout'))
@@ -1405,49 +1383,32 @@ def checkout():
         # Better readable order ID
         order_id = "ORD-" + uuid.uuid4().hex[:10].upper()
 
-        # ------------------ Build order ------------------ #
-        order = {
-            'id': order_id,
-            'name': name,
-            'email': email,
-            'phone': phone,
-            'items': [
-                {
-                    "name": p["name"],
-                    "price": p["price"],
-                    "quantity": p["quantity"],
-                    "color": p.get("color", "-"),
-                    "size": p.get("size", "-"),
-                    "images": p.get("images", [])
-                } for p in cart_items
-            ],
-            'total': total,
-            'status': 'Pending',
-            'payment_status': 'Unpaid',
-            'timestamp': utc_now.isoformat(),
-            'local_time': formatted_time,
-            'timezone': timezone_str
+        # ------------------ Prepare metadata for Paystack ------------------ #
+        # All necessary info for sending email later
+        metadata = {
+            "name": name,
+            "email": email,
+            "phone": phone,
+            "timezone": timezone_str,
+            "local_time": formatted_time,
+            "items": cart_items
         }
-
-        # ------------------ Save pending order ------------------ #
-        orders = load_orders()
-        orders.append(order)
-        save_orders(orders)
-
-        # Store only the ID in session (safer)
-        session['pending_order_id'] = order_id
-        session.modified = True
 
         # ------------------ Render Paystack payment page ------------------ #
         return render_template(
             'payment.html',
             email=email,
+            name=name,
+            phone=phone,
+            timezone=timezone_str,
+            local_time=formatted_time,
+            cart_items=cart_items,
             amount=int(total * 100),  # Paystack uses kobo
             reference=order_id,
+            metadata=metadata,       # Pass metadata to your frontend JS
             paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY')
         )
 
-    # ------------------ GET method ------------------ #
     return render_template(
         'checkout.html',
         cart_items=cart_items,
