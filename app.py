@@ -378,6 +378,8 @@ def verify_payment():
     # ---------------- PAYMENT FAILED ---------------- #
     else:
         return render_template("failure.html", payment=payment_data)
+      
+      
 
 @app.route('/orders')
 def orders():
@@ -493,25 +495,15 @@ def live_search():
 
 
 
-# ✅ For production: use environment variable instead of hardcoding
-# (Set RESEND_API_KEY in Render environment variables)
-# resend.api_key = os.getenv("RESEND_API_KEY")
+resend.api_key = os.getenv("RESEND_API_KEY")  # uncomment this line!
 
 def send_email(to, subject, html):
-    """Reusable function to send emails via Resend"""
-    try:
-        resend.Emails.send({
-            "from": "Shopluxe <onboarding@resend.dev>",
-            "to": [to],
-            "subject": subject,
-            "html": html
-        })
-        print("✅ Email sent successfully")
-    except Exception as e:
-        print("❌ Email sending failed:", e)
-
-
-
+    resend.Emails.send({
+        "from": "Shopluxe <onboarding@resend.dev>",
+        "to": [to],
+        "subject": subject,
+        "html": html
+    })
 
 
 @app.route('/filtered/<category>')
