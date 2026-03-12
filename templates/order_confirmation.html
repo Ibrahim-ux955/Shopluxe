@@ -9,19 +9,19 @@
         <p><strong>Name:</strong> {{ order['name'] }}</p>
         <p><strong>Email:</strong> {{ order['email'] }}</p>
         <p><strong>Phone:</strong> {{ order['phone'] }}</p>
-        <p><strong>Order placed on:</strong> {{ order['local_time'] }} ({{ order['timezone'] }})</p>
+        <p><strong>Order placed on:</strong> {{ order.get('local_time') or order.get('order_time', '') }}</p>
 
         <h5 class="mt-4">Order Items</h5>
         <ul class="list-group mb-3">
-          {% for item in order['items'] %}
+          {% for item in order.get('products') or order.get('items', []) %}
             <li class="list-group-item d-flex justify-content-between">
-              {{ item['name'] }} x{{ item['quantity'] }}
-              <span>GH₵ {{ item['price'] }}</span>
+              {{ item['name'] }} x{{ item.get('quantity', 1) }}
+              <span>GH₵ {{ item.get('price', '') }}</span>
             </li>
           {% endfor %}
           <li class="list-group-item d-flex justify-content-between">
             <strong>Total:</strong>
-            <strong>GH₵ {{ order['total'] }}</strong>
+            <strong>GH₵ {{ order.get('total') or order.get('amount', '') }}</strong>
           </li>
         </ul>
 
