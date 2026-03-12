@@ -372,7 +372,7 @@ def verify_payment():
                 track_order_url=track_order_url,
                 base_url=base_url
             )
-            send_email("vybezkhid7@gmail.com", "📦 New Paid Order - ShopLuxe", admin_html)
+            send_email("vybezkhid7@gmail.com", "📦 New Paid Orders - ShopLuxe", admin_html)
 
             # User email
             user_html = render_template(
