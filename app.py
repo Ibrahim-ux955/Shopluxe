@@ -74,6 +74,12 @@ class Product(db.Model):
     images = db.Column(db.Text, default='[]')
     popularity = db.Column(db.Integer, default=0)
     timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    # ✅ ADD THESE
+    brand = db.Column(db.String(100), default='')
+    sku = db.Column(db.String(100), default='')
+    tags = db.Column(db.Text, default='[]')
+    delivery_info = db.Column(db.String(200), default='Delivery in 2-4 working days')
+    new_arrival = db.Column(db.Boolean, default=True)
 
     def to_dict(self):
         images = json.loads(self.images or '[]')
@@ -726,21 +732,7 @@ def admin():
     orders = [o.to_dict() for o in Order.query.order_by(Order.timestamp.desc()).all()]
     return render_template('admin.html', products=products, orders=orders)
   
-@app.route('/migrate_add_columns')
-def migrate_add_columns():
-    if not session.get('admin_logged_in'):
-        return redirect(url_for('admin_login'))
-    try:
-        with db.engine.connect() as conn:
-            conn.execute(db.text("ALTER TABLE products ADD COLUMN brand VARCHAR(100) DEFAULT ''"))
-            conn.execute(db.text("ALTER TABLE products ADD COLUMN sku VARCHAR(100) DEFAULT ''"))
-            conn.execute(db.text("ALTER TABLE products ADD COLUMN tags TEXT DEFAULT '[]'"))
-            conn.execute(db.text("ALTER TABLE products ADD COLUMN delivery_info VARCHAR(200) DEFAULT 'Delivery in 2-4 working days'"))
-            conn.execute(db.text("ALTER TABLE products ADD COLUMN new_arrival BOOLEAN DEFAULT 1"))
-            conn.commit()
-        return "✅ Columns added successfully!"
-    except Exception as e:
-        return f"⚠️ Error: {e}"
+
   
 @app.route('/delete/<product_id>', methods=['POST'])
 def delete(product_id):
