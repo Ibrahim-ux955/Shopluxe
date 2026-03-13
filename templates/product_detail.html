@@ -284,7 +284,7 @@ class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == produc
 </div>
 {% endif %}
 
-<form action="{{ url_for('add_to_cart', index=product.index) }}" method="POST" id="addToCartForm">
+<form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="POST" id="addToCartForm"></form>
 
 <div class="mb-3">
   <label class="small mb-1 d-block">Quantity</label>

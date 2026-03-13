@@ -4,23 +4,17 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
-from itsdangerous import URLSafeTimedSerializer  # ✅ Add this
+from flask_sqlalchemy import SQLAlchemy
+from itsdangerous import URLSafeTimedSerializer
 import os, json, uuid
 from uuid import uuid4
-from datetime import datetime,timezone, timedelta 
+from datetime import datetime, timezone, timedelta
 import resend
-from flask import Flask
 import requests
-
-
 from werkzeug.middleware.proxy_fix import ProxyFix
-from urllib.parse import unquote
-from urllib.parse import quote
-from flask import url_for
+from urllib.parse import unquote, quote
 from dotenv import load_dotenv
-load_dotenv()  # ✅ Load environment variables from .env (Render handles this automatically)
-
-
+load_dotenv()
 
 app = Flask(__name__)
 app.jinja_env.globals['session'] = session
@@ -28,16 +22,15 @@ app.secret_key = 'secret123'
 app.config['UPLOAD_FOLDER'] = 'static/shoes'
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# ✅ Add this line below secret key
+# ✅ SQLite Database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shopluxe.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
 serializer = URLSafeTimedSerializer(app.secret_key)
-
-
-DATA_FILE = 'data.json'
-RESTOCK_FILE = 'restock_requests.json'
-REVIEWS_FILE = 'reviews.json'
-USERS_FILE = 'users.json'
 ADMIN_PASSWORD = 'Mohammed_@3'
-
+MAX_ATTEMPTS = 5
+LOCKOUT_DURATION = timedelta(minutes=5)
 
 # Email config
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
@@ -48,143 +41,280 @@ app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
 mail = Mail(app)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Helper functions
-def load_data():
-    try:
-        if not os.path.exists(DATA_FILE):
-            return []
-
-        with open(DATA_FILE, "r") as f:
-            return json.load(f)
-
-    except (json.JSONDecodeError, FileNotFoundError):
-        return []
-
-
-def save_data(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f, indent=4)
-
-def load_restock_requests():
-    if not os.path.exists(RESTOCK_FILE): return []
-    with open(RESTOCK_FILE, 'r') as f: return json.load(f)
-
-def save_restock_requests(data):
-    with open(RESTOCK_FILE, 'w') as f: json.dump(data, f, indent=4)
-
-def load_reviews():
-    if not os.path.exists(REVIEWS_FILE): return []
-    with open(REVIEWS_FILE, 'r') as f: return json.load(f)
-
-def save_reviews(data):
-    with open(REVIEWS_FILE, 'w') as f: json.dump(data, f, indent=4)
-
-def load_users():
-    if not os.path.exists(USERS_FILE): return []
-    with open(USERS_FILE, 'r') as f: return json.load(f)
-
-def save_users(data):
-    with open(USERS_FILE, 'w') as f: json.dump(data, f, indent=4)
-
-# Get all products
-def get_all_products():
-    return load_data()  # Returns the full list of products
-
-# Get products by category
-def get_products_by_category(category):
-    products = load_data()
-    return [p for p in products if p.get('category', '').lower() == category.lower()]
-
-# Get featured products (e.g., newest 4 products)
-def get_featured_products():
-    products = load_data()
-    # Sort products by timestamp descending
-    products_sorted = sorted(products, key=lambda x: x.get('timestamp', ''), reverse=True)
-    return products_sorted[:4]  # Returns top 4 newest products
-  
-import os, json
-from datetime import datetime, timedelta
-
-# ✅ Define orders file path (consistent with your setup)
-ORDERS_FILE = os.path.join(os.path.dirname(__file__), "data/orders.json")
-
-
-import os, json
-from datetime import datetime, timezone, timedelta
-
-ORDERS_FILE = os.path.join(os.path.dirname(__file__), "data/orders.json")
-
-def load_orders():
-    try:
-        with open(ORDERS_FILE, 'r') as f:
-            orders = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
-
-    now = datetime.now(timezone.utc)
-
-    for o in orders:
-        # Normalize old timestamps
-        for key in ['delivered_time', 'cancelled_time', 'completed_time', 'paid_time']:
-            if key in o and isinstance(o[key], str) and 'T' in o[key]:
-                try:
-                    o[key] = datetime.fromisoformat(o[key]).strftime("%Y-%m-%d %H:%M:%S")
-                except Exception:
-                    pass
-
-        # Expire unpaid orders older than 15 mins
-        if o.get("payment_status") == "Unpaid":
-            try:
-                order_time = datetime.fromisoformat(o.get("timestamp"))
-                if now - order_time > timedelta(minutes=15):
-                    o['status'] = 'Expired'
-            except Exception:
-                pass
-
-    save_orders(orders)
-    return orders
-
-def save_orders(data):
-    with open(ORDERS_FILE, 'w') as f:
-        json.dump(data, f, indent=4)
-
-
-# Routes
-
-# Load Paystack keys from environment
-
-# ✅ Fetch Paystack keys from .env
 PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY")
 PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
+print("PAYSTACK_PUBLIC_KEY:", PAYSTACK_PUBLIC_KEY)
 
-print("PAYSTACK_PUBLIC_KEY:", PAYSTACK_PUBLIC_KEY)  # 🔍 Debug: should start with pk_live_ or pk_test_
+resend.api_key = os.getenv("RESEND_API_KEY")
+
+# ============================================================
+# DATABASE MODELS
+# ============================================================
+
+class Product(db.Model):
+    __tablename__ = 'products'
+    id = db.Column(db.String, primary_key=True, default=lambda: str(uuid4()))
+    name = db.Column(db.String, nullable=False)
+    price = db.Column(db.String, nullable=False)
+    sale_price = db.Column(db.String, nullable=True)
+    on_sale = db.Column(db.Boolean, default=False)
+    featured = db.Column(db.Boolean, default=False)
+    category = db.Column(db.String, default='')
+    description = db.Column(db.Text, default='')
+    stock = db.Column(db.Integer, default=0)
+    colors = db.Column(db.Text, default='[]')   # JSON string
+    sizes = db.Column(db.Text, default='[]')    # JSON string
+    images = db.Column(db.Text, default='[]')   # JSON string
+    popularity = db.Column(db.Integer, default=0)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'price': self.price,
+            'sale_price': self.sale_price,
+            'on_sale': self.on_sale,
+            'featured': self.featured,
+            'category': self.category,
+            'description': self.description,
+            'stock': self.stock,
+            'colors': json.loads(self.colors or '[]'),
+            'sizes': json.loads(self.sizes or '[]'),
+            'images': json.loads(self.images or '[]'),
+            'image': json.loads(self.images or '[]')[0] if json.loads(self.images or '[]') else None,
+            'popularity': self.popularity,
+            'timestamp': self.timestamp
+        }
 
 
+class Order(db.Model):
+    __tablename__ = 'orders'
+    id = db.Column(db.String, primary_key=True)
+    name = db.Column(db.String, default='')
+    email = db.Column(db.String, default='')
+    phone = db.Column(db.String, default='')
+    amount = db.Column(db.Float, default=0)
+    total = db.Column(db.Float, default=0)
+    products = db.Column(db.Text, default='[]')   # JSON string
+    status = db.Column(db.String, default='Pending')
+    payment_status = db.Column(db.String, default='Unpaid')
+    timestamp = db.Column(db.String, default='')
+    order_time = db.Column(db.String, default='')
+    local_time = db.Column(db.String, default='')
+    delivered_time = db.Column(db.String, default='')
+    cancelled_time = db.Column(db.String, default='')
+    completed_time = db.Column(db.String, default='')
+    timezone = db.Column(db.String, default='UTC')
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'phone': self.phone,
+            'amount': self.amount,
+            'total': self.total,
+            'products': json.loads(self.products or '[]'),
+            'status': self.status,
+            'payment_status': self.payment_status,
+            'timestamp': self.timestamp,
+            'order_time': self.order_time,
+            'local_time': self.local_time,
+            'delivered_time': self.delivered_time,
+            'cancelled_time': self.cancelled_time,
+            'completed_time': self.completed_time,
+            'timezone': self.timezone
+        }
+
+
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.String, primary_key=True, default=lambda: str(uuid4()))
+    name = db.Column(db.String, nullable=False)
+    email = db.Column(db.String, unique=True, nullable=False)
+    password = db.Column(db.String, nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'password': self.password,
+            'is_admin': self.is_admin
+        }
+
+
+class Review(db.Model):
+    __tablename__ = 'reviews'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    product_id = db.Column(db.String, default='')
+    product_index = db.Column(db.Integer, default=0)
+    name = db.Column(db.String, default='')
+    comment = db.Column(db.Text, default='')
+    rating = db.Column(db.Integer, default=5)
+    user_id = db.Column(db.String, default='')
+    user_email = db.Column(db.String, default='')
+    timestamp = db.Column(db.String, default='')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'product_id': self.product_id,
+            'product_index': self.product_index,
+            'name': self.name,
+            'comment': self.comment,
+            'rating': self.rating,
+            'user_id': self.user_id,
+            'user_email': self.user_email,
+            'timestamp': self.timestamp
+        }
+
+
+# ============================================================
+# HELPER FUNCTIONS (replacing JSON load/save)
+# ============================================================
+
+def load_data():
+    return [p.to_dict() for p in Product.query.all()]
+
+def save_data(products_list):
+    pass  # No longer needed — use db directly
+
+def load_orders():
+    orders = Order.query.all()
+    result = []
+    now = datetime.now(timezone.utc)
+    for o in orders:
+        d = o.to_dict()
+        # Expire unpaid orders older than 15 mins
+        if d.get('payment_status') == 'Unpaid' and d.get('timestamp'):
+            try:
+                order_time = datetime.fromisoformat(d['timestamp'])
+                if order_time.tzinfo is None:
+                    order_time = order_time.replace(tzinfo=timezone.utc)
+                if now - order_time > timedelta(minutes=15):
+                    o.status = 'Expired'
+                    d['status'] = 'Expired'
+                    db.session.commit()
+            except Exception:
+                pass
+        result.append(d)
+    return result
+
+def save_orders(orders_list):
+    pass  # No longer needed — use db directly
+
+def load_users():
+    return [u.to_dict() for u in User.query.all()]
+
+def save_users(users_list):
+    pass  # No longer needed — use db directly
+
+def load_reviews():
+    return [r.to_dict() for r in Review.query.all()]
+
+def save_reviews(reviews_list):
+    pass  # No longer needed — use db directly
+
+def get_all_products():
+    return load_data()
+
+def get_products_by_category(category):
+    return [p for p in load_data() if p.get('category', '').lower() == category.lower()]
+
+def get_featured_products():
+    products = sorted(load_data(), key=lambda x: x.get('timestamp', ''), reverse=True)
+    return products[:4]
+
+@app.route('/migrate_json_to_db')
+def migrate_json_to_db():
+    if not session.get('admin_logged_in'):
+        return "Not authorized", 403
+
+    # Migrate products
+    try:
+        with open('data.json', 'r') as f:
+            products = json.load(f)
+        for p in products:
+            if not Product.query.get(p.get('id')):
+                db.session.add(Product(
+                    id=p.get('id', str(uuid4())),
+                    name=p.get('name', ''),
+                    price=str(p.get('price', '')),
+                    sale_price=str(p.get('sale_price', '')) if p.get('sale_price') else None,
+                    on_sale=p.get('on_sale', False),
+                    featured=p.get('featured', False),
+                    category=p.get('category', ''),
+                    description=p.get('description', ''),
+                    stock=int(p.get('stock', 0)),
+                    colors=json.dumps(p.get('colors', [])),
+                    sizes=json.dumps(p.get('sizes', [])),
+                    images=json.dumps(p.get('images', [])),
+                    popularity=p.get('popularity', 0)
+                ))
+    except Exception as e:
+        print("Products migration error:", e)
+
+    # Migrate orders
+    try:
+        orders_file = os.path.join(os.path.dirname(__file__), "data/orders.json")
+        with open(orders_file, 'r') as f:
+            orders = json.load(f)
+        for o in orders:
+            if not Order.query.get(o.get('id')):
+                db.session.add(Order(
+                    id=o.get('id', str(uuid4())),
+                    name=o.get('name', ''),
+                    email=o.get('email', ''),
+                    phone=o.get('phone', ''),
+                    amount=float(o.get('amount', 0)),
+                    total=float(o.get('total', 0)),
+                    products=json.dumps(o.get('products') or o.get('items', [])),
+                    status=o.get('status', 'Pending'),
+                    payment_status=o.get('payment_status', 'Unpaid'),
+                    timestamp=o.get('timestamp', ''),
+                    order_time=o.get('order_time', ''),
+                    local_time=o.get('local_time', '')
+                ))
+    except Exception as e:
+        print("Orders migration error:", e)
+
+    # Migrate users
+    try:
+        with open('users.json', 'r') as f:
+            users = json.load(f)
+        for u in users:
+            if not User.query.filter_by(email=u.get('email')).first():
+                db.session.add(User(
+                    id=u.get('id', str(uuid4())),
+                    name=u.get('name', ''),
+                    email=u.get('email', ''),
+                    password=u.get('password', ''),
+                    is_admin=u.get('is_admin', False)
+                ))
+    except Exception as e:
+        print("Users migration error:", e)
+
+    # Migrate reviews
+    try:
+        with open('reviews.json', 'r') as f:
+            reviews = json.load(f)
+        for r in reviews:
+            db.session.add(Review(
+                product_id=str(r.get('product_id', '')),
+                product_index=r.get('product_index', 0),
+                name=r.get('name', ''),
+                comment=r.get('comment', ''),
+                rating=r.get('rating', 5),
+                timestamp=r.get('timestamp', '')
+            ))
+    except Exception as e:
+        print("Reviews migration error:", e)
+
+    db.session.commit()
+    return "✅ Migration complete!"
 
 
 @app.route('/', endpoint='home')
@@ -265,28 +395,24 @@ def initialize_payment():
     data = request.get_json()
     email = data.get('email')
     amount = int(data.get('amount')) * 100
-    reference = str(uuid4())  # unique reference for this order
+    reference = str(uuid4())
 
-    # Build the pending order
-    pending_order = {
-        "id": str(uuid4()),
-        "name": data.get("name"),
-        "email": email,
-        "phone": data.get("phone"),
-        "items": data.get("items"),   # cart items
-        "total": data.get("amount"),
-        "status": "Pending",
-        "payment_status": "Unpaid",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "local_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "payment_reference": reference
-    }
+    # ✅ Save pending order to database
+    pending_order = Order(
+        id=str(uuid4()),
+        name=data.get("name"),
+        email=email,
+        phone=data.get("phone"),
+        products=json.dumps(data.get("items", [])),
+        total=data.get("amount"),
+        status="Pending",
+        payment_status="Unpaid",
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        local_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    )
+    db.session.add(pending_order)
+    db.session.commit()
 
-    orders = load_orders()
-    orders.append(pending_order)
-    save_orders(orders)
-
-    # Initialize Paystack
     headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}", "Content-Type": "application/json"}
     payload = {
         "email": email,
@@ -294,10 +420,8 @@ def initialize_payment():
         "reference": reference,
         "callback_url": url_for('verify_payment', _external=True)
     }
-
     response = requests.post("https://api.paystack.co/transaction/initialize", json=payload, headers=headers)
     return jsonify(response.json())
-
 
 import os, json
 from datetime import datetime, timezone
@@ -312,7 +436,6 @@ def verify_payment():
     reference = request.args.get('reference')
     headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
 
-    # Verify transaction with Paystack
     response = requests.get(
         f"https://api.paystack.co/transaction/verify/{reference}",
         headers=headers
@@ -320,7 +443,6 @@ def verify_payment():
     result = response.json()
     payment_data = result.get("data", {})
 
-    # ---------------- PAYMENT SUCCESS ---------------- #
     if payment_data.get("status") == "success":
 
         customer = payment_data.get("customer", {})
@@ -334,8 +456,7 @@ def verify_payment():
         order_id = reference
 
         # ✅ FIX 1: Duplicate order prevention
-        orders = load_orders()
-        if any(o.get("id") == order_id for o in orders):
+        if Order.query.get(order_id):
             return redirect(url_for("order_confirmation", reference=order_id))
 
         track_order_url = url_for("track_order", order_id=order_id, _external=True)
@@ -344,54 +465,47 @@ def verify_payment():
         )
 
         # ✅ FIX 2: Stock deduction
-        products = load_data()
         for item in items:
-            for product in products:
-                if product.get("name") == item.get("name"):
-                    product["stock"] = max(0, int(product.get("stock", 0)) - int(item.get("quantity", 1)))
-        save_data(products)
+            product = Product.query.filter_by(name=item.get("name")).first()
+            if product:
+                product.stock = max(0, product.stock - int(item.get("quantity", 1)))
+        db.session.commit()
 
-        # ------------------ SAVE ORDER ------------------ #
-        new_order = {
-            "id": order_id,
-            "name": name,
-            "email": email,
-            "phone": phone,
-            "amount": amount,
-            "total": amount,
-            "products": items,
-            "status": "Paid",
-            "payment_status": "Paid",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "order_time": datetime.now().strftime("%b %d, %Y, %I:%M %p"),
-            "local_time": datetime.now().strftime("%b %d, %Y, %I:%M %p")
-        }
-        orders.append(new_order)
-        save_orders(orders)
+        # ✅ Save order
+        new_order = Order(
+            id=order_id,
+            name=name,
+            email=email,
+            phone=phone,
+            amount=amount,
+            total=amount,
+            products=json.dumps(items),
+            status="Paid",
+            payment_status="Paid",
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            order_time=datetime.now().strftime("%b %d, %Y, %I:%M %p"),
+            local_time=datetime.now().strftime("%b %d, %Y, %I:%M %p")
+        )
+        db.session.add(new_order)
+        db.session.commit()
 
-        # ✅ FIX 3: Clear cart after payment
+        # ✅ FIX 3: Clear cart
         session.pop('cart', None)
 
-        # ------------------ SEND ADMIN EMAIL ------------------ #
+        # ✅ Send emails
         try:
             admin_html = render_template(
                 "emails/admin_order_email.html",
-                name=name,
-                email=email,
-                phone=phone,
-                product_name=product_list,
-                total=amount,
+                name=name, email=email, phone=phone,
+                product_name=product_list, total=amount,
                 order_time=datetime.now().strftime("%b %d, %Y, %I:%M %p"),
                 track_order_url=track_order_url
             )
             send_email("vybezkhid7@gmail.com", "📦 New Paid Order - ShopLuxe", admin_html)
 
-            # ------------------ SEND USER EMAIL ------------------ #
             user_html = render_template(
                 "emails/user_order_email.html",
-                name=name,
-                product_name=product_list,
-                total=amount,
+                name=name, product_name=product_list, total=amount,
                 order_time=datetime.now().strftime("%b %d, %Y, %I:%M %p"),
                 track_order_url=track_order_url
             )
@@ -402,7 +516,6 @@ def verify_payment():
 
         return redirect(url_for("order_confirmation", reference=order_id))
 
-    # ---------------- PAYMENT FAILED ---------------- #
     else:
         return render_template("failure.html", payment=payment_data)
 
@@ -412,22 +525,12 @@ def orders():
         flash("❌ Please login first.")
         return redirect(url_for('login'))
 
-    all_orders = load_orders()
+    # ✅ Query directly from database
+    user_orders = Order.query.filter_by(email=session['user_email']).all()
+    user_orders = [o.to_dict() for o in user_orders]
 
-    # Show all orders for this logged-in user
-    user_orders = [o for o in all_orders if o.get('email') == session['user_email']]
-
-    # Normalize orders for display
     for order in user_orders:
-        order['status'] = order.get('status', 'Pending')
-        order['payment_status'] = order.get('payment_status', 'Unpaid')
         order['local_time'] = order.get('local_time') or order.get('order_time', 'N/A')
-
-        # Support both 'items' and 'products'
-        if 'items' in order and not order.get('products'):
-            order['products'] = order['items']
-
-        # Fallback for legacy single-item orders
         if not order.get('products'):
             order['products'] = [{
                 'name': order.get('product_name', 'Unknown Product'),
@@ -619,12 +722,10 @@ def admin():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
 
-    # Load data
     products = load_data()
     reviews = load_reviews()
-    orders = load_orders()  # ✅ loads all orders, including pending
+    orders = load_orders()
 
-    # ---------------------- ADD NEW PRODUCT ---------------------- #
     if request.method == 'POST':
         name = request.form.get('name', '').title()
         price = request.form.get('price', '')
@@ -632,16 +733,13 @@ def admin():
         description = request.form.get('description', '')
         stock = int(request.form.get('stock', 0))
 
-        # Sale & Featured
         on_sale = 'on_sale' in request.form
         sale_price = request.form.get('sale_price', '')
         featured = 'featured' in request.form
 
-        # Colors & Sizes
         colors = [c.strip() for c in request.form.get('colors', '').split(',')] if request.form.get('colors') else []
         sizes = [s.strip() for s in request.form.get('sizes', '').split(',')] if request.form.get('sizes') else []
 
-        # Validate sale price
         if on_sale and sale_price:
             try:
                 if float(sale_price) >= float(price):
@@ -651,7 +749,6 @@ def admin():
                 flash("⚠️ Invalid sale price entered.")
                 return redirect(url_for('admin'))
 
-        # Handle image uploads
         uploaded_files = request.files.getlist('images')
         if not uploaded_files or all(f.filename == '' for f in uploaded_files):
             flash("❌ Please upload at least one image.")
@@ -664,31 +761,29 @@ def admin():
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 image_filenames.append(filename)
 
-        # Create new product
-        new_product = {
-            'id': str(uuid4()),
-            'name': name,
-            'price': price,
-            'sale_price': sale_price if on_sale and sale_price else None,
-            'on_sale': on_sale,
-            'featured': featured,
-            'category': category,
-            'description': description,
-            'stock': stock,
-            'colors': colors,
-            'sizes': sizes,
-            'images': image_filenames,
-            'timestamp': datetime.now(timezone.utc).isoformat()
-        }
-
-        products.append(new_product)
-        save_data(products)
+        # ✅ Save to database
+        new_product = Product(
+            id=str(uuid4()),
+            name=name,
+            price=price,
+            sale_price=sale_price if on_sale and sale_price else None,
+            on_sale=on_sale,
+            featured=featured,
+            category=category,
+            description=description,
+            stock=stock,
+            colors=json.dumps(colors),
+            sizes=json.dumps(sizes),
+            images=json.dumps(image_filenames),
+            timestamp=datetime.now(timezone.utc)
+        )
+        db.session.add(new_product)
+        db.session.commit()
         flash("✅ Product added successfully!")
         return redirect(url_for('admin'))
 
-    # ---------------------- NORMALIZE ORDERS ---------------------- #
+    # Normalize orders for display
     for order in orders:
-        # Ensure essential fields exist
         order['id'] = order.get('id', str(uuid4()))
         order['status'] = order.get('status', 'Pending')
         order['payment_status'] = order.get('payment_status', 'Unpaid')
@@ -698,11 +793,6 @@ def admin():
             order['local_time'] if order['status'] == 'Cancelled' else ''
         )
 
-        # Support both 'items' and 'products'
-        if 'items' in order and not order.get('products'):
-            order['products'] = order['items']
-
-        # Fallback for legacy single-item orders
         if not order.get('products'):
             order['products'] = [{
                 'name': order.get('product_name', 'Unknown Product'),
@@ -712,20 +802,9 @@ def admin():
                 'size': order.get('size', '-')
             }]
 
-        # Expire unpaid orders older than 15 mins
-        if order.get("payment_status") == "Unpaid":
-            try:
-                order_time = datetime.fromisoformat(order.get("timestamp"))
-                if datetime.now(timezone.utc) - order_time > timedelta(minutes=15):
-                    order['status'] = 'Expired'
-            except Exception:
-                pass
-
-        # Mark paid orders clearly for display
         if order.get('payment_status') == 'Paid' and order['status'] == 'Pending':
             order['status'] = 'Paid'
 
-        # Unified completed_time for template
         if order['status'] == 'Delivered':
             order['completed_time'] = order['delivered_time']
         elif order['status'] == 'Cancelled':
@@ -735,7 +814,6 @@ def admin():
         else:
             order['completed_time'] = ''
 
-    # ---------------------- RENDER TEMPLATE ---------------------- #
     return render_template(
         'admin.html',
         products=products,
@@ -744,9 +822,6 @@ def admin():
         current_time=datetime.now(timezone.utc),
         active_page='admin'
     )
-
-
-
 
   # <-- Add this
 @app.template_filter('todatetime')
@@ -778,27 +853,24 @@ def signup():
             flash("❌ All fields are required.")
             return redirect(url_for('signup'))
 
-        users = load_users()
-        if any(u['email'] == email for u in users):
+        # ✅ Check if email already exists
+        if User.query.filter_by(email=email).first():
             flash("❌ Email already registered.")
             return redirect(url_for('signup'))
 
-        hashed_password = generate_password_hash(password)
-        users.append({'name': name, 'email': email, 'password': hashed_password})
-        save_users(users)
+        # ✅ Save to database
+        new_user = User(
+            id=str(uuid4()),
+            name=name,
+            email=email,
+            password=generate_password_hash(password)
+        )
+        db.session.add(new_user)
+        db.session.commit()
 
-        # Send welcome email
         try:
             msg = Message("🎉 Welcome to ShopLuxe!", recipients=[email])
-            msg.body = f"""Hello {name},
-
-Thanks for signing up with ShopLuxe!
-
-You can now log in and start exploring amazing products.
-
-Best regards,  
-ShopLuxe Team
-"""
+            msg.body = f"Hello {name},\n\nThanks for signing up with ShopLuxe!\n\nBest regards,\nShopLuxe Team"
             mail.send(msg)
         except Exception as e:
             print("Email send failed:", e)
@@ -809,30 +881,23 @@ ShopLuxe Team
     return render_template('signup.html')
 
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-
         email = request.form.get('email')
         password = request.form.get('password')
 
-        users = load_users()
+        # ✅ Query from database
+        user = User.query.filter_by(email=email).first()
 
-        user = next((u for u in users if u['email'] == email), None)
-
-        if user and check_password_hash(user['password'], password):
-
+        if user and check_password_hash(user.password, password):
             session.clear()
-
-            session['user_id'] = user['id']
-            session['user_name'] = user['name']
-            session['user_email'] = user['email']
-            session['is_admin'] = user.get('is_admin', False)
-
+            session['user_id'] = user.id
+            session['user_name'] = user.name
+            session['user_email'] = user.email
+            session['is_admin'] = user.is_admin
             flash("✅ Logged in successfully.")
             return redirect(url_for('profile'))
-
         else:
             flash("❌ Invalid credentials.")
             return redirect(url_for('login'))
@@ -844,8 +909,9 @@ def login():
 def forgot_password():
     if request.method == 'POST':
         email = request.form.get('email')
-        users = load_users()
-        user = next((u for u in users if u['email'] == email), None)
+
+        # ✅ Query from database
+        user = User.query.filter_by(email=email).first()
 
         if not user:
             flash("❌ Email not found.")
@@ -868,15 +934,11 @@ def forgot_password():
 
     return render_template('forgot_password.html')
 
-# Admin login lockout config
-MAX_ATTEMPTS = 5
-LOCKOUT_DURATION = timedelta(minutes=5)
-
 
 @app.route('/reset_with_token/<token>', methods=['GET', 'POST'])
 def reset_with_token(token):
     try:
-        email = serializer.loads(token, salt='reset-password', max_age=1800)  # 30 min
+        email = serializer.loads(token, salt='reset-password', max_age=1800)
     except:
         flash("❌ Reset link expired or invalid.")
         return redirect(url_for('forgot_password'))
@@ -887,11 +949,11 @@ def reset_with_token(token):
             flash("❌ Please enter a new password.")
             return redirect(url_for('reset_with_token', token=token))
 
-        users = load_users()
-        user = next((u for u in users if u['email'] == email), None)
+        # ✅ Query from database
+        user = User.query.filter_by(email=email).first()
         if user:
-            user['password'] = generate_password_hash(new_password)
-            save_users(users)
+            user.password = generate_password_hash(new_password)
+            db.session.commit()
             flash("✅ Password reset successful. Please log in.")
             return redirect(url_for('login'))
 
@@ -910,123 +972,106 @@ def load_json(filename):
 
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
-    if 'user' not in session:
+    if not session.get('user_id'):
         flash("⚠️ Please log in first.")
         return redirect(url_for('login'))
 
-    users = load_users()
-    user = next((u for u in users if u['email'] == session['user']['email']), None)
+    # ✅ Query from database
+    user = User.query.get(session['user_id'])
     if not user:
         flash("⚠️ User not found.")
         return redirect(url_for('login'))
 
-    # ✅ Load all orders and reviews
-    orders = load_json('data/orders.json')
-    reviews = load_json('data/reviews.json')
+    # ✅ Load orders and reviews from database
+    user_orders = Order.query.filter_by(email=user.email).all()
+    user_reviews = Review.query.filter_by(user_email=user.email).all()
 
-    # ✅ Filter for this specific user
-    user_orders = [o for o in orders if o.get('user_email') == user['email']]
-    user_reviews = [r for r in reviews if r.get('user_email') == user['email']]
-
-    # ✅ Compute totals
-    total_spent = sum(o.get('total', 0) for o in user_orders)
-    order_count = len(user_orders)
-    review_count = len(user_reviews)
-
+    total_spent = sum(o.total or 0 for o in user_orders)
     user_stats = {
-        "orders": order_count,
-        "reviews": review_count,
+        "orders": len(user_orders),
+        "reviews": len(user_reviews),
         "spent": total_spent
     }
 
-    # ✅ Handle profile update
     if request.method == 'POST':
         current_password = request.form.get('current_password')
         new_name = request.form.get('name')
         new_password = request.form.get('password')
 
-        if not check_password_hash(user['password'], current_password):
+        if not check_password_hash(user.password, current_password):
             flash("❌ Incorrect current password.")
             return redirect(url_for('profile'))
 
-        user['name'] = new_name or user['name']
+        user.name = new_name or user.name
         if new_password:
-            user['password'] = generate_password_hash(new_password)
+            user.password = generate_password_hash(new_password)
 
-        save_users(users)
+        db.session.commit()
+        session['user_name'] = user.name
         flash("✅ Profile updated successfully.")
         return redirect(url_for('profile'))
 
-    # ✅ Pass everything to the template
-    return render_template('profile.html', user=user, stats=user_stats)
-
+    return render_template('profile.html', user=user.to_dict(), stats=user_stats)
 
 
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
+    session.clear()
     flash("👋 Logged out.")
     return redirect(url_for('index'))
 
-
-@app.route('/delete/<int:index>', methods=['POST'])
-def delete(index):
+@app.route('/delete/<product_id>', methods=['POST'])
+def delete(product_id):
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
 
-    products = load_data()
-    if 0 <= index < len(products):
-        # Only try to delete image if it exists
-        if 'image' in products[index] and products[index]['image']:
-            image_path = os.path.join(app.config['UPLOAD_FOLDER'], products[index]['image'])
-            if os.path.exists(image_path):
-                os.remove(image_path)
+    product = Product.query.get(product_id)
+    if not product:
+        flash("❌ Product not found.")
+        return redirect(url_for('admin'))
 
-        # Remove product from the list
-        del products[index]
-        save_data(products)
-        flash("🗑️ Product deleted.")
-    else:
-        flash("❌ Invalid product index.")
+    # Delete images from filesystem
+    images = json.loads(product.images or '[]')
+    for img in images:
+        img_path = os.path.join(app.config['UPLOAD_FOLDER'], img)
+        if os.path.exists(img_path):
+            os.remove(img_path)
 
+    db.session.delete(product)
+    db.session.commit()
+    flash("🗑️ Product deleted.")
     return redirect(url_for('admin'))
 
 
 @app.route('/product/<product_id>')
 def product_detail(product_id):
-    products = load_data()
-    reviews = load_reviews()
-
-    # Find product by ID safely
-    product = next((p for p in products if p.get('id') == product_id), None)
+    product = Product.query.get(product_id)
     if not product:
         flash("⚠️ Product not found.")
         return redirect(url_for('index'))
 
-    # Optional: add 'index' for templates needing it
-    product['index'] = products.index(product)
+    product_dict = product.to_dict()
+    products = load_data()
+    product_dict['index'] = next(
+        (i for i, p in enumerate(products) if p['id'] == product_id), 0
+    )
 
-    # Related products (max 4)
-    product_category = product.get('category', '').strip().lower()
-    related = []
-    for p in products:
-        if p.get('category', '').strip().lower() == product_category and p.get('id') != product_id:
-            # Ensure each related product has an 'id'
-            if 'id' not in p:
-                continue
-            related.append(p)
-        if len(related) >= 4:
-            break
+    # Related products
+    related = [
+        p for p in products
+        if p.get('category', '').lower() == product_dict['category'].lower()
+        and p.get('id') != product_id
+    ][:4]
 
-    # Images for product_detail page
-    product_images = product.get('images') or ([product.get('image')] if product.get('image') else [])
+    # ✅ Reviews by product_id
+    product_reviews = Review.query.filter_by(product_id=product_id).all()
+    product_reviews = [r.to_dict() for r in product_reviews]
 
-    # Product reviews
-    product_reviews = [r for r in reviews if r.get('product_index') == product['index']]
+    product_images = product_dict.get('images') or []
 
     return render_template(
         'product_detail.html',
-        product=product,
+        product=product_dict,
         related=related,
         reviews=product_reviews,
         product_images=product_images
@@ -1034,100 +1079,98 @@ def product_detail(product_id):
 
 
 
-
-@app.route('/submit_review/<int:index>', methods=['POST'])
-def submit_review(index):
+@app.route('/submit_review/<product_id>', methods=['POST'])
+def submit_review(product_id):
     name = request.form.get('name')
     comment = request.form.get('comment')
     rating = int(request.form.get('rating'))
-    timestamp = datetime.now(timezone.utc).isoformat()
 
     if not name or not comment or rating not in range(1, 6):
         flash("❌ Please provide a name, comment, and rating (1-5).")
-        return redirect(url_for('product_detail', index=index))
+        return redirect(url_for('product_detail', product_id=product_id))
 
-    reviews = load_reviews()
-    reviews.append({
-        'product_index': index,
-        'name': name,
-        'comment': comment,
-        'rating': rating,
-        'timestamp':  datetime.now(timezone.utc).isoformat()
-    })
-    save_reviews(reviews)
+    # ✅ Save to database
+    new_review = Review(
+        product_id=product_id,
+        name=name,
+        comment=comment,
+        rating=rating,
+        user_id=session.get('user_id', ''),
+        user_email=session.get('user_email', ''),
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+    db.session.add(new_review)
+    db.session.commit()
 
     flash("✅ Review submitted!")
-    return redirect(url_for('product_detail', index=index))
+    return redirect(url_for('product_detail', product_id=product_id))
 
-@app.route('/restock_notify/<int:index>', methods=['POST'])
-def restock_notify(index):
+@app.route('/restock_notify/<product_id>', methods=['POST'])
+def restock_notify(product_id):
     email = request.form.get('email')
-    products = load_data()
-    if not email or index < 0 or index >= len(products):
+    product = Product.query.get(product_id)
+
+    if not email or not product:
         flash("❌ Invalid request")
-        return redirect(url_for('product_detail', index=index))
-    requests = load_restock_requests()
-    product = products[index]
-    requests.append({
-        'email': email,
-        'product_name': product['name'],
-        'product_index': index,
-        'timestamp': datetime.now(timezone.utc).isoformat()
-    })
-    save_restock_requests(requests)
-    flash("✅ You’ll be notified when it's back in stock!")
-    return redirect(url_for('product_detail', index=index))
+        return redirect(url_for('product_detail', product_id=product_id))
+
+    # ✅ Save to database
+    new_request = RestockRequest(
+        email=email,
+        product_name=product.name,
+        product_id=product_id,
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+    db.session.add(new_request)
+    db.session.commit()
+
+    flash("✅ You'll be notified when it's back in stock!")
+    return redirect(url_for('product_detail', product_id=product_id))
 
 @app.route('/edit/<product_id>', methods=['GET', 'POST'])
 def edit_product(product_id):
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
 
-    products = load_data()
-    product = next((p for p in products if p.get('id') == product_id), None)
+    product = Product.query.get(product_id)
     if not product:
         flash("❌ Product not found.")
         return redirect(url_for('admin'))
 
     if request.method == 'POST':
-        # Update basic fields
-        product['name'] = request.form.get('name').title()
-        product['price'] = request.form.get('price')
-        product['category'] = request.form.get('category').title()
-        product['description'] = request.form.get('description')
-        product['stock'] = int(request.form.get('stock', 0))
+        product.name = request.form.get('name').title()
+        product.price = request.form.get('price')
+        product.category = request.form.get('category').title()
+        product.description = request.form.get('description')
+        product.stock = int(request.form.get('stock', 0))
 
-        # ✅ Handle sale toggle and sale price
         sale_price = request.form.get('sale_price')
         on_sale = 'on_sale' in request.form
-        product['on_sale'] = on_sale
+        product.on_sale = on_sale
+
         if on_sale and sale_price:
             try:
-                if float(sale_price) >= float(product['price']):
+                if float(sale_price) >= float(product.price):
                     flash("⚠️ Sale price must be less than the original price.")
                     return redirect(url_for('edit_product', product_id=product_id))
-                product['sale_price'] = sale_price
+                product.sale_price = sale_price
             except ValueError:
                 flash("⚠️ Invalid sale price entered.")
                 return redirect(url_for('edit_product', product_id=product_id))
         else:
-            product.pop('sale_price', None)
+            product.sale_price = None
 
-        # ✅ Handle Featured checkbox
-        product['featured'] = 'featured' in request.form
+        product.featured = 'featured' in request.form
 
-        # ✅ Handle sizes and colors
         sizes = request.form.get('sizes', '')
         colors = request.form.get('colors', '')
-        product['sizes'] = [s.strip() for s in sizes.split(',')] if sizes else []
-        product['colors'] = [c.strip() for c in colors.split(',')] if colors else []
+        product.sizes = json.dumps([s.strip() for s in sizes.split(',')]) if sizes else '[]'
+        product.colors = json.dumps([c.strip() for c in colors.split(',')]) if colors else '[]'
 
         # Handle removing images
         remove_images = request.form.getlist('remove_images')
-        if 'images' not in product:
-            product['images'] = [product.get('image')] if product.get('image') else []
-
-        product['images'] = [img for img in product['images'] if img not in remove_images]
+        current_images = json.loads(product.images or '[]')
+        current_images = [img for img in current_images if img not in remove_images]
 
         # Delete removed images from filesystem
         for img in remove_images:
@@ -1141,19 +1184,15 @@ def edit_product(product_id):
             if f and f.filename != '':
                 filename = secure_filename(f.filename)
                 f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                product['images'].append(filename)
+                current_images.append(filename)
 
-        # Ensure main 'image' field always exists
-        if product['images']:
-            product['image'] = product['images'][0]
-        else:
-            product['image'] = None
-
-        save_data(products)
+        product.images = json.dumps(current_images)
+        db.session.commit()
         flash("✅ Product updated successfully!")
         return redirect(url_for('admin'))
 
-    return render_template('edit_product.html', product=product)
+    # Pass product as dict for template compatibility
+    return render_template('edit_product.html', product=product.to_dict())
 
 
 
@@ -1196,30 +1235,29 @@ def shop():
     
 # ------------------ CART ROUTES ------------------
 
-# ✅ Initialize cart in session if not present
+# ------------------ CART ROUTES ------------------
+
 def get_cart():
     if 'cart' not in session:
         session['cart'] = []
     return session['cart']
 
 
-# ✅ Add to Cart (AJAX + fallback)
-# ✅ Add to Cart (includes color & size)
-@app.route('/add_to_cart/<int:index>', methods=['POST'])
-def add_to_cart(index):
+# ✅ Add to Cart
+@app.route('/add_to_cart/<product_id>', methods=['POST'])
+def add_to_cart(product_id):
     quantity = int(request.form.get("quantity", 1))
     color = request.form.get("color", "-")
     size = request.form.get("size", "-")
 
     cart = get_cart()
 
-    # Check if the exact same product (index+color+size) already exists
     for item in cart:
-        if item['index'] == index and item.get('color') == color and item.get('size') == size:
+        if item['product_id'] == product_id and item.get('color') == color and item.get('size') == size:
             item['quantity'] += quantity
             break
     else:
-        cart.append({'index': index, 'quantity': quantity, 'color': color, 'size': size})
+        cart.append({'product_id': product_id, 'quantity': quantity, 'color': color, 'size': size})
 
     session['cart'] = cart
 
@@ -1230,67 +1268,45 @@ def add_to_cart(index):
     return redirect(request.referrer or url_for('index'))
 
 
-
-# ✅ Cart count API (for navbar live badge)
-@app.route('/cart_count')
-def cart_count():
-    return jsonify({'count': len(session.get('cart', []))})
-  
-  # 🛒 AJAX Add to Cart (Live)
-# ✅ AJAX Add to Cart (includes color & size)
-@app.route('/add_to_cart_ajax/<int:index>', methods=['POST'])
-def add_to_cart_ajax(index):
+# ✅ AJAX Add to Cart
+@app.route('/add_to_cart_ajax/<product_id>', methods=['POST'])
+def add_to_cart_ajax(product_id):
     color = request.form.get("color", "-")
     size = request.form.get("size", "-")
 
     cart = session.get('cart', [])
-    found = next((item for item in cart if item['index'] == index and item.get('color') == color and item.get('size') == size), None)
+    found = next((item for item in cart if item['product_id'] == product_id and item.get('color') == color and item.get('size') == size), None)
 
     if found:
         found['quantity'] += 1
         message = "➕ Increased quantity in cart!"
     else:
-        cart.append({'index': index, 'quantity': 1, 'color': color, 'size': size})
+        cart.append({'product_id': product_id, 'quantity': 1, 'color': color, 'size': size})
         message = "🛒 Added to cart!"
 
     session['cart'] = cart
     return jsonify({'success': True, 'message': message, 'count': len(cart)})
 
 
-
+# ✅ Cart page
 @app.route('/cart')
 def cart():
     cart = get_cart()
-    products = load_data()
     cart_items = []
 
     for item in cart:
-        index = item.get("index")
-        quantity = item.get("quantity", 1)
-        color = item.get("color", "-")
-        size = item.get("size", "-")
+        product_id = item.get("product_id")
+        product = Product.query.get(product_id)
+        if not product:
+            continue
 
-        if 0 <= index < len(products):
-            product = products[index].copy()
-            product['quantity'] = quantity
-            product['index'] = index
-            product['color'] = color
-            product['size'] = size
+        p = product.to_dict()
+        p['quantity'] = item.get('quantity', 1)
+        p['color'] = item.get('color', '-')
+        p['size'] = item.get('size', '-')
+        cart_items.append(p)
 
-            # ✅ Ensure image exists
-            if 'images' in product and product['images']:
-                product['image'] = product['images'][0]
-            elif 'image' in product:
-                product['image'] = product['image']
-            else:
-                product['image'] = 'default.png'
-
-            cart_items.append(product)
-
-    # 🧮 Totals
     subtotal = sum(float(p['price']) * p['quantity'] for p in cart_items)
-
-    # ✅ Accurate Paystack payout fee: 1.95% capped at GHS 50
     payout_fee = round(min(subtotal * 0.0195, 50), 2)
     total = round(subtotal + payout_fee, 2)
 
@@ -1298,34 +1314,37 @@ def cart():
         'cart.html',
         cart_items=cart_items,
         subtotal=subtotal,
-        payout_fee=payout_fee,  # renamed variable
+        payout_fee=payout_fee,
         total=total,
         active_page='cart'
     )
 
 
-
+# ✅ Clear cart
 @app.route('/clear-cart')
 def clear_cart():
-    session['cart'] = []  # ✅ correct: cart is a list of dicts
+    session['cart'] = []
     return redirect(url_for('cart'))
 
-@app.route('/cart/increase/<int:index>')
-def increase_quantity(index):
+
+# ✅ Increase quantity
+@app.route('/cart/increase/<product_id>')
+def increase_quantity(product_id):
     cart = get_cart()
     for item in cart:
-        if item['index'] == index:
+        if item['product_id'] == product_id:
             item['quantity'] += 1
             break
     session['cart'] = cart
     return redirect(url_for('cart'))
 
 
-@app.route('/cart/decrease/<int:index>')
-def decrease_quantity(index):
+# ✅ Decrease quantity
+@app.route('/cart/decrease/<product_id>')
+def decrease_quantity(product_id):
     cart = get_cart()
     for item in cart:
-        if item['index'] == index:
+        if item['product_id'] == product_id:
             item['quantity'] -= 1
             if item['quantity'] < 1:
                 cart.remove(item)
@@ -1334,13 +1353,19 @@ def decrease_quantity(index):
     return redirect(url_for('cart'))
 
 
-@app.route('/cart/remove/<int:index>')
-def remove_from_cart(index):
+# ✅ Remove from cart
+@app.route('/cart/remove/<product_id>')
+def remove_from_cart(product_id):
     cart = get_cart()
-    cart = [item for item in cart if item['index'] != index]
+    cart = [item for item in cart if item['product_id'] != product_id]
     session['cart'] = cart
     return redirect(url_for('cart'))
 
+
+# ✅ Cart count API
+@app.route('/cart_count')
+def cart_count():
+    return jsonify({'count': len(session.get('cart', []))})
 
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo  # Python 3.9+
@@ -1352,79 +1377,25 @@ from zoneinfo import ZoneInfo
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
     cart = get_cart()
-    products = load_data()
     cart_items = []
 
-    # ------------------ Build cart items ------------------ #
     for item in cart:
-        index = item.get("index")
-        quantity = item.get("quantity", 1)
-        color = item.get("color", "-")
-        size = item.get("size", "-")
+        product_id = item.get("product_id")
+        product = Product.query.get(product_id)
+        if not product:
+            continue
 
-        if 0 <= index < len(products):
-            product = products[index].copy()
-            product['quantity'] = quantity
-            product['id'] = products[index].get('id', index)
-            product['color'] = color
-            product['size'] = size
-            product['images'] = products[index].get('images', [])
-            cart_items.append(product)
+        p = product.to_dict()
+        p['quantity'] = item.get('quantity', 1)
+        p['color'] = item.get('color', '-')
+        p['size'] = item.get('size', '-')
+        cart_items.append(p)
 
     if not cart_items:
         flash("⚠️ Your cart is empty.")
         return redirect(url_for("cart"))
 
     total = sum(float(p.get('price', 0)) * p['quantity'] for p in cart_items)
-
-    if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        phone = request.form.get('phone')
-        timezone_str = request.form.get('timezone', 'UTC')
-
-        if not name or not email or not phone:
-            flash("❌ All fields are required.")
-            return redirect(url_for('checkout'))
-
-        utc_now = datetime.now(timezone.utc)
-
-        try:
-            user_zone = ZoneInfo(timezone_str)
-        except Exception:
-            user_zone = ZoneInfo("UTC")
-
-        local_time = utc_now.astimezone(user_zone)
-        formatted_time = local_time.strftime("%b %d, %Y, %I:%M %p")
-
-        # Better readable order ID
-        order_id = "ORD-" + uuid.uuid4().hex[:10].upper()
-
-        # ------------------ Prepare metadata for Paystack ------------------ #
-        # All necessary info for sending email later
-        metadata = {
-            "name": name,
-            "email": email,
-            "phone": phone,
-            "timezone": timezone_str,
-            "local_time": formatted_time,
-            "items": cart_items
-        }
-
-        # ------------------ Render Paystack payment page ------------------ #
-        return render_template(
-            'payment.html',
-            email=email,
-            name=name,
-            phone=phone,
-            timezone=timezone_str,
-            local_time=formatted_time,
-            cart_items=cart_items,
-            amount=int(total * 100),  # Paystack uses kobo
-            reference=order_id,
-            metadata=metadata,       # Pass metadata to your frontend JS
-            paystack_public_key=os.getenv('PAYSTACK_PUBLIC_KEY')
-        )
 
     return render_template(
         'checkout.html',
@@ -1436,77 +1407,44 @@ def checkout():
 @app.route('/track-order/<order_id>')
 def track_order(order_id):
     order_id = unquote(order_id)
-    orders = load_orders()
-
-    order = next((o for o in orders if o["id"] == order_id), None)
+    order = Order.query.get(order_id)
     if not order:
         return "Order not found.", 404
-
-    return render_template("track_order.html", order=order)
+    return render_template("track_order.html", order=order.to_dict())
 
 # ✅ Mark an order as delivered
 @app.route('/mark_delivered/<order_id>', methods=['POST'])
 def mark_delivered(order_id):
-    orders = load_orders()
-    order_found = False
-
-    for o in orders:
-        if str(o['id']) == str(order_id):
-            o['status'] = 'Delivered'
-
-            # ✅ Get user's timezone safely
-            timezone_str = o.get('timezone', 'UTC')
-            try:
-                user_tz = pytz.timezone(timezone_str)
-            except pytz.UnknownTimeZoneError:
-                user_tz = pytz.UTC
-
-            # ✅ Store localized timestamp for history display
-            local_time = datetime.now(user_tz).strftime("%Y-%m-%d %H:%M:%S")
-            o['delivered_time'] = local_time
-            o['completed_time'] = local_time  # ✅ Add for history tracking
-
-            order_found = True
-            user_email = o.get('email')
-            name = o.get('name')
-            items = o.get('products', [])  # ✅ Ensure consistency with template
-            total = o.get('total', 0)
-            formatted_time = o.get('local_time', '')
-            break
-
-    if not order_found:
+    order = Order.query.get(order_id)
+    if not order:
         flash("⚠️ Order not found.")
         return redirect(url_for('admin'))
 
-    save_orders(orders)
+    local_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    order.status = 'Delivered'
+    order.delivered_time = local_time
+    order.completed_time = local_time
+    db.session.commit()
 
-    # ✅ Send delivery email to user
     try:
+        items = json.loads(order.products or '[]')
         base_url = request.url_root.rstrip('/')
         item_lines = [
-            f"""
-            <div style='display:flex;align-items:center;margin-bottom:10px;border:1px solid #eee;padding:8px;border-radius:10px;'>
-                <img src='{base_url}/static/shoes/{(item.get('images') or [None])[0]}' 
-                     alt='{item.get('name')}' 
-                     style='width:60px;height:60px;object-fit:cover;border-radius:8px;margin-right:10px;'>
-                <div>
-                    <strong>{item.get('name')}</strong><br>
-                    Qty: {item.get('quantity', 1)} | GH₵ {item.get('price')}
-                </div>
-            </div>
-            """ for item in items
+            f"""<div style='margin-bottom:10px;'>
+                <strong>{item.get('name')}</strong><br>
+                Qty: {item.get('quantity', 1)} | GH₵ {item.get('price')}
+            </div>""" for item in items
         ]
-
         user_html = render_template(
             'emails/user_delivered_email.html',
-            name=name,
+            name=order.name,
             product_name=''.join(item_lines),
             quantity=len(items),
-            total=total,
-            order_time=formatted_time,
-            timezone=timezone_str
+            total=order.total,
+            order_time=order.local_time,
+            timezone=order.timezone
         )
-        send_email(user_email, "✅ Your Order Has Been Delivered - ShopLuxe", user_html)
+        send_email(order.email, "✅ Your Order Has Been Delivered - ShopLuxe", user_html)
         flash("✅ Order marked delivered and email sent to user.")
     except Exception as e:
         print("❌ Email sending failed:", e)
@@ -1514,76 +1452,45 @@ def mark_delivered(order_id):
 
     return redirect(url_for('admin'))
 
-
 # ✅ Cancel an order
 @app.route('/cancel_order/<order_id>', methods=['POST'])
 def cancel_order(order_id):
-    orders = load_orders()
-    order_found = False
-    for o in orders:
-        if str(o['id']) == str(order_id):
-            o['status'] = 'Cancelled'
-
-            # ✅ Get user's timezone safely
-            timezone_str = o.get('timezone', 'UTC')
-            try:
-                user_tz = pytz.timezone(timezone_str)
-            except pytz.UnknownTimeZoneError:
-                user_tz = pytz.UTC
-
-            # ✅ Store localized timestamp for history display
-            local_time = datetime.now(user_tz).strftime("%Y-%m-%d %H:%M:%S")
-            o['cancelled_time'] = local_time
-            o['completed_time'] = local_time  # ✅ Add for history tracking
-
-            order_found = True
-            user_email = o.get('email')
-            user_name = o.get('name')
-            break
-
-    if order_found:
-        save_orders(orders)
-
-        # ✅ Send cancelled email to user
-        try:
-            track_order_url = url_for('track_order', order_id=quote(order_id), _external=True)
-            cancelled_html = render_template(
-                'emails/order_cancelled_email.html',
-                name=user_name,
-                order_id=order_id,
-                track_order_url=track_order_url
-            )
-            send_email(user_email, "❌ Your ShopLuxe Order Has Been Cancelled", cancelled_html)
-            flash("✅ Order cancelled and email sent to user.")
-        except Exception as e:
-            print("❌ Order cancelled but email could not be sent:", e)
-            flash("⚠️ Order cancelled but email could not be sent.")
-    else:
+    order = Order.query.get(order_id)
+    if not order:
         flash("❌ Order not found.")
+        return redirect(url_for('admin'))
+
+    local_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    order.status = 'Cancelled'
+    order.cancelled_time = local_time
+    order.completed_time = local_time
+    db.session.commit()
+
+    try:
+        track_order_url = url_for('track_order', order_id=quote(order_id), _external=True)
+        cancelled_html = render_template(
+            'emails/order_cancelled_email.html',
+            name=order.name,
+            order_id=order_id,
+            track_order_url=track_order_url
+        )
+        send_email(order.email, "❌ Your ShopLuxe Order Has Been Cancelled", cancelled_html)
+        flash("✅ Order cancelled and email sent to user.")
+    except Exception as e:
+        print("❌ Order cancelled but email could not be sent:", e)
+        flash("⚠️ Order cancelled but email could not be sent.")
 
     return redirect(url_for('admin'))
 
 
 @app.route('/order_confirmation')
 def order_confirmation():
-
     reference = request.args.get("reference")
-
-    orders = load_orders()
-
-    order = None
-
-    for o in orders:
-        if o["id"] == reference:
-            order = o
-            break
-
+    order = Order.query.get(reference)
     if not order:
         flash("⚠️ Order not found.")
         return redirect(url_for('cart'))
-
-    return render_template("order_confirmation.html", order=order)
-
+    return render_template("order_confirmation.html", order=order.to_dict())
 
 @app.route('/settings')
 def settings():
@@ -1741,36 +1648,37 @@ def categories():
 
 @app.route('/rate-product', methods=['POST'])
 def rate_product():
-
     if 'user_id' not in session:
-        return jsonify({"success":False,"message":"Login required"})
+        return jsonify({"success": False, "message": "Login required"})
 
     data = request.get_json()
     product_id = data['product_id']
     rating = int(data['rating'])
 
-    with open('reviews.json','r') as f:
-        reviews = json.load(f)
+    # ✅ Check for duplicate rating in database
+    existing = Review.query.filter_by(
+        product_id=product_id,
+        user_id=session['user_id']
+    ).first()
 
-    # prevent double rating
-    for r in reviews:
-        if r['product_id'] == product_id and r['user_id'] == session['user_id']:
-            return jsonify({"success":False,"message":"Already rated"})
+    if existing:
+        return jsonify({"success": False, "message": "Already rated"})
 
-    reviews.append({
-        "product_id": product_id,
-        "user_id": session['user_id'],
-        "rating": rating
-    })
+    new_review = Review(
+        product_id=product_id,
+        user_id=session['user_id'],
+        rating=rating,
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+    db.session.add(new_review)
+    db.session.commit()
 
-    with open('reviews.json','w') as f:
-        json.dump(reviews,f,indent=2)
-
-    return jsonify({"success":True})
-
-
+    return jsonify({"success": True})
 
 app.jinja_env.add_extension('jinja2.ext.do')
+
+with app.app_context():
+    db.create_all()
 
 if __name__ == "__main__":
   
