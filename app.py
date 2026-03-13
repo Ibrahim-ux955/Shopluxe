@@ -908,7 +908,8 @@ def login():
 def logout():
     session.clear()
     flash("👋 Logged out.")
-    return redirect(url_for('index'))
+    return redirect(url_for('home'))  # ✅ changed 'index' to 'home'
+
 
 
 @app.route('/forgot_password', methods=['GET', 'POST'])
