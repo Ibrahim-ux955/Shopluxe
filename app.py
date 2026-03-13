@@ -153,6 +153,8 @@ class User(db.Model):
     email = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    reset_token = db.Column(db.String, nullable=True)
+    reset_token_expiry = db.Column(db.String, nullable=True)
 
     def to_dict(self):
         return {
@@ -162,7 +164,6 @@ class User(db.Model):
             'password': self.password,
             'is_admin': self.is_admin
         }
-
 
 class Review(db.Model):
     __tablename__ = 'reviews'
@@ -527,7 +528,6 @@ def initialize_payment():
     response = requests.post("https://api.paystack.co/transaction/initialize", json=payload, headers=headers)
     return jsonify(response.json())
 
-
 @app.route('/verify_payment')
 def verify_payment():
     reference = request.args.get('reference')
@@ -547,10 +547,11 @@ def verify_payment():
     items = metadata.get("items", [])
     order_id = reference
 
+    # ✅ Duplicate check first
     if Order.query.get(order_id):
         return redirect(url_for("order_confirmation", reference=order_id))
 
-    # ✅ Stock deduction + out of stock alert
+    # ✅ Stock deduction + admin out-of-stock alert only
     for item in items:
         product = Product.query.filter_by(name=item.get("name")).first()
         if product:
@@ -568,7 +569,8 @@ def verify_payment():
                             <p>Last order: <strong>{name}</strong> ({email})</p>
                             <p>Please restock as soon as possible.</p>
                             <a href="https://www.shopluxe.online/admin"
-                               style="background:#198754;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;">
+                               style="background:#198754;color:#fff;padding:10px 20px;
+                               border-radius:8px;text-decoration:none;">
                                Go to Admin Panel
                             </a>
                         </div>
@@ -579,9 +581,17 @@ def verify_payment():
 
     db.session.commit()
 
+    # ✅ Store effective_price in order items
+    enriched_items = []
+    for item in items:
+        enriched_items.append({
+            **item,
+            'price': item.get('effective_price') or item.get('price', 0)
+        })
+
     new_order = Order(
         id=order_id, name=name, email=email, phone=phone,
-        amount=amount, total=amount, products=json.dumps(items),
+        amount=amount, total=amount, products=json.dumps(enriched_items),
         status="Paid", payment_status="Paid",
         timestamp=datetime.now(timezone.utc).isoformat(),
         order_time=datetime.now().strftime("%b %d, %Y, %I:%M %p"),
@@ -592,7 +602,10 @@ def verify_payment():
     session.pop('cart', None)
 
     track_order_url = url_for("track_order", order_id=order_id, _external=True)
-    product_list = "".join(f"<p>{i['name']} ({i.get('quantity', 1)}x)</p>" for i in items)
+    product_list = "".join(
+        f"<p>{i['name']} ({i.get('quantity', 1)}x) — GH₵ {i.get('price', 0)}</p>"
+        for i in enriched_items
+    )
     order_time_str = datetime.now().strftime("%b %d, %Y, %I:%M %p")
 
     try:
@@ -608,7 +621,6 @@ def verify_payment():
         print("⚠️ Email sending failed:", e)
 
     return redirect(url_for("order_confirmation", reference=order_id))
-
 
 @app.route('/order_confirmation')
 def order_confirmation():
@@ -763,54 +775,90 @@ def edit_product(product_id):
         return redirect(url_for('admin'))
 
     if request.method == 'POST':
-        product.name = request.form.get('name').title()
-        product.price = request.form.get('price')
-        product.category = request.form.get('category').title()
-        product.description = request.form.get('description')
-        product.stock = int(request.form.get('stock', 0))
+        old_stock = product.stock  # ✅ Save before update for restock notification
+
+        # ── Basic Info ──
+        product.name = request.form.get('name', '').strip().title()
+        product.brand = request.form.get('brand', '').strip()
+        product.sku = request.form.get('sku', '').strip()
+        product.description = request.form.get('description', '').strip()
+        product.delivery_info = request.form.get('delivery_info', 'Delivery in 2-4 working days').strip()
+
+        # ── Category ──
+        category = request.form.get('category')
+        if category == 'custom':
+            category = request.form.get('category_custom', '').strip().title()
+        product.category = category
+
+        # ── Pricing ──
+        product.price = request.form.get('price', '').strip()
+        product.sale_price = request.form.get('sale_price', '').strip() or None
+        product.on_sale = 'on_sale' in request.form
         product.featured = 'featured' in request.form
+        product.new_arrival = 'new_arrival' in request.form
 
-        on_sale = 'on_sale' in request.form
-        sale_price = request.form.get('sale_price')
-        product.on_sale = on_sale
+        # ── Inventory ──
+        product.stock = int(request.form.get('stock', 0))
 
-        if on_sale and sale_price:
-            try:
-                if float(sale_price) >= float(product.price):
-                    flash("⚠️ Sale price must be less than the original price.")
-                    return redirect(url_for('edit_product', product_id=product_id))
-                product.sale_price = sale_price
-            except ValueError:
-                flash("⚠️ Invalid sale price entered.")
-                return redirect(url_for('edit_product', product_id=product_id))
-        else:
-            product.sale_price = None
+        # ── Sizes & Colors ──
+        sizes_raw = request.form.get('sizes', '')
+        product.sizes = json.dumps([s.strip() for s in sizes_raw.split(',') if s.strip()])
 
-        sizes = request.form.get('sizes', '')
-        colors = request.form.get('colors', '')
-        product.sizes = json.dumps([s.strip() for s in sizes.split(',')]) if sizes else '[]'
-        product.colors = json.dumps([c.strip() for c in colors.split(',')]) if colors else '[]'
+        colors_raw = request.form.get('colors', '')
+        product.colors = json.dumps([c.strip() for c in colors_raw.split(',') if c.strip()])
 
+        # ── Tags ──
+        tags_raw = request.form.get('tags', '')
+        product.tags = json.dumps([t.strip() for t in tags_raw.split(',') if t.strip()])
+
+        # ── Images: remove checked ──
         remove_images = request.form.getlist('remove_images')
-        current_images = [img for img in json.loads(product.images or '[]') if img not in remove_images]
-        for img in remove_images:
-            img_path = os.path.join(app.config['UPLOAD_FOLDER'], img)
-            if os.path.exists(img_path):
-                os.remove(img_path)
+        existing_images = json.loads(product.images or '[]')
+        kept_images = [img for img in existing_images if img not in remove_images]
 
-        for f in request.files.getlist('new_images'):
-            if f and f.filename:
-                filename = secure_filename(f.filename)
-                f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                current_images.append(filename)
+        # ── Images: add new uploads ──
+        new_images = request.files.getlist('new_images')
+        for file in new_images:
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                kept_images.append(filename)
 
-        product.images = json.dumps(current_images)
+        product.images = json.dumps(kept_images)
+        product.timestamp = datetime.now(timezone.utc).isoformat()
+
         db.session.commit()
+
+        # ✅ Notify restock waitlist if stock went from 0 to > 0
+        if old_stock == 0 and product.stock > 0:
+            waitlist = RestockRequest.query.filter_by(product_id=product.id).all()
+            for req in waitlist:
+                try:
+                    send_email(
+                        req.email,
+                        f"✅ Back in Stock — {product.name}",
+                        f"""
+                        <div style="font-family:sans-serif; padding:20px;">
+                            <h2 style="color:#198754;">Good news! 🎉</h2>
+                            <p><strong>{product.name}</strong> is back in stock.</p>
+                            <a href="https://www.shopluxe.online/product/{product.id}"
+                               style="background:#198754;color:#fff;padding:10px 20px;
+                               border-radius:8px;text-decoration:none;">
+                               Shop Now
+                            </a>
+                        </div>
+                        """
+                    )
+                except Exception as e:
+                    print("⚠️ Restock alert failed:", e)
+
+            RestockRequest.query.filter_by(product_id=product.id).delete()
+            db.session.commit()
+
         flash("✅ Product updated successfully!")
         return redirect(url_for('admin'))
 
     return render_template('edit_product.html', product=product.to_dict())
-
 
 @app.route('/mark_delivered/<order_id>', methods=['POST'])
 def mark_delivered(order_id):
@@ -938,30 +986,87 @@ def logout():
 def debug_session():
     return str(dict(session))
 
-@app.route('/forgot_password', methods=['GET', 'POST'])
+@app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
-        if not user:
-            flash("❌ Email not found.")
-            return redirect(url_for('forgot_password'))
 
-        token = serializer.dumps(email, salt='reset-password')
-        reset_link = url_for('reset_with_token', token=token, _external=True)
-        try:
-            msg = Message("🔐 Password Reset Request", recipients=[email])
-            msg.body = f"Hello,\n\nClick the link below to reset your password:\n\n{reset_link}\n\nThis link expires in 30 minutes."
-            mail.send(msg)
-        except Exception as e:
-            print("Failed to send email:", e)
-            flash("❌ Email send failed.")
-            return redirect(url_for('forgot_password'))
+        if user:
+            # Generate token
+            token = str(uuid4())
+            user.reset_token = token
+            user.reset_token_expiry = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
+            db.session.commit()
 
-        flash("📧 Check your email for the reset link.")
-        return redirect(url_for('login'))
+            reset_url = url_for('reset_password', token=token, _external=True)
+
+            try:
+                send_email(
+                    email,
+                    "🔑 Reset Your ShopLuxe Password",
+                    f"""
+                    <div style="font-family:sans-serif; padding:20px; max-width:500px;">
+                        <h2 style="color:#198754;">Reset Your Password</h2>
+                        <p>Hi {user.name}, click the button below to reset your password.</p>
+                        <a href="{reset_url}"
+                           style="background:#198754;color:#fff;padding:12px 24px;
+                           border-radius:8px;text-decoration:none;display:inline-block;
+                           font-weight:bold;">
+                           Reset Password
+                        </a>
+                        <p style="color:#999;font-size:12px;margin-top:20px;">
+                           This link expires in 30 minutes. If you didn't request this, ignore this email.
+                        </p>
+                    </div>
+                    """
+                )
+            except Exception as e:
+                print("⚠️ Reset email failed:", e)
+
+        # ✅ Always flash success even if email not found (security best practice)
+        flash("If that email exists, a reset link has been sent.")
+        return redirect(url_for('forgot_password'))
 
     return render_template('forgot_password.html')
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    user = User.query.filter_by(reset_token=token).first()
+
+    # ✅ Check token exists and not expired
+    if not user or not user.reset_token_expiry:
+        flash("❌ Invalid or expired reset link.")
+        return redirect(url_for('forgot_password'))
+
+    expiry = datetime.fromisoformat(user.reset_token_expiry)
+    if datetime.now(timezone.utc) > expiry:
+        flash("❌ Reset link has expired. Please request a new one.")
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm = request.form.get('confirm_password')
+
+        if password != confirm:
+            flash("❌ Passwords do not match.")
+            return redirect(url_for('reset_password', token=token))
+
+        if len(password) < 6:
+            flash("❌ Password must be at least 6 characters.")
+            return redirect(url_for('reset_password', token=token))
+
+        # ✅ Update password and clear token
+        user.password = generate_password_hash(password)
+        user.reset_token = None
+        user.reset_token_expiry = None
+        db.session.commit()
+
+        flash("✅ Password reset successfully. Please log in.")
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html', token=token)  
+  
 
 
 @app.route('/reset_with_token/<token>', methods=['GET', 'POST'])
@@ -1052,7 +1157,7 @@ def add_to_cart(product_id):
         return jsonify({'success': True, 'message': '🛒 Added to cart!', 'count': len(cart)})
 
     flash("🛒 Product added to cart!")
-    return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('home'))
 
 
 @app.route('/add_to_cart_ajax/<product_id>', methods=['POST'])
@@ -1085,10 +1190,13 @@ def cart():
         p['quantity'] = item.get('quantity', 1)
         p['color'] = item.get('color', '-')
         p['size'] = item.get('size', '-')
+        # ✅ Use sale price if on sale
+        p['effective_price'] = float(p['sale_price']) if p.get('on_sale') and p.get('sale_price') else float(p['price'])
         cart_items.append(p)
 
-    subtotal = sum(float(p['price']) * p['quantity'] for p in cart_items)
-    payout_fee = round(min(subtotal * 0.0195, 50), 2)
+    subtotal = sum(p['effective_price'] * p['quantity'] for p in cart_items)
+    # ✅ Paystack Ghana: 1.95% + GH₵ 0.50, capped at GH₵ 500
+    payout_fee = round(min((subtotal * 0.0195) + 0.50, 500), 2)
     return render_template('cart.html', cart_items=cart_items, subtotal=subtotal,
                            payout_fee=payout_fee, total=round(subtotal + payout_fee, 2),
                            active_page='cart')
@@ -1147,17 +1255,25 @@ def checkout():
         p['quantity'] = item.get('quantity', 1)
         p['color'] = item.get('color', '-')
         p['size'] = item.get('size', '-')
+        p['effective_price'] = float(p['sale_price']) if p.get('on_sale') and p.get('sale_price') else float(p['price'])
         cart_items.append(p)
 
     if not cart_items:
         flash("⚠️ Your cart is empty.")
         return redirect(url_for("cart"))
 
-    total = sum(float(p.get('price', 0)) * p['quantity'] for p in cart_items)
-    return render_template('checkout.html', cart_items=cart_items, total=total,
-                           paystack_public_key=PAYSTACK_PUBLIC_KEY)
+    subtotal = sum(p['effective_price'] * p['quantity'] for p in cart_items)
+    payout_fee = round(min((subtotal * 0.0195) + 0.50, 500), 2)
+    total = round(subtotal + payout_fee, 2)
 
-
+    return render_template(
+        'checkout.html',
+        cart_items=cart_items,
+        subtotal=subtotal,
+        payout_fee=payout_fee,
+        total=total,
+        paystack_public_key=PAYSTACK_PUBLIC_KEY
+    )
 # ============================================================
 # WISHLIST ROUTES
 # ============================================================
@@ -1350,6 +1466,56 @@ def restock_notify(product_id):
     return redirect(url_for('product_detail', product_id=product_id))
 
 
+from authlib.integrations.flask_client import OAuth
+
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.getenv('GOOGLE_CLIENT_ID'),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
+)
+
+@app.route('/auth/google')
+def google_login():
+    redirect_uri = url_for('google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route('/auth/google/callback')
+def google_callback():
+    token = google.authorize_access_token()
+    user_info = token.get('userinfo')
+
+    if not user_info:
+        flash("❌ Google login failed.")
+        return redirect(url_for('login'))
+
+    email = user_info['email']
+    name = user_info.get('name', email.split('@')[0])
+
+    # ✅ Find or create user
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        user = User(
+            id=str(uuid4()),
+            name=name,
+            email=email,
+            password=generate_password_hash(str(uuid4())),  # random password
+            is_admin=False
+        )
+        db.session.add(user)
+        db.session.commit()
+
+    session.clear()
+    session['user_id'] = user.id
+    session['user_name'] = user.name
+    session['user_email'] = user.email
+    session['is_admin'] = user.is_admin
+
+    flash(f"✅ Welcome, {user.name}!")
+    return redirect(url_for('profile'))
+
 # ============================================================
 # DB INIT & RUN
 # ============================================================
@@ -1372,6 +1538,16 @@ with app.app_context():
             except:
                 pass
 
+        # ✅ Users table — reset password columns
+        for col, definition in [
+            ("reset_token", "VARCHAR DEFAULT NULL"),
+            ("reset_token_expiry", "VARCHAR DEFAULT NULL"),
+        ]:
+            try:
+                conn.execute(db.text(f"ALTER TABLE users ADD COLUMN {col} {definition}"))
+                conn.commit()
+            except:
+                pass
         # ✅ Remove bad columns from reviews if they exist (can't drop in SQLite, so just ignore)
         # SQLite doesn't support DROP COLUMN in older versions, so the Review model
         # must NOT have these columns defined
