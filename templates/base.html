@@ -3,308 +3,633 @@
 <head>
   <meta charset="UTF-8">
   <meta name="google-site-verification" content="6-q4p5ou0N7gjjUczzPcIw6UT_-zwYvjyHRX19ScmCU">
-
-  <title>Shopluxe — Online Shopping in Ghana</title>
-  <meta name="description" content="Buy quality products online at Shopluxe. Fast delivery, secure payment and trusted shopping experience in Ghana.">
-  <meta name="keywords" content="Shopluxe, online shop Ghana, ecommerce Ghana, buy products online">
+  <title>ShopLuxe — Online Shopping in Ghana</title>
+  <meta name="description" content="Buy quality products online at ShopLuxe. Fast delivery, secure payment and trusted shopping experience in Ghana.">
+  <meta name="keywords" content="ShopLuxe, online shop Ghana, ecommerce Ghana, buy products online">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
-
-  <meta property="og:title" content="Shopluxe — Online Shopping in Ghana">
+  <meta property="og:title" content="ShopLuxe — Online Shopping in Ghana">
   <meta property="og:description" content="Buy quality products online with fast delivery and secure payment.">
   <meta property="og:url" content="https://shopluxe.online">
   <meta property="og:type" content="website">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      background-color: #f8f9fa;
-      min-height: 100vh;
-    }
-    .btn-custom {
-      background-color: transparent;
-      border: 1px solid #ccc;
-      color: #333;
-    }
-    .btn-custom:hover {
-      background-color: #f8f9fa;
-      color: #000;
-    }
-    nav.navbar .container a,
-    nav.navbar .navbar-brand span,
-    nav.navbar .dropdown-toggle {
-      color: #666 !important;
-      text-decoration: none;
-      transition: color 0.3s;
-    }
-    nav.navbar .container a:hover,
-    nav.navbar .navbar-brand:hover span,
-    nav.navbar .dropdown-toggle:hover {
-      color: #ff6600 !important;
-    }
-    nav.navbar .container a.active,
-    nav.navbar .container a.active i {
-      color: #ff6600 !important;
-      font-weight: 600;
-    }
-    nav.navbar.fixed-bottom .container a {
-      color: #666;
-      text-align: center;
-      font-size: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      text-decoration: none;
-      transition: color 0.3s;
-    }
-    nav.navbar.fixed-bottom .container a.active,
-    nav.navbar.fixed-bottom .container a.active i {
-      color: #ff6600 !important;
-      font-weight: 600;
-    }
-    nav.navbar.fixed-bottom .container a small {
-      margin-top: 2px;
-      display: block;
-      font-size: 11px;
-    }
-    .container.mt-4.mb-5 {
-      padding-bottom: 70px;
-    }
+  :root {
+    --brand: #198754;
+    --brand-dark: #146c43;
+    --accent: #ff6600;
+    --dark: #1a1a2e;
+    --mid: #555570;
+    --light: #f4f6f9;
+    --card: #ffffff;
+    --border: #eef0f5;
+    --nav-h: 62px;
+    --promo-h: 36px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--light);
+    padding-top: calc(var(--nav-h) + var(--promo-h));
+    padding-bottom: 72px;
+    min-height: 100vh;
+  }
+
+  /* ══════════════════════════════════════
+     PROMO BANNER
+  ══════════════════════════════════════ */
+  .promo-banner {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: var(--promo-h);
+    background: linear-gradient(90deg, var(--dark) 0%, #2d2d4e 100%);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1050;
+    gap: 24px;
+  }
+  .promo-text {
+    font-size: .75rem; color: #fff; font-weight: 500;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .promo-text .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); display: inline-block;
+  }
+  .promo-close {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: #aaa;
+    cursor: pointer; font-size: .8rem; padding: 4px;
+  }
+  .promo-close:hover { color: #fff; }
+
+  /* ══════════════════════════════════════
+     TOP NAV
+  ══════════════════════════════════════ */
+  .top-nav {
+    position: fixed; top: var(--promo-h); left: 0; right: 0;
+    height: var(--nav-h);
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 16px rgba(0,0,0,.05);
+    z-index: 1040;
+    display: flex; align-items: center;
+    padding: 0 20px; gap: 16px;
+  }
+
+  /* Brand */
+  .nav-brand {
+    display: flex; align-items: center; gap: 8px;
+    text-decoration: none; flex-shrink: 0;
+  }
+  .nav-brand img { height: 36px; }
+  .nav-brand-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; color: var(--dark); font-weight: 700;
+    display: none;
+  }
+  @media(min-width:768px){ .nav-brand-text { display: block; } }
+
+  /* Search */
+  .nav-search {
+    flex: 1; max-width: 600px;
+    display: flex; align-items: center;
+    border: 2px solid var(--border); border-radius: 12px;
+    overflow: hidden; background: #fff;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .nav-search:focus-within {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(25,135,84,.1);
+  }
+  .nav-search input {
+    flex: 1; border: none; outline: none; padding: 9px 14px;
+    font-size: .88rem; font-family: 'DM Sans', sans-serif;
+    color: var(--dark); background: transparent;
+  }
+  .nav-search-btn {
+    background: var(--brand); border: none;
+    padding: 9px 16px; color: #fff;
+    cursor: pointer; transition: background .2s;
+    font-size: .9rem;
+  }
+  .nav-search-btn:hover { background: var(--brand-dark); }
+
+  /* Nav actions */
+  .nav-actions {
+    display: flex; align-items: center; gap: 6px;
+    margin-left: auto; flex-shrink: 0;
+  }
+
+  .nav-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 7px 12px; border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: #fff; color: var(--mid);
+    font-size: .8rem; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: border-color .2s, color .2s, background .2s;
+    white-space: nowrap;
+  }
+  .nav-btn:hover { border-color: var(--brand); color: var(--brand); }
+  .nav-btn.primary {
+    background: var(--brand); color: #fff; border-color: var(--brand);
+  }
+  .nav-btn.primary:hover { background: var(--brand-dark); color: #fff; }
+
+  .nav-icon-btn {
+    position: relative;
+    width: 40px; height: 40px; border-radius: 10px;
+    border: 1.5px solid var(--border); background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--mid); font-size: 1.1rem;
+    text-decoration: none; transition: border-color .2s, color .2s;
+    flex-shrink: 0;
+  }
+  .nav-icon-btn:hover { border-color: var(--brand); color: var(--brand); }
+  .nav-badge {
+    position: absolute; top: -5px; right: -5px;
+    background: var(--accent); color: #fff;
+    font-size: .6rem; font-weight: 800;
+    min-width: 18px; height: 18px;
+    border-radius: 9px; padding: 0 4px;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid #fff;
+  }
+
+  /* Categories bar */
+  .cat-bar {
+    position: fixed; top: calc(var(--promo-h) + var(--nav-h)); left: 0; right: 0;
+    background: var(--dark); z-index: 1030;
+    display: flex; align-items: center; gap: 4px;
+    padding: 0 20px; height: 38px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .cat-bar::-webkit-scrollbar { display: none; }
+  .cat-link {
+    color: #ccc; font-size: .75rem; font-weight: 500;
+    text-decoration: none; padding: 4px 12px;
+    border-radius: 6px; white-space: nowrap;
+    transition: color .15s, background .15s;
+    flex-shrink: 0;
+  }
+  .cat-link:hover { color: #fff; background: rgba(255,255,255,.1); }
+  .cat-link.hot { color: var(--accent); font-weight: 700; }
+
+  /* Adjust body for cat bar */
+  body { padding-top: calc(var(--nav-h) + var(--promo-h) + 38px); }
+
+  /* ══════════════════════════════════════
+     SEARCH DROPDOWN
+  ══════════════════════════════════════ */
+  .search-dropdown {
+    position: absolute;
+    top: calc(var(--promo-h) + var(--nav-h));
+    left: 50%; transform: translateX(-50%);
+    width: min(600px, calc(100vw - 40px));
+    background: #fff; border-radius: 0 0 14px 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.12);
+    z-index: 2000; display: none;
+    max-height: 360px; overflow-y: auto;
+    border: 1px solid var(--border); border-top: none;
+  }
+  .search-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; text-decoration: none; color: var(--dark);
+    transition: background .15s;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-item:last-child { border-bottom: none; }
+  .search-item:hover { background: var(--light); }
+  .search-item img {
+    width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
+    flex-shrink: 0; background: #f0f0f5;
+  }
+  .search-item-name { font-size: .85rem; font-weight: 600; }
+  .search-item-price { font-size: .78rem; color: var(--brand); font-weight: 700; }
+  .search-empty {
+    padding: 20px; text-align: center;
+    font-size: .85rem; color: #999;
+  }
+
+  /* ══════════════════════════════════════
+     FLASH MESSAGES
+  ══════════════════════════════════════ */
+  .flash-msg {
+    background: #d1fae5; border: 1px solid #6ee7b7;
+    border-radius: 10px; padding: 10px 16px;
+    font-size: .85rem; color: #065f46;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* ══════════════════════════════════════
+     BOTTOM NAV (Mobile)
+  ══════════════════════════════════════ */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 20px rgba(0,0,0,.07);
+    display: flex; align-items: stretch;
+    height: 58px; z-index: 1040;
+  }
+  @media(min-width:768px){ .bottom-nav { display: none; } }
+
+  .bnav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-decoration: none; color: #aaa;
+    font-size: .65rem; font-weight: 600;
+    gap: 3px; position: relative;
+    transition: color .15s;
+  }
+  .bnav-item i { font-size: 1.25rem; }
+  .bnav-item.active { color: var(--brand); }
+  .bnav-item.active::before {
+    content: ''; position: absolute; top: 0; left: 20%; right: 20%;
+    height: 3px; background: var(--brand); border-radius: 0 0 4px 4px;
+  }
+  .bnav-badge {
+    position: absolute; top: 6px;
+    right: calc(50% - 16px);
+    background: var(--accent); color: #fff;
+    font-size: .55rem; font-weight: 800;
+    min-width: 16px; height: 16px; border-radius: 8px;
+    padding: 0 3px; display: flex; align-items: center;
+    justify-content: center; border: 1.5px solid #fff;
+  }
+
+  /* ══════════════════════════════════════
+     DROPDOWN MENUS
+  ══════════════════════════════════════ */
+  .dropdown-menu {
+    border: 1.5px solid var(--border);
+    border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.1);
+    padding: 8px; min-width: 200px;
+  }
+  .dropdown-item {
+    border-radius: 8px; font-size: .85rem; padding: 8px 12px;
+    color: var(--dark); transition: background .15s;
+  }
+  .dropdown-item:hover { background: var(--brand-light, #e8f5e9); color: var(--brand); }
+  .dropdown-divider { margin: 6px 0; }
+
+  /* User menu avatar */
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand), #0d6efd);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: .7rem; font-weight: 700; flex-shrink: 0;
+  }
+
+  /* Admin badge */
+  .admin-tag {
+    background: #fff3cd; color: #856404;
+    font-size: .65rem; font-weight: 700;
+    padding: 2px 6px; border-radius: 6px;
+  }
+
+  /* ══════════════════════════════════════
+     MAIN CONTENT
+  ══════════════════════════════════════ */
+  .main-content {
+    max-width: 1200px; margin: 0 auto;
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #bbb; }
   </style>
 </head>
 
 <body>
 
-<!-- Top Navbar -->
-<nav class="navbar bg-white shadow-sm">
-  <div class="container-fluid d-flex align-items-center justify-content-between">
-
-    <!-- Brand -->
-    <a class="navbar-brand d-flex align-items-center text-dark fw-bold" href="/">
-      <img src="{{ url_for('static', filename='logo/shopluxe.png') }}" alt="ShopLuxe" style="height: 40px;">
-      <span class="ms-2">ShopLuxe</span>
-    </a>
-
-    <!-- Right Side -->
-    <div class="d-flex align-items-center ms-auto gap-2">
-
-      <!-- Cart (Desktop only) -->
-      <a class="btn btn-custom d-none d-md-inline" href="{{ url_for('cart') }}">
-        🛒 Cart ({{ session.cart|length if session.cart else 0 }})
-      </a>
-
-      <!-- ✅ Admin Button (Desktop) -->
-      {% if session.get('admin_logged_in') %}
-        <a class="btn btn-custom" href="{{ url_for('admin') }}">⚙️ Admin</a>
-      {% endif %}
-
-      <!-- Profile/Login (Desktop only) -->
-      {% if session.get('user_id') %}
-        <div class="dropdown d-none d-md-block">
-          <button class="btn btn-custom dropdown-toggle" type="button" data-bs-toggle="dropdown">
-            👤 {{ session.get('user_name') }}
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="{{ url_for('profile') }}">My Profile</a></li>
-            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
-          </ul>
-        </div>
-      {% else %}
-        <div class="d-none d-md-flex gap-2">
-          <a class="btn btn-custom" href="{{ url_for('login') }}">Login</a>
-          <a class="btn btn-custom" href="{{ url_for('signup') }}">Sign Up</a>
-        </div>
-      {% endif %}
-
-      <!-- Categories (Desktop only) -->
-      <div class="dropdown d-none d-md-block">
-        <button class="btn btn-custom dropdown-toggle" type="button" data-bs-toggle="dropdown">
-          🛍️ Categories
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Shoes') }}">Shoes</a></li>
-          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Tops') }}">Tops</a></li>
-          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Bottoms') }}">Bottoms</a></li>
-          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Men') }}">Men's</a></li>
-          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Women') }}">Women's</a></li>
-          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Kids') }}">Kid's</a></li>
-          <li><a class="dropdown-item" href="{{ url_for('filtered', category='Accessories') }}">Accessories</a></li>
-        </ul>
-      </div>
-
-    </div>
+<!-- ══ PROMO BANNER ══ -->
+<div class="promo-banner" id="promoBanner">
+  <div class="promo-text">
+    <span class="dot"></span>
+    FREE delivery on all orders · Pay securely with Paystack
+    <span class="dot"></span>
   </div>
-</nav>
+  <div class="promo-text d-none d-md-flex">
+    🇬🇭 Delivering across Ghana · 2–4 working days
+  </div>
+  <button class="promo-close" onclick="closeBanner()">✕</button>
+</div>
 
-<!-- Search Bar (Home page only) -->
-{% if active_page == 'home' %}
-<div class="container mt-3 position-relative" style="max-width: 700px;">
-  <div class="input-group shadow-sm">
-    <input
-      id="amazon-live-search"
-      type="search"
-      class="form-control py-2 px-3"
-      placeholder="Search for products..."
-      autocomplete="off"
-    >
-    <button class="btn btn-dark" type="button" id="amazon-search-btn">
+<!-- ══ TOP NAV ══ -->
+<nav class="top-nav">
+
+  <!-- Brand -->
+  <a class="nav-brand" href="{{ url_for('home') }}">
+    <img src="{{ url_for('static', filename='logo/shopluxe.png') }}" alt="ShopLuxe">
+    <span class="nav-brand-text">ShopLuxe</span>
+  </a>
+
+  <!-- Search (desktop) -->
+  <div class="nav-search d-none d-md-flex" id="navSearch">
+    <input type="search" id="searchInput" placeholder="Search products, brands, categories..."
+           autocomplete="off" oninput="liveSearch(this.value)" onfocus="showDropdown()"
+           onkeydown="if(event.key==='Enter') performSearch()">
+    <button class="nav-search-btn" onclick="performSearch()">
       <i class="bi bi-search"></i>
     </button>
   </div>
 
-  <div id="amazon-search-results"
-       class="list-group position-absolute w-100 mt-1 bg-white border rounded shadow-sm"
-       style="z-index: 2000; display: none; max-height: 320px; overflow-y: auto;">
-  </div>
-</div>
+  <!-- Actions -->
+  <div class="nav-actions">
 
-<script>
-const searchInput = document.getElementById('amazon-live-search');
-const searchBtn = document.getElementById('amazon-search-btn');
-const resultsBox = document.getElementById('amazon-search-results');
-let searchTimeout = null;
-
-function renderResults(data, query) {
-  if (!data.length) {
-    resultsBox.innerHTML = `<div class="list-group-item text-center text-muted py-2">No results found for "<strong>${query}</strong>"</div>`;
-    resultsBox.style.display = 'block';
-    return;
-  }
-  let html = '';
-  data.forEach(p => {
-    html += `
-      <a href="/product/${p.id}" class="list-group-item list-group-item-action d-flex align-items-center py-2">
-        <img src="${p.image_url}" alt="${p.name}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; margin-right: 10px;">
-        <div class="fw-semibold text-truncate" style="max-width: 400px;">${p.name}</div>
-      </a>`;
-  });
-  resultsBox.innerHTML = html;
-  resultsBox.style.display = 'block';
-}
-
-function performSearch() {
-  const query = searchInput.value.trim();
-  if (!query) { resultsBox.style.display = 'none'; return; }
-  fetch(`/live_search?q=${encodeURIComponent(query)}`)
-    .then(res => res.json())
-    .then(data => renderResults(data, query))
-    .catch(() => {
-      resultsBox.innerHTML = `<div class="list-group-item text-danger text-center">⚠️ Error loading results</div>`;
-      resultsBox.style.display = 'block';
-    });
-}
-
-searchInput.addEventListener('input', () => {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(performSearch, 300);
-});
-searchBtn.addEventListener('click', performSearch);
-document.addEventListener('click', e => {
-  if (!e.target.closest('.container')) resultsBox.style.display = 'none';
-});
-</script>
-{% endif %}
-
-<!-- Main Content -->
-<div class="container mt-4 mb-5">
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <div class="alert alert-info">{{ messages[0] }}</div>
-    {% endif %}
-  {% endwith %}
-  {% block content %}{% endblock %}
-</div>
-
-<!-- Bottom Navigation (Mobile Only) -->
-<nav class="navbar fixed-bottom bg-white d-md-none border-top shadow-sm">
-  <div class="container d-flex justify-content-around text-center py-1">
-
-    <!-- Home -->
-    <a href="{{ url_for('home') }}" class="{% if active_page == 'home' %}active{% endif %}">
-      <i class="bi bi-house-fill fs-5"></i>
-      <small>Home</small>
-    </a>
-
-    <!-- Categories -->
-    <a href="{{ url_for('categories') }}" class="{% if active_page == 'categories' %}active{% endif %}">
-      <i class="bi bi-grid-3x3-gap-fill fs-5"></i>
-      <small>Categories</small>
-    </a>
+    <!-- Mobile search toggle -->
+    <button class="nav-icon-btn d-md-none" onclick="toggleMobileSearch()" title="Search">
+      <i class="bi bi-search"></i>
+    </button>
 
     <!-- Cart -->
-    <a href="{{ url_for('cart') }}" class="position-relative {% if active_page == 'cart' %}active{% endif %}">
-      <i class="bi bi-bag-fill fs-5"></i>
-      <small>Cart</small>
-      <span id="cart-count" class="position-absolute badge rounded-pill bg-danger text-white"
-            style="font-size: 0.65rem; top: 3px; right: 12px; transform: translate(25%, -25%);">
-        {{ session.get('cart', [])|length }}
+    <a href="{{ url_for('cart') }}" class="nav-icon-btn" title="Cart">
+      <i class="bi bi-bag"></i>
+      <span class="nav-badge" id="cartBadgeTop">{{ session.get('cart', [])|length or '' }}</span>
+    </a>
+
+    <!-- Wishlist (desktop) -->
+    <a href="{{ url_for('wishlist') }}" class="nav-icon-btn d-none d-md-flex" title="Wishlist">
+      <i class="bi bi-heart"></i>
+      <span class="nav-badge" id="wishBadgeTop" style="background:#e91e8c;">
+        {{ session.get('wishlist', [])|length or '' }}
       </span>
     </a>
 
-    <!-- Wishlist -->
-    <a href="{{ url_for('wishlist') }}" class="position-relative {% if active_page == 'wishlist' %}active{% endif %}">
-      <i class="bi bi-heart fs-5"></i>
-      <small>Wishlist</small>
-      <span id="wishlist-count" class="position-absolute badge rounded-pill bg-danger text-white"
-            style="font-size: 0.65rem; top: 3px; right: 18px; transform: translate(25%, -25%);">
-        {{ session.get('wishlist', [])|length }}
-      </span>
-    </a>
-
-    <!-- Profile/Login -->
-    {% if session.get('user_id') %}
-      <a href="{{ url_for('profile') }}" class="{% if active_page == 'profile' %}active{% endif %}">
-        <i class="bi bi-person-fill fs-5"></i>
-        <small>Profile</small>
-      </a>
-    {% else %}
-      <a href="{{ url_for('login') }}" class="{% if active_page == 'login' %}active{% endif %}">
-        <i class="bi bi-box-arrow-in-right fs-5"></i>
-        <small>Login</small>
-      </a>
-    {% endif %}
-
-    <!-- ✅ Admin Button (Mobile) -->
+    <!-- Admin -->
     {% if session.get('admin_logged_in') %}
-      <a href="{{ url_for('admin') }}">
-        <i class="bi bi-gear-fill fs-5"></i>
-        <small>Admin</small>
-      </a>
+    <a href="{{ url_for('admin') }}" class="nav-btn d-none d-md-flex">
+      <i class="bi bi-gear"></i> Admin
+    </a>
     {% endif %}
+
+    <!-- User -->
+    {% if session.get('user_id') %}
+    <div class="dropdown d-none d-md-block">
+      <button class="nav-btn dropdown-toggle" data-bs-toggle="dropdown">
+        <div class="user-avatar">{{ session.get('user_name', 'U')[0].upper() }}</div>
+        {{ session.get('user_name', '').split()[0] }}
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li class="px-3 py-2">
+          <div style="font-size:.8rem;color:#999;">Signed in as</div>
+          <div style="font-size:.85rem;font-weight:600;color:var(--dark);">{{ session.get('user_email','') }}</div>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="bi bi-person me-2"></i>My Profile</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('cart') }}"><i class="bi bi-bag me-2"></i>My Cart</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('wishlist') }}"><i class="bi bi-heart me-2"></i>Wishlist</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+      </ul>
+    </div>
+    {% else %}
+    <a href="{{ url_for('login') }}" class="nav-btn d-none d-md-flex">
+      <i class="bi bi-box-arrow-in-right"></i> Sign In
+    </a>
+    <a href="{{ url_for('signup') }}" class="nav-btn primary d-none d-md-flex">
+      <i class="bi bi-person-plus"></i> Sign Up
+    </a>
+    {% endif %}
+
+    <!-- Categories dropdown (desktop) -->
+    <div class="dropdown d-none d-md-block">
+      <button class="nav-btn dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="bi bi-grid-3x3-gap"></i> Categories
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        {% set cats = [
+          ('Sneakers','bi-lightning',''),
+          ('Heels','bi-star',''),
+          ('Sandals','bi-sun',''),
+          ('Boots','bi-snow',''),
+          ('Loafers','bi-briefcase',''),
+          ('Slippers','bi-house',''),
+          ('Formal','bi-suit-club',''),
+          ('Sport','bi-trophy',''),
+          ('Kids','bi-balloon','')
+        ] %}
+        {% for name, icon, _ in cats %}
+        <li>
+          <a class="dropdown-item" href="{{ url_for('filtered', category=name) }}">
+            <i class="bi {{ icon }} me-2" style="color:var(--brand);"></i>{{ name }}
+          </a>
+        </li>
+        {% endfor %}
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="{{ url_for('categories') }}"><i class="bi bi-grid me-2"></i>All Categories</a></li>
+      </ul>
+    </div>
 
   </div>
 </nav>
 
-<!-- Live Count Scripts -->
+<!-- ══ CATEGORIES BAR ══ -->
+<div class="cat-bar">
+  <a href="{{ url_for('home') }}" class="cat-link {% if active_page=='home' %}hot{% endif %}">🏠 Home</a>
+  <a href="{{ url_for('filtered', category='Sneakers') }}" class="cat-link">Sneakers</a>
+  <a href="{{ url_for('filtered', category='Heels') }}" class="cat-link">Heels</a>
+  <a href="{{ url_for('filtered', category='Sandals') }}" class="cat-link">Sandals</a>
+  <a href="{{ url_for('filtered', category='Boots') }}" class="cat-link">Boots</a>
+  <a href="{{ url_for('filtered', category='Loafers') }}" class="cat-link">Loafers</a>
+  <a href="{{ url_for('filtered', category='Slippers') }}" class="cat-link">Slippers</a>
+  <a href="{{ url_for('filtered', category='Formal') }}" class="cat-link">Formal</a>
+  <a href="{{ url_for('filtered', category='Sport') }}" class="cat-link">Sport</a>
+  <a href="{{ url_for('filtered', category='Kids') }}" class="cat-link">Kids</a>
+  <a href="{{ url_for('filtered', category='Sale') }}" class="cat-link" style="color:#ff6600;font-weight:700;">🔥 Sale</a>
+</div>
+
+<!-- ══ MOBILE SEARCH BAR (hidden by default) ══ -->
+<div id="mobileSearchBar" style="
+  display:none; position:fixed;
+  top:calc(var(--promo-h) + var(--nav-h));
+  left:0;right:0; background:#fff;
+  padding:10px 16px; z-index:1035;
+  border-bottom:1px solid var(--border);
+  box-shadow:0 4px 16px rgba(0,0,0,.08);
+">
+  <div class="nav-search" style="max-width:100%;">
+    <input type="search" id="mobileSearchInput" placeholder="Search products..."
+           autocomplete="off" oninput="liveSearch(this.value)"
+           onkeydown="if(event.key==='Enter') performSearch(true)">
+    <button class="nav-search-btn" onclick="performSearch(true)">
+      <i class="bi bi-search"></i>
+    </button>
+  </div>
+</div>
+
+<!-- ══ SEARCH DROPDOWN ══ -->
+<div class="search-dropdown" id="searchDropdown"></div>
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="main-content">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="flash-msg">
+          <i class="bi bi-check-circle-fill" style="color:var(--brand);"></i>
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</div>
+
+<!-- ══ BOTTOM NAV (Mobile) ══ -->
+<nav class="bottom-nav">
+
+  <a href="{{ url_for('home') }}" class="bnav-item {% if active_page=='home' %}active{% endif %}">
+    <i class="bi bi-house{% if active_page=='home' %}-fill{% endif %}"></i>
+    <span>Home</span>
+  </a>
+
+  <a href="{{ url_for('categories') }}" class="bnav-item {% if active_page=='categories' %}active{% endif %}">
+    <i class="bi bi-grid{% if active_page=='categories' %}-fill{% endif %}"></i>
+    <span>Shop</span>
+  </a>
+
+  <a href="{{ url_for('cart') }}" class="bnav-item {% if active_page=='cart' %}active{% endif %}">
+    <i class="bi bi-bag{% if active_page=='cart' %}-fill{% endif %}"></i>
+    <span>Cart</span>
+    <span class="bnav-badge" id="cartBadge">{{ session.get('cart',[])|length or '' }}</span>
+  </a>
+
+  <a href="{{ url_for('wishlist') }}" class="bnav-item {% if active_page=='wishlist' %}active{% endif %}">
+    <i class="bi bi-heart{% if active_page=='wishlist' %}-fill{% endif %}"></i>
+    <span>Saved</span>
+    <span class="bnav-badge" id="wishBadge" style="background:#e91e8c;">
+      {{ session.get('wishlist',[])|length or '' }}
+    </span>
+  </a>
+
+  {% if session.get('user_id') %}
+  <a href="{{ url_for('profile') }}" class="bnav-item {% if active_page=='profile' %}active{% endif %}">
+    <i class="bi bi-person{% if active_page=='profile' %}-fill{% endif %}"></i>
+    <span>Profile</span>
+  </a>
+  {% else %}
+  <a href="{{ url_for('login') }}" class="bnav-item {% if active_page=='login' %}active{% endif %}">
+    <i class="bi bi-box-arrow-in-right"></i>
+    <span>Sign In</span>
+  </a>
+  {% endif %}
+
+  {% if session.get('admin_logged_in') %}
+  <a href="{{ url_for('admin') }}" class="bnav-item">
+    <i class="bi bi-gear-fill"></i>
+    <span>Admin</span>
+  </a>
+  {% endif %}
+
+</nav>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-function updateWishlistCount() {
-  fetch('/wishlist_count')
-    .then(res => res.json())
-    .then(data => {
-      const badge = document.getElementById('wishlist-count');
-      if (badge) badge.textContent = data.count > 0 ? data.count : '';
-    });
+// ── Promo banner ──
+function closeBanner() {
+  document.getElementById('promoBanner').style.display = 'none';
+  document.body.style.paddingTop = 'calc(var(--nav-h) + 38px)';
+  document.querySelector('.top-nav').style.top = '0';
+  document.querySelector('.cat-bar').style.top = 'var(--nav-h)';
+  const msb = document.getElementById('mobileSearchBar');
+  if(msb) msb.style.top = 'var(--nav-h)';
 }
 
-function updateCartCount() {
-  fetch('/cart_count')
-    .then(res => res.json())
-    .then(data => {
-      const badge = document.getElementById('cart-count');
-      if (badge) badge.textContent = data.count > 0 ? data.count : '';
-    });
+// ── Mobile search toggle ──
+let mobileSearchOpen = false;
+function toggleMobileSearch() {
+  mobileSearchOpen = !mobileSearchOpen;
+  const bar = document.getElementById('mobileSearchBar');
+  bar.style.display = mobileSearchOpen ? 'block' : 'none';
+  if (mobileSearchOpen) document.getElementById('mobileSearchInput').focus();
 }
 
-document.addEventListener('wishlistChanged', updateWishlistCount);
-document.addEventListener('cartChanged', updateCartCount);
-setInterval(updateWishlistCount, 8000);
+// ── Live search ──
+let searchTimer = null;
+function liveSearch(query) {
+  clearTimeout(searchTimer);
+  if (!query.trim()) { hideDropdown(); return; }
+  searchTimer = setTimeout(() => {
+    fetch(`/live_search?q=${encodeURIComponent(query)}`)
+      .then(r => r.json())
+      .then(data => renderSearchResults(data, query))
+      .catch(() => {});
+  }, 280);
+}
+
+function renderSearchResults(data, query) {
+  const box = document.getElementById('searchDropdown');
+  if (!data.length) {
+    box.innerHTML = `<div class="search-empty">No results for "<strong>${query}</strong>"</div>`;
+  } else {
+    box.innerHTML = data.map(p => `
+      <a href="/product/${p.id}" class="search-item">
+        <img src="${p.image_url}" alt="${p.name}" onerror="this.src=''">
+        <div>
+          <div class="search-item-name">${p.name}</div>
+          <div class="search-item-price">GH₵ ${p.price}</div>
+        </div>
+      </a>`).join('');
+  }
+  box.style.display = 'block';
+}
+
+function showDropdown() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (q) liveSearch(q);
+}
+function hideDropdown() {
+  document.getElementById('searchDropdown').style.display = 'none';
+}
+
+function performSearch(mobile = false) {
+  const q = (mobile
+    ? document.getElementById('mobileSearchInput')
+    : document.getElementById('searchInput')).value.trim();
+  if (q) window.location.href = `/search?q=${encodeURIComponent(q)}`;
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#navSearch') && !e.target.closest('#searchDropdown')) {
+    hideDropdown();
+  }
+});
+
+// ── Live badge updates ──
+function updateCounts() {
+  fetch('/cart_count').then(r => r.json()).then(d => {
+    const v = d.count > 0 ? d.count : '';
+    ['cartBadge','cartBadgeTop'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = v;
+    });
+  }).catch(()=>{});
+
+  fetch('/wishlist_count').then(r => r.json()).then(d => {
+    const v = d.count > 0 ? d.count : '';
+    ['wishBadge','wishBadgeTop'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = v;
+    });
+  }).catch(()=>{});
+}
+
+document.addEventListener('cartChanged', updateCounts);
+document.addEventListener('wishlistChanged', updateCounts);
+setInterval(updateCounts, 10000);
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
