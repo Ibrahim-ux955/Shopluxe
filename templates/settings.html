@@ -1,14 +1,252 @@
 {% extends 'base.html' %}
-
 {% block content %}
-<div class="container mt-5" style="max-width: 500px;">
-  <div class="card shadow border-0 rounded-4">
-    <div class="card-body text-center p-4">
-      <h3 class="mb-3">⚙️ Account Settings</h3>
-      <p class="text-muted">Manage your profile, password, and preferences here.</p>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root {
+  --brand:#198754;--brand-light:#e8f5e9;--dark:#1a1a2e;
+  --mid:#555570;--light:#f4f6f9;--card:#ffffff;--border:#eef0f5;
+  --radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.06);--danger:#dc3545;
+}
+body { font-family:'DM Sans',sans-serif; background:var(--light); }
+.settings-page { max-width:700px; margin:0 auto; padding:2rem 1rem 5rem; }
 
-      <a href="{{ url_for('profile') }}" class="btn btn-outline-primary mt-3">⬅ Back to Profile</a>
+.page-header { margin-bottom:24px; }
+.page-title { font-family:'Playfair Display',serif; font-size:1.8rem; color:var(--dark); margin:0 0 4px; }
+.page-sub { font-size:.82rem; color:#999; margin:0; }
+
+.a-card { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; overflow:hidden; }
+.a-card-head { display:flex; align-items:center; gap:10px; padding:14px 20px; border-bottom:1px solid var(--border); background:#fafbfc; }
+.a-card-head i { color:var(--brand); font-size:1rem; }
+.a-card-title { font-weight:700; font-size:.9rem; color:var(--dark); margin:0; }
+.a-card-body { padding:20px; }
+
+.f-label { font-size:.7rem; font-weight:700; color:var(--mid); text-transform:uppercase; letter-spacing:.5px; margin-bottom:5px; display:block; }
+.f-input { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:10px 13px; font-size:.86rem; font-family:'DM Sans',sans-serif; color:var(--dark); background:#fff; transition:border-color .2s,box-shadow .2s; outline:none; }
+.f-input:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(25,135,84,.1); }
+.f-input:disabled { background:#f8f9fa; color:#aaa; cursor:not-allowed; }
+.row-2 { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+@media(max-width:540px){ .row-2{grid-template-columns:1fr;} }
+
+.input-wrap { position:relative; }
+.input-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#bbb; font-size:.88rem; pointer-events:none; }
+.input-icon + .f-input { padding-left:36px; }
+.toggle-pw { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:#bbb; cursor:pointer; font-size:.88rem; padding:0; transition:color .2s; }
+.toggle-pw:hover { color:var(--brand); }
+
+.btn-save { background:linear-gradient(135deg,#198754,#0d6efd); color:#fff; border:none; border-radius:10px; padding:11px 26px; font-size:.88rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; display:inline-flex; align-items:center; gap:5px; transition:opacity .2s; }
+.btn-save:hover { opacity:.92; }
+.btn-cancel { background:none; border:1.5px solid var(--border); border-radius:10px; padding:11px 20px; font-size:.86rem; font-weight:600; color:var(--mid); cursor:pointer; font-family:'DM Sans',sans-serif; text-decoration:none; display:inline-flex; align-items:center; gap:5px; transition:border-color .2s; }
+.btn-cancel:hover { border-color:var(--brand); color:var(--brand); }
+
+/* Toggle switch */
+.pref-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
+.pref-row:last-child { border-bottom:none; padding-bottom:0; }
+.pref-info strong { font-size:.86rem; color:var(--dark); display:block; }
+.pref-info small { font-size:.72rem; color:#aaa; }
+.toggle-sw { position:relative; width:40px; height:22px; flex-shrink:0; }
+.toggle-sw input { opacity:0; width:0; height:0; }
+.toggle-sl { position:absolute; inset:0; background:#ddd; border-radius:22px; cursor:pointer; transition:background .2s; }
+.toggle-sl::before { content:''; position:absolute; width:16px; height:16px; border-radius:50%; background:#fff; left:3px; top:3px; transition:transform .2s; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+.toggle-sw input:checked + .toggle-sl { background:var(--brand); }
+.toggle-sw input:checked + .toggle-sl::before { transform:translateX(18px); }
+
+/* Avatar */
+.avatar-wrap { display:flex; align-items:center; gap:18px; margin-bottom:20px; }
+.avatar-circle { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--brand),#0d6efd); color:#fff; font-family:'Playfair Display',serif; font-size:1.8rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.avatar-info h6 { font-weight:700; color:var(--dark); margin:0 0 3px; font-size:.95rem; }
+.avatar-info p { font-size:.76rem; color:#aaa; margin:0 0 8px; }
+.btn-change-avatar { background:var(--brand-light); color:var(--brand); border:none; border-radius:8px; padding:6px 14px; font-size:.74rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
+
+/* Danger zone */
+.danger-zone { border:1.5px solid #fce4e4; border-radius:var(--radius); padding:18px 20px; }
+.danger-title { font-size:.86rem; font-weight:700; color:var(--danger); margin-bottom:4px; }
+.danger-sub { font-size:.76rem; color:#aaa; margin-bottom:14px; }
+.btn-danger { background:#fce4e4; color:var(--danger); border:none; border-radius:10px; padding:10px 20px; font-size:.82rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; display:inline-flex; align-items:center; gap:5px; transition:background .2s; }
+.btn-danger:hover { background:#dc3545; color:#fff; }
+
+/* Strength bar */
+.strength-bar { height:4px; border-radius:4px; background:var(--border); margin-top:-8px; margin-bottom:12px; overflow:hidden; }
+.strength-fill { height:100%; border-radius:4px; width:0%; transition:width .3s,background .3s; }
+.strength-text { font-size:.68rem; color:#aaa; margin-bottom:10px; }
+</style>
+
+<div class="settings-page">
+
+  <div class="page-header">
+    <h1 class="page-title">Account Settings</h1>
+    <p class="page-sub">Manage your profile, password and preferences</p>
+  </div>
+
+  <!-- ── PROFILE ── -->
+  <div class="a-card">
+    <div class="a-card-head"><i class="bi bi-person-circle"></i><h6 class="a-card-title">Profile Information</h6></div>
+    <div class="a-card-body">
+      <div class="avatar-wrap">
+        <div class="avatar-circle">{{ session.get('user_name','U')[0].upper() }}</div>
+        <div class="avatar-info">
+          <h6>{{ session.get('user_name','') }}</h6>
+          <p>{{ session.get('user_email','') }}</p>
+          <button class="btn-change-avatar" onclick="alert('Avatar upload coming soon!')">
+            <i class="bi bi-camera"></i> Change Photo
+          </button>
+        </div>
+      </div>
+
+      <form method="POST" action="{{ url_for('update_profile') }}">
+        <input type="hidden" name="action" value="update_profile">
+        <div class="row-2 mb-3">
+          <div>
+            <label class="f-label">Full Name</label>
+            <div class="input-wrap">
+              <i class="bi bi-person input-icon"></i>
+              <input type="text" name="name" class="f-input"
+                     value="{{ session.get('user_name','') }}" required>
+            </div>
+          </div>
+          <div>
+            <label class="f-label">Phone Number</label>
+            <div class="input-wrap">
+              <i class="bi bi-telephone input-icon"></i>
+              <input type="tel" name="phone" class="f-input" placeholder="024 000 0000">
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="f-label">Email Address</label>
+          <div class="input-wrap">
+            <i class="bi bi-envelope input-icon"></i>
+            <input type="email" class="f-input"
+                   value="{{ session.get('user_email','') }}" disabled>
+          </div>
+          <div style="font-size:.68rem;color:#aaa;margin-top:3px;">Email cannot be changed. Contact support if needed.</div>
+        </div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;">
+          <button type="submit" class="btn-save"><i class="bi bi-check-circle"></i> Save Changes</button>
+          <a href="{{ url_for('profile') }}" class="btn-cancel"><i class="bi bi-arrow-left"></i> Back to Profile</a>
+        </div>
+      </form>
     </div>
   </div>
+
+  <!-- ── PASSWORD ── -->
+  <div class="a-card">
+    <div class="a-card-head"><i class="bi bi-lock-fill"></i><h6 class="a-card-title">Change Password</h6></div>
+    <div class="a-card-body">
+      <form method="POST" action="{{ url_for('update_profile') }}">
+        <input type="hidden" name="action" value="change_password">
+        <div class="mb-3">
+          <label class="f-label">Current Password</label>
+          <div class="input-wrap">
+            <i class="bi bi-lock input-icon"></i>
+            <input type="password" name="current_password" class="f-input"
+                   placeholder="Enter current password" required autocomplete="current-password">
+            <button type="button" class="toggle-pw" onclick="toggleField('current_password','cpwIcon')">
+              <i class="bi bi-eye" id="cpwIcon"></i>
+            </button>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="f-label">New Password</label>
+          <div class="input-wrap">
+            <i class="bi bi-lock input-icon"></i>
+            <input type="password" name="new_password" id="newPw" class="f-input"
+                   placeholder="Min. 6 characters" required autocomplete="new-password"
+                   oninput="checkStrength(this.value)">
+            <button type="button" class="toggle-pw" onclick="toggleField('newPw','npwIcon')">
+              <i class="bi bi-eye" id="npwIcon"></i>
+            </button>
+          </div>
+          <div class="strength-bar"><div class="strength-fill" id="strFill"></div></div>
+          <div class="strength-text" id="strText">Enter a new password</div>
+        </div>
+        <div class="mb-3">
+          <label class="f-label">Confirm New Password</label>
+          <div class="input-wrap">
+            <i class="bi bi-lock input-icon"></i>
+            <input type="password" name="confirm_password" id="confPw" class="f-input"
+                   placeholder="Repeat new password" required autocomplete="new-password">
+            <button type="button" class="toggle-pw" onclick="toggleField('confPw','cpw2Icon')">
+              <i class="bi bi-eye" id="cpw2Icon"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn-save"><i class="bi bi-shield-check"></i> Update Password</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── NOTIFICATIONS ── -->
+  <div class="a-card">
+    <div class="a-card-head"><i class="bi bi-bell-fill"></i><h6 class="a-card-title">Notifications</h6></div>
+    <div class="a-card-body">
+      <div class="pref-row">
+        <div class="pref-info"><strong>Order Updates</strong><small>Emails about your order status</small></div>
+        <label class="toggle-sw"><input type="checkbox" checked><span class="toggle-sl"></span></label>
+      </div>
+      <div class="pref-row">
+        <div class="pref-info"><strong>Restock Alerts</strong><small>Notify when saved items are back</small></div>
+        <label class="toggle-sw"><input type="checkbox" checked><span class="toggle-sl"></span></label>
+      </div>
+      <div class="pref-row">
+        <div class="pref-info"><strong>Promotions & Sales</strong><small>Deals, discounts and new arrivals</small></div>
+        <label class="toggle-sw"><input type="checkbox"><span class="toggle-sl"></span></label>
+      </div>
+      <div class="pref-row">
+        <div class="pref-info"><strong>Newsletter</strong><small>Weekly picks and style guides</small></div>
+        <label class="toggle-sw"><input type="checkbox"><span class="toggle-sl"></span></label>
+      </div>
+      <div style="margin-top:14px;">
+        <button class="btn-save" onclick="alert('Preferences saved!')"><i class="bi bi-check-circle"></i> Save Preferences</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DANGER ZONE ── -->
+  <div class="a-card">
+    <div class="a-card-head"><i class="bi bi-exclamation-triangle-fill" style="color:#dc3545;"></i><h6 class="a-card-title" style="color:#dc3545;">Danger Zone</h6></div>
+    <div class="a-card-body">
+      <div class="danger-zone">
+        <div class="danger-title">Delete Account</div>
+        <div class="danger-sub">Once you delete your account, all your data including orders and wishlist will be permanently removed. This cannot be undone.</div>
+        <button class="btn-danger"
+                onclick="if(confirm('Are you sure? This cannot be undone.')) window.location.href='{{ url_for('delete_account') }}'">
+          <i class="bi bi-trash3"></i> Delete My Account
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<script>
+function toggleField(id, iconId) {
+  const f = document.getElementById(id);
+  const i = document.getElementById(iconId);
+  f.type = f.type === 'password' ? 'text' : 'password';
+  i.className = f.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+}
+
+function checkStrength(val) {
+  const fill = document.getElementById('strFill');
+  const text = document.getElementById('strText');
+  let score = 0;
+  if (val.length >= 6) score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const levels = [
+    {w:'0%',c:'#eee',t:'Enter a password'},
+    {w:'25%',c:'#ef4444',t:'Weak'},
+    {w:'50%',c:'#f97316',t:'Fair'},
+    {w:'75%',c:'#eab308',t:'Good'},
+    {w:'100%',c:'#22c55e',t:'Strong 💪'},
+  ];
+  const l = levels[Math.min(score,4)];
+  fill.style.width = l.w;
+  fill.style.background = l.c;
+  text.textContent = l.t;
+  text.style.color = l.c;
+}
+</script>
 {% endblock %}

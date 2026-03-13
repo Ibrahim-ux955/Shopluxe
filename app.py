@@ -298,101 +298,83 @@ def todatetime_filter(s):
 # MAIN ROUTES
 # ============================================================
 
-@app.route('/', endpoint='home')
-def index():
-    query = request.args.get('q', '').strip().lower()
-    category = request.args.get('category', '').strip().lower()
-    current_time = datetime.now(timezone.utc)
-    products = normalize_timestamps(load_data())
+@app.route('/')
+def home():
+    all_products = [p.to_dict() for p in Product.query.all()]
 
-    featured_products = [p for p in products if p.get('featured')]
-    popular_products = sorted(products, key=lambda x: x.get('popularity', 0), reverse=True)[:8]
-    new_products = sorted(products, key=lambda x: x['timestamp'], reverse=True)[:8]
-    sale_products = [p for p in products if p.get('on_sale')]
+    popular_products = sorted(all_products, key=lambda p: p.get('popularity', 0), reverse=True)[:10]
+    new_products = [p for p in all_products if p.get('new_arrival')][:8]
+    featured_products = [p for p in all_products if p.get('featured')][:10]
+    sale_products = [p for p in all_products if p.get('on_sale')][:8]
 
-    if query:
-        filtered_products = [p for p in products if query in p.get('name', '').lower()
-                             or query in p.get('description', '').lower()
-                             or query in p.get('category', '').lower()]
-    elif category:
-        filtered_products = [p for p in products if p.get('category', '').lower() == category]
-    else:
-        filtered_products = products
-
-    return render_template(
-        'index.html',
-        products=filtered_products,
-        featured_products=featured_products,
+    return render_template('index.html',
         popular_products=popular_products,
         new_products=new_products,
+        featured_products=featured_products,
         sale_products=sale_products,
-        query=query,
-        current_time=current_time,
-        selected_category=category or 'all',
-        active_page='home',
-        paystack_public_key=PAYSTACK_PUBLIC_KEY
+        active_page='home'
     )
 
 
 @app.route('/search')
 def search():
-    query = request.args.get('q', '').strip().lower()
-    current_time = datetime.now(timezone.utc)
-    products = normalize_timestamps(load_data())
+    q = request.args.get('q', '').strip()
+    if not q:
+        return redirect(url_for('home'))
 
-    filtered = [p for p in products if query in p.get('name', '').lower()
-                or query in p.get('category', '').lower()
-                or query in p.get('description', '').lower()] if query else products
+    products = [p.to_dict() for p in
+                Product.query.filter(Product.name.ilike(f'%{q}%')).all()]
 
-    featured_products = [p for p in filtered if (current_time - p['timestamp']).days <= 7]
+    # Still pass the section lists so the carousel still shows
+    all_products = [p.to_dict() for p in Product.query.all()]
+    popular_products = sorted(all_products, key=lambda p: p.get('popularity', 0), reverse=True)[:10]
+    new_products = [p for p in all_products if p.get('new_arrival')][:8]
+    featured_products = [p for p in all_products if p.get('featured')][:10]
+    sale_products = [p for p in all_products if p.get('on_sale')][:8]
 
-    return render_template(
-        'index.html',
-        products=filtered,
+    return render_template('index.html',
+        products=products,
+        query=q,
+        popular_products=popular_products,
+        new_products=new_products,
         featured_products=featured_products,
-        query=query,
-        current_time=current_time,
-        selected_category='all',
-        active_page='search'
+        sale_products=sale_products,
+        active_page='home'
     )
+
 
 
 @app.route('/live_search')
 def live_search():
-    query = request.args.get('q', '').strip().lower()
-    if not query:
+    q = request.args.get('q', '').strip().lower()
+    if not q:
         return jsonify([])
-
-    filtered = [p for p in load_data()
-                if query in p.get('name', '').lower()
-                or query in p.get('category', '').lower()
-                or query in p.get('description', '').lower()]
-
-    for p in filtered:
-        p['image_url'] = url_for('static', filename='shoes/' + (p.get('images', ['placeholder.jpg'])[0]))
-    return jsonify(filtered)
+    products = Product.query.filter(Product.name.ilike(f'%{q}%')).limit(8).all()
+    results = []
+    for p in products:
+        d = p.to_dict()
+        images = d.get('images', [])
+        results.append({
+            'id': d['id'],
+            'name': d['name'],
+            'price': d['price'],
+            'image_url': url_for('static', filename='shoes/' + images[0]) if images else ''
+        })
+    return jsonify(results)
 
 
 @app.route('/filtered/<category>')
 def filtered(category):
-    current_time = datetime.now(timezone.utc)
-    all_products = normalize_timestamps(load_data())
+    if category == 'Sale':
+        products = [p.to_dict() for p in Product.query.filter_by(on_sale=True).all()]
+    elif category == 'New Arrivals':
+        products = [p.to_dict() for p in Product.query.filter_by(new_arrival=True).all()]
+    else:
+        products = [p.to_dict() for p in Product.query.filter(
+            Product.category.ilike(category)).all()]
 
-    filtered_products = all_products if category.lower() == 'all' else [
-        p for p in all_products if category.lower() in p['category'].lower()
-    ]
-
-    featured_products = [p for p in filtered_products if (current_time - p['timestamp']).days <= 7]
-
-    return render_template(
-        'filtered.html',
-        products=filtered_products,
-        featured_products=featured_products,
-        current_time=current_time,
-        selected_category=category,
-        active_page='categories'
-    )
-
+    return render_template('filtered.html', products=products,
+                           category=category, active_page='categories')
 
 @app.route('/shop')
 def shop():
@@ -406,19 +388,9 @@ def shop():
         current_time=datetime.now(timezone.utc)
     )
 
-
 @app.route('/categories')
 def categories():
-    cats = [
-        {'name': 'Shoes', 'image': 'shoes.jpg'},
-        {'name': 'Tops', 'image': 'tops.jpg'},
-        {'name': 'Bottoms', 'image': 'bottoms.jpg'},
-        {'name': "Men's", 'image': 'men.jpg'},
-        {'name': "Women's", 'image': 'women.jpg'},
-        {'name': "Kid's", 'image': 'kids.jpg'},
-        {'name': 'Accessories', 'image': 'accessories.jpg'}
-    ]
-    return render_template('categories.html', categories=cats, active_page='categories')
+    return render_template('categories.html', active_page='categories')
 
 @app.route('/product/<product_id>')
 def product_detail(product_id):
@@ -469,7 +441,50 @@ def product_detail(product_id):
 
 @app.route('/settings')
 def settings():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
     return render_template('settings.html')
+
+@app.route('/update_profile', methods=['POST'])
+def update_profile():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    user = User.query.get(session['user_id'])
+    action = request.form.get('action')
+
+    if action == 'update_profile':
+        user.name = request.form.get('name', '').strip()
+        db.session.commit()
+        session['user_name'] = user.name
+        flash("✅ Profile updated successfully.")
+
+    elif action == 'change_password':
+        current = request.form.get('current_password')
+        new_pw = request.form.get('new_password')
+        confirm = request.form.get('confirm_password')
+        if not check_password_hash(user.password, current):
+            flash("❌ Current password is incorrect.")
+        elif new_pw != confirm:
+            flash("❌ New passwords do not match.")
+        elif len(new_pw) < 6:
+            flash("❌ Password must be at least 6 characters.")
+        else:
+            user.password = generate_password_hash(new_pw)
+            db.session.commit()
+            flash("✅ Password updated successfully.")
+
+    return redirect(url_for('settings'))
+
+@app.route('/delete_account')
+def delete_account():
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+    user = User.query.get(session['user_id'])
+    db.session.delete(user)
+    db.session.commit()
+    session.clear()
+    flash("Your account has been deleted.")
+    return redirect(url_for('home'))
 
 
 @app.route('/support')
@@ -635,9 +650,9 @@ def order_confirmation():
 def track_order(order_id):
     order = Order.query.get(unquote(order_id))
     if not order:
-        return "Order not found.", 404
+        flash("⚠️ Order not found.")
+        return redirect(url_for('home'))
     return render_template("track_order.html", order=order.to_dict())
-
 
 @app.route('/orders')
 def orders():
@@ -696,24 +711,26 @@ def admin():
         return redirect(url_for('admin_login'))
 
     if request.method == 'POST':
-        name = request.form.get('name')
-        price = float(request.form.get('price', 0))
+        name = request.form.get('name', '').strip().title()
+        price = request.form.get('price', '0').strip()
         on_sale = 'on_sale' in request.form
-        sale_price = float(request.form.get('sale_price') or 0)
+        sale_price = request.form.get('sale_price', '').strip() or None
         featured = 'featured' in request.form
         new_arrival = 'new_arrival' in request.form
 
-        # Category: custom overrides dropdown
-        category = request.form.get('category_custom', '').strip() or request.form.get('category', '')
+        # ✅ Custom category overrides dropdown
+        category = request.form.get('category', '')
+        if category == 'custom':
+            category = request.form.get('category_custom', '').strip().title()
 
-        description = request.form.get('description', '')
+        description = request.form.get('description', '').strip()
         stock = int(request.form.get('stock', 0))
-        sizes = [s.strip() for s in request.form.get('sizes', '').split(',') if s.strip()]
-        colors = [c.strip() for c in request.form.get('colors', '').split(',') if c.strip()]
-        brand = request.form.get('brand', '')
-        sku = request.form.get('sku', '')
-        tags = [t.strip() for t in request.form.get('tags', '').split(',') if t.strip()]
-        delivery_info = request.form.get('delivery_info', 'Delivery in 2-4 working days')
+        sizes = json.dumps([s.strip() for s in request.form.get('sizes', '').split(',') if s.strip()])
+        colors = json.dumps([c.strip() for c in request.form.get('colors', '').split(',') if c.strip()])
+        brand = request.form.get('brand', '').strip()
+        sku = request.form.get('sku', '').strip()
+        tags = json.dumps([t.strip() for t in request.form.get('tags', '').split(',') if t.strip()])
+        delivery_info = request.form.get('delivery_info', 'Delivery in 2-4 working days').strip()
 
         images = request.files.getlist('images')
         image_filenames = []
@@ -726,21 +743,22 @@ def admin():
         new_product = Product(
             name=name, price=price, on_sale=on_sale, sale_price=sale_price,
             featured=featured, category=category, description=description,
-            stock=stock, sizes=json.dumps(sizes), colors=json.dumps(colors),
+            stock=stock, sizes=sizes, colors=colors,
             images=json.dumps(image_filenames),
-            brand=brand, sku=sku, tags=json.dumps(tags),
+            brand=brand, sku=sku, tags=tags,
             delivery_info=delivery_info, new_arrival=new_arrival,
-            timestamp=datetime.now(timezone.utc)
+            # ✅ Store as string since timestamp is db.Column(db.String)
+            timestamp=datetime.now(timezone.utc).isoformat()
         )
         db.session.add(new_product)
         db.session.commit()
         flash("✅ Product added successfully!")
         return redirect(url_for('admin'))
 
-    products = load_data()
+    # ✅ Load from DB not load_data()
+    products = [p.to_dict() for p in Product.query.order_by(Product.timestamp.desc()).all()]
     orders = [o.to_dict() for o in Order.query.order_by(Order.timestamp.desc()).all()]
-    return render_template('admin.html', products=products, orders=orders)
-  
+    return render_template('admin.html', products=products, orders=orders, active_page='admin')
 
   
 @app.route('/delete/<product_id>', methods=['POST'])
@@ -1278,24 +1296,30 @@ def checkout():
 # WISHLIST ROUTES
 # ============================================================
 
+def get_wishlist():
+    """Returns full product dicts for wishlisted items."""
+    raw = session.get('wishlist', [])
+    result = []
+    for item in raw:
+        product = Product.query.get(item.get('id'))
+        if product:
+            result.append(product.to_dict())
+    return result
+
+
 @app.route('/add_to_wishlist/<product_id>')
 def add_to_wishlist(product_id):
-    wishlist = get_wishlist()
-    product = get_product_by_id(product_id)
-
+    product = Product.query.get(product_id)
     if not product:
         flash("❌ Product not found.")
-        return redirect(request.referrer or url_for('index'))
-    if any(str(p['id']) == str(product_id) for p in wishlist):
+        return redirect(request.referrer or url_for('home'))
+
+    wishlist = session.get('wishlist', [])
+    if any(p['id'] == product_id for p in wishlist):
         flash("❤️ Already in your wishlist.")
         return redirect(request.referrer or url_for('wishlist'))
 
-    image_path = product.get('image') or (product.get('images', ['default.png'])[0])
-    if image_path.startswith('static/'):
-        image_path = image_path.replace('static/', '')
-
-    wishlist.append({'id': product['id'], 'name': product['name'],
-                     'price': product['price'], 'image': image_path})
+    wishlist.append({'id': product_id})
     session['wishlist'] = wishlist
     flash("💖 Added to your wishlist!")
     return redirect(request.referrer or url_for('wishlist'))
@@ -1304,23 +1328,17 @@ def add_to_wishlist(product_id):
 @app.route('/toggle_wishlist_ajax/<product_id>', methods=['POST'])
 def toggle_wishlist_ajax(product_id):
     wishlist = session.get('wishlist', [])
-    in_wishlist = any(str(p['id']) == str(product_id) for p in wishlist)
+    in_wishlist = any(p['id'] == product_id for p in wishlist)
 
     if in_wishlist:
-        wishlist = [p for p in wishlist if str(p['id']) != str(product_id)]
+        wishlist = [p for p in wishlist if p['id'] != product_id]
         message = "💔 Removed from wishlist."
         in_wishlist = False
     else:
-        product = get_product_by_id(product_id)
+        product = Product.query.get(product_id)
         if not product:
             return jsonify({'success': False, 'message': '❌ Product not found.'})
-
-        image_path = product.get('image') or (product.get('images', ['default.png'])[0])
-        if image_path.startswith('static/'):
-            image_path = image_path.replace('static/', '')
-
-        wishlist.append({'id': product['id'], 'name': product['name'],
-                         'price': product['price'], 'image': image_path})
+        wishlist.append({'id': product_id})
         message = "💖 Added to wishlist!"
         in_wishlist = True
 
@@ -1336,8 +1354,15 @@ def wishlist():
 
 @app.route('/remove_from_wishlist/<product_id>')
 def remove_from_wishlist(product_id):
-    session['wishlist'] = [p for p in get_wishlist() if str(p.get('id')) != str(product_id)]
+    session['wishlist'] = [p for p in session.get('wishlist', [])
+                           if p.get('id') != product_id]
     flash("❌ Removed from wishlist.")
+    return redirect(url_for('wishlist'))
+
+
+@app.route('/clear_wishlist')
+def clear_wishlist():
+    session['wishlist'] = []
     return redirect(url_for('wishlist'))
 
 
