@@ -58,31 +58,52 @@ PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY")
 # DATABASE MODELS
 # ============================================================
 
-def to_dict(self):
-    images = json.loads(self.images or '[]')
-    return {
-        'id': self.id,
-        'name': self.name,
-        'price': self.price,
-        'sale_price': self.sale_price,
-        'on_sale': self.on_sale,
-        'featured': self.featured,
-        'category': self.category,
-        'description': self.description,
-        'stock': self.stock,
-        'colors': json.loads(self.colors or '[]'),
-        'sizes': json.loads(self.sizes or '[]'),
-        'images': images,
-        'image': images[0] if images else None,
-        'popularity': self.popularity,
-        'timestamp': self.timestamp,
-        # ✅ ADD THESE
-        'brand': self.brand or '',
-        'sku': self.sku or '',
-        'tags': json.loads(self.tags or '[]'),
-        'delivery_info': self.delivery_info or 'Delivery in 2-4 working days',
-        'new_arrival': self.new_arrival if self.new_arrival is not None else True,
-    }
+class Product(db.Model):
+    __tablename__ = 'products'
+    id = db.Column(db.String, primary_key=True, default=lambda: str(uuid4()))
+    name = db.Column(db.String, nullable=False)
+    price = db.Column(db.String, nullable=False)
+    sale_price = db.Column(db.String, nullable=True)
+    on_sale = db.Column(db.Boolean, default=False)
+    featured = db.Column(db.Boolean, default=False)
+    category = db.Column(db.String, default='')
+    description = db.Column(db.Text, default='')
+    stock = db.Column(db.Integer, default=0)
+    colors = db.Column(db.Text, default='[]')
+    sizes = db.Column(db.Text, default='[]')
+    images = db.Column(db.Text, default='[]')
+    popularity = db.Column(db.Integer, default=0)
+    timestamp = db.Column(db.String, default='')
+    brand = db.Column(db.String(100), default='')
+    sku = db.Column(db.String(100), default='')
+    tags = db.Column(db.Text, default='[]')
+    delivery_info = db.Column(db.String(200), default='Delivery in 2-4 working days')
+    new_arrival = db.Column(db.Boolean, default=True)
+
+    def to_dict(self):
+        images = json.loads(self.images or '[]')
+        return {
+            'id': self.id,
+            'name': self.name,
+            'price': self.price,
+            'sale_price': self.sale_price,
+            'on_sale': self.on_sale,
+            'featured': self.featured,
+            'category': self.category,
+            'description': self.description,
+            'stock': self.stock,
+            'colors': json.loads(self.colors or '[]'),
+            'sizes': json.loads(self.sizes or '[]'),
+            'images': images,
+            'image': images[0] if images else None,
+            'popularity': self.popularity,
+            'timestamp': self.timestamp,
+            'brand': self.brand or '',
+            'sku': self.sku or '',
+            'tags': json.loads(self.tags or '[]'),
+            'delivery_info': self.delivery_info or 'Delivery in 2-4 working days',
+            'new_arrival': self.new_arrival if self.new_arrival is not None else True,
+        }
 
 
 class Order(db.Model):
@@ -154,12 +175,6 @@ class Review(db.Model):
     user_id = db.Column(db.String, default='')
     user_email = db.Column(db.String, default='')
     timestamp = db.Column(db.String, default='')
-     # ✅ ADD THESE 5 LINES
-    brand = db.Column(db.String(100), default='')
-    sku = db.Column(db.String(100), default='')
-    tags = db.Column(db.Text, default='[]')
-    delivery_info = db.Column(db.String(200), default='Delivery in 2-4 working days')
-    new_arrival = db.Column(db.Boolean, default=True)
 
     def to_dict(self):
         return {
@@ -173,7 +188,6 @@ class Review(db.Model):
             'user_email': self.user_email,
             'timestamp': self.timestamp
         }
-
 
 class RestockRequest(db.Model):
     __tablename__ = 'restock_requests'
