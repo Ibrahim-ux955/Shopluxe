@@ -410,28 +410,50 @@ def categories():
     ]
     return render_template('categories.html', categories=cats, active_page='categories')
 
-
 @app.route('/product/<product_id>')
 def product_detail(product_id):
     product = Product.query.get(product_id)
     if not product:
         flash("⚠️ Product not found.")
-        return redirect(url_for('index'))
+        return redirect(url_for('home'))
 
     product_dict = product.to_dict()
     products = load_data()
-    related = [p for p in products
-               if p.get('category', '').lower() == product_dict['category'].lower()
-               and p.get('id') != product_id][:4]
+    product_dict['category'] = product_dict.get('category') or 'All'
+
+    related = [
+        p for p in products
+        if p.get('category', '').lower() == product_dict['category'].lower()
+        and p.get('id') != product_id
+    ][:4]
 
     product_reviews = [r.to_dict() for r in Review.query.filter_by(product_id=product_id).all()]
+
+    # ✅ User's rating
+    user_rating = None
+    if session.get('user_id'):
+        existing = Review.query.filter_by(
+            product_id=product_id,
+            user_id=session['user_id']
+        ).first()
+        if existing:
+            user_rating = existing.rating
+
+    # ✅ Average rating and review count
+    all_ratings = [r['rating'] for r in product_reviews if r.get('rating')]
+    product_dict['rating'] = round(sum(all_ratings) / len(all_ratings), 1) if all_ratings else 0
+    product_dict['review_count'] = len(product_reviews)
+
+    # ✅ Stock percentage (max 100)
+    product_dict['stock_percentage'] = min(int((product_dict['stock'] / 100) * 100), 100)
 
     return render_template(
         'product_detail.html',
         product=product_dict,
         related=related,
         reviews=product_reviews,
-        product_images=product_dict.get('images') or []
+        product_images=product_dict.get('images') or [],
+        user_rating=user_rating
     )
 
 
@@ -519,10 +541,33 @@ def verify_payment():
     if Order.query.get(order_id):
         return redirect(url_for("order_confirmation", reference=order_id))
 
+    # ✅ Stock deduction + out of stock alert
     for item in items:
         product = Product.query.filter_by(name=item.get("name")).first()
         if product:
             product.stock = max(0, product.stock - int(item.get("quantity", 1)))
+
+            if product.stock == 0:
+                try:
+                    send_email(
+                        "vybezkhid7@gmail.com",
+                        f"⚠️ Out of Stock Alert — {product.name}",
+                        f"""
+                        <div style="font-family:sans-serif; padding:20px;">
+                            <h2 style="color:#dc3545;">⚠️ Product Out of Stock</h2>
+                            <p><strong>{product.name}</strong> is now out of stock.</p>
+                            <p>Last order: <strong>{name}</strong> ({email})</p>
+                            <p>Please restock as soon as possible.</p>
+                            <a href="https://www.shopluxe.online/admin"
+                               style="background:#198754;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;">
+                               Go to Admin Panel
+                            </a>
+                        </div>
+                        """
+                    )
+                except Exception as e:
+                    print("⚠️ Out of stock email failed:", e)
+
     db.session.commit()
 
     new_order = Order(
@@ -1211,61 +1256,119 @@ def wishlist_count():
 # REVIEW & RATING ROUTES
 # ============================================================
 
-@app.route('/submit_review/<product_id>', methods=['POST'])
-def submit_review(product_id):
-    name = request.form.get('name')
-    comment = request.form.get('comment')
-    rating = int(request.form.get('rating', 0))
-
-    if not name or not comment or rating not in range(1, 6):
-        flash("❌ Please provide a name, comment, and rating (1-5).")
-        return redirect(url_for('product_detail', product_id=product_id))
-
-    db.session.add(Review(
-        product_id=product_id, name=name, comment=comment, rating=rating,
-        user_id=session.get('user_id', ''), user_email=session.get('user_email', ''),
-        timestamp=datetime.now(timezone.utc).isoformat()
-    ))
-    db.session.commit()
-    flash("✅ Review submitted!")
-    return redirect(url_for('product_detail', product_id=product_id))
-
-
 @app.route('/rate-product', methods=['POST'])
 def rate_product():
     if 'user_id' not in session:
         return jsonify({"success": False, "message": "Login required"})
 
     data = request.get_json()
-    product_id = data['product_id']
-    rating = int(data['rating'])
+    product_id = data.get('product_id')
+    rating = int(data.get('rating', 0))
 
-    if Review.query.filter_by(product_id=product_id, user_id=session['user_id']).first():
-        return jsonify({"success": False, "message": "Already rated"})
+    if not product_id or rating not in range(1, 6):
+        return jsonify({"success": False, "message": "Invalid data"})
 
-    db.session.add(Review(
-        product_id=product_id, user_id=session['user_id'],
-        rating=rating, timestamp=datetime.now(timezone.utc).isoformat()
-    ))
+    # ✅ Always update existing, never create duplicate
+    existing = Review.query.filter_by(
+        product_id=product_id,
+        user_id=session['user_id']
+    ).first()
+
+    if existing:
+        existing.rating = rating
+        existing.timestamp = datetime.now(timezone.utc).isoformat()
+    else:
+        db.session.add(Review(
+            product_id=product_id,
+            user_id=session['user_id'],
+            user_email=session.get('user_email', ''),
+            name=session.get('user_name', 'Anonymous'),
+            rating=rating,
+            timestamp=datetime.now(timezone.utc).isoformat()
+        ))
+
     db.session.commit()
     return jsonify({"success": True})
 
 
+@app.route('/submit_review/<product_id>', methods=['POST'])
+def submit_review(product_id):
+    if not session.get('user_id'):
+        flash("❌ Please log in to submit a review.")
+        return redirect(url_for('login'))
+
+    comment = request.form.get('comment', '').strip()
+    rating = int(request.form.get('rating', 0))
+
+    if not comment or rating not in range(1, 6):
+        flash("❌ Please select a rating and write a comment.")
+        return redirect(url_for('product_detail', product_id=product_id))
+
+    # ✅ Always update existing, never create duplicate
+    existing = Review.query.filter_by(
+        product_id=product_id,
+        user_id=session['user_id']
+    ).first()
+
+    if existing:
+        existing.rating = rating
+        existing.comment = comment
+        existing.name = session.get('user_name', existing.name)
+        existing.timestamp = datetime.now(timezone.utc).isoformat()
+    else:
+        db.session.add(Review(
+            product_id=product_id,
+            name=session.get('user_name', 'Anonymous'),
+            comment=comment,
+            rating=rating,
+            user_id=session['user_id'],
+            user_email=session.get('user_email', ''),
+            timestamp=datetime.now(timezone.utc).isoformat()
+        ))
+
+    db.session.commit()
+    flash("✅ Review submitted!")
+    return redirect(url_for('product_detail', product_id=product_id))
+
 @app.route('/restock_notify/<product_id>', methods=['POST'])
 def restock_notify(product_id):
-    email = request.form.get('email')
+    email = request.form.get('email', '').strip()
     product = Product.query.get(product_id)
 
     if not email or not product:
-        flash("❌ Invalid request")
+        flash("❌ Something went wrong.")
         return redirect(url_for('product_detail', product_id=product_id))
 
-    db.session.add(RestockRequest(
-        email=email, product_name=product.name,
-        product_id=product_id, timestamp=datetime.now(timezone.utc).isoformat()
-    ))
-    db.session.commit()
-    flash("✅ You'll be notified when it's back in stock!")
+    # Save request to DB
+    existing = RestockRequest.query.filter_by(
+        product_id=product_id, email=email
+    ).first()
+
+    if not existing:
+        db.session.add(RestockRequest(
+            product_id=product_id,
+            email=email,
+            timestamp=datetime.now(timezone.utc).isoformat()
+        ))
+        db.session.commit()
+
+    # Confirm email to user
+    try:
+        send_email(
+            email,
+            "🔔 You're on the waitlist — ShopLuxe",
+            f"""
+            <div style="font-family:sans-serif; padding:20px;">
+                <h2 style="color:#198754;">You're on the list!</h2>
+                <p>We'll notify you as soon as <strong>{product.name}</strong> is back in stock.</p>
+                <p>Thanks for shopping with ShopLuxe 🛍️</p>
+            </div>
+            """
+        )
+    except Exception as e:
+        print("⚠️ Restock notify email failed:", e)
+
+    flash("✅ We'll notify you when it's back in stock!")
     return redirect(url_for('product_detail', product_id=product_id))
 
 
