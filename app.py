@@ -165,6 +165,12 @@ class Review(db.Model):
     user_id = db.Column(db.String, default='')
     user_email = db.Column(db.String, default='')
     timestamp = db.Column(db.String, default='')
+     # ✅ ADD THESE 5 LINES
+    brand = db.Column(db.String(100), default='')
+    sku = db.Column(db.String(100), default='')
+    tags = db.Column(db.Text, default='[]')
+    delivery_info = db.Column(db.String(200), default='Delivery in 2-4 working days')
+    new_arrival = db.Column(db.Boolean, default=True)
 
     def to_dict(self):
         return {
@@ -675,84 +681,67 @@ def admin():
         return redirect(url_for('admin_login'))
 
     if request.method == 'POST':
-        name = request.form.get('name', '').title()
-        price = request.form.get('price', '')
-        category = request.form.get('category', '').title()
+        name = request.form.get('name')
+        price = float(request.form.get('price', 0))
+        on_sale = 'on_sale' in request.form
+        sale_price = float(request.form.get('sale_price') or 0)
+        featured = 'featured' in request.form
+        new_arrival = 'new_arrival' in request.form
+
+        # Category: custom overrides dropdown
+        category = request.form.get('category_custom', '').strip() or request.form.get('category', '')
+
         description = request.form.get('description', '')
         stock = int(request.form.get('stock', 0))
-        on_sale = 'on_sale' in request.form
-        sale_price = request.form.get('sale_price', '')
-        featured = 'featured' in request.form
-        colors = [c.strip() for c in request.form.get('colors', '').split(',')] if request.form.get('colors') else []
-        sizes = [s.strip() for s in request.form.get('sizes', '').split(',')] if request.form.get('sizes') else []
+        sizes = [s.strip() for s in request.form.get('sizes', '').split(',') if s.strip()]
+        colors = [c.strip() for c in request.form.get('colors', '').split(',') if c.strip()]
+        brand = request.form.get('brand', '')
+        sku = request.form.get('sku', '')
+        tags = [t.strip() for t in request.form.get('tags', '').split(',') if t.strip()]
+        delivery_info = request.form.get('delivery_info', 'Delivery in 2-4 working days')
 
-        if on_sale and sale_price:
-            try:
-                if float(sale_price) >= float(price):
-                    flash("⚠️ Sale price must be less than the original price.")
-                    return redirect(url_for('admin'))
-            except ValueError:
-                flash("⚠️ Invalid sale price entered.")
-                return redirect(url_for('admin'))
-
-        uploaded_files = request.files.getlist('images')
-        if not uploaded_files or all(f.filename == '' for f in uploaded_files):
-            flash("❌ Please upload at least one image.")
-            return redirect(url_for('admin'))
-
+        images = request.files.getlist('images')
         image_filenames = []
-        for file in uploaded_files:
-            if file and file.filename:
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        for img in images:
+            if img and img.filename:
+                filename = secure_filename(img.filename)
+                img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 image_filenames.append(filename)
 
-        db.session.add(Product(
-            id=str(uuid4()), name=name, price=price,
-            sale_price=sale_price if on_sale and sale_price else None,
-            on_sale=on_sale, featured=featured, category=category,
-            description=description, stock=stock,
-            colors=json.dumps(colors), sizes=json.dumps(sizes),
+        new_product = Product(
+            name=name, price=price, on_sale=on_sale, sale_price=sale_price,
+            featured=featured, category=category, description=description,
+            stock=stock, sizes=json.dumps(sizes), colors=json.dumps(colors),
             images=json.dumps(image_filenames),
-            timestamp=datetime.now(timezone.utc)
-        ))
+            brand=brand, sku=sku, tags=json.dumps(tags),
+            delivery_info=delivery_info, new_arrival=new_arrival,
+            timestamp=datetime.now(timezone.utc).isoformat()
+        )
+        db.session.add(new_product)
         db.session.commit()
         flash("✅ Product added successfully!")
         return redirect(url_for('admin'))
 
-    orders = load_orders()
-    for order in orders:
-        order.setdefault('status', 'Pending')
-        order.setdefault('payment_status', 'Unpaid')
-        order.setdefault('local_time', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        order.setdefault('delivered_time', '')
-        order['cancelled_time'] = order.get('cancelled_time') or (
-            order['local_time'] if order['status'] == 'Cancelled' else ''
-        )
-        if not order.get('products'):
-            order['products'] = [{'name': 'Unknown Product', 'price': order.get('total', 0),
-                                   'quantity': 1, 'color': '-', 'size': '-'}]
-        if order.get('payment_status') == 'Paid' and order['status'] == 'Pending':
-            order['status'] = 'Paid'
-        if order['status'] == 'Delivered':
-            order['completed_time'] = order['delivered_time']
-        elif order['status'] == 'Cancelled':
-            order['completed_time'] = order['cancelled_time']
-        elif order['status'] == 'Paid':
-            order['completed_time'] = order.get('paid_time', order['local_time'])
-        else:
-            order['completed_time'] = ''
-
-    return render_template(
-        'admin.html',
-        products=load_data(),
-        reviews=load_reviews(),
-        orders=orders,
-        current_time=datetime.now(timezone.utc),
-        active_page='admin'
-    )
-
-
+    products = load_data()
+    orders = [o.to_dict() for o in Order.query.order_by(Order.timestamp.desc()).all()]
+    return render_template('admin.html', products=products, orders=orders)
+  
+@app.route('/migrate_add_columns')
+def migrate_add_columns():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(db.text("ALTER TABLE products ADD COLUMN brand VARCHAR(100) DEFAULT ''"))
+            conn.execute(db.text("ALTER TABLE products ADD COLUMN sku VARCHAR(100) DEFAULT ''"))
+            conn.execute(db.text("ALTER TABLE products ADD COLUMN tags TEXT DEFAULT '[]'"))
+            conn.execute(db.text("ALTER TABLE products ADD COLUMN delivery_info VARCHAR(200) DEFAULT 'Delivery in 2-4 working days'"))
+            conn.execute(db.text("ALTER TABLE products ADD COLUMN new_arrival BOOLEAN DEFAULT 1"))
+            conn.commit()
+        return "✅ Columns added successfully!"
+    except Exception as e:
+        return f"⚠️ Error: {e}"
+  
 @app.route('/delete/<product_id>', methods=['POST'])
 def delete(product_id):
     if not session.get('admin_logged_in'):

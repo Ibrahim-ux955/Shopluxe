@@ -12,13 +12,14 @@
     <button class="btn btn-dark" id="btn-payments">💳 Payments</button>
   </div>
 
-  
-
-  <!-- Add New Product Section -->
+  <!-- ═══════════════════════════════════════════════
+       ADD NEW PRODUCT — Amazon-style
+  ═══════════════════════════════════════════════ -->
   <div id="section-add" class="admin-section">
-    <div class="card shadow-lg border-0 mb-5" style="max-width: 700px; margin: 0 auto;">
-      <div class="card-body">
-        <h3 class="card-title text-center mb-4">Add New Product</h3>
+    <div class="card shadow-lg border-0 mb-5" style="max-width: 780px; margin: 0 auto;">
+      <div class="card-body p-4">
+        <h3 class="card-title text-center mb-1">Add New Product</h3>
+        <p class="text-center text-muted small mb-4">Fill in all details carefully — this is what customers will see.</p>
 
         {% with messages = get_flashed_messages() %}
           {% if messages %}
@@ -28,65 +29,234 @@
           {% endif %}
         {% endwith %}
 
-        <form method="POST" enctype="multipart/form-data">
-          <div class="mb-3">
-            <label class="form-label" for="name">Product Name</label>
-            <input type="text" name="name" id="name" class="form-control" required>
+        <form method="POST" enctype="multipart/form-data" id="addProductForm">
+
+          <!-- ── SECTION 1: Basic Info ── -->
+          <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span class="badge bg-primary rounded-pill px-3 py-2">1</span>
+              <h6 class="mb-0 fw-bold">Basic Information</h6>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Product Name <span class="text-danger">*</span></label>
+              <input type="text" name="name" class="form-control" placeholder="e.g. Nike Air Max 270" required>
+              <small class="text-muted">Use a clear, descriptive name. Include brand if relevant.</small>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+              <select name="category" class="form-select" required>
+                <option value="" disabled selected>Select a category</option>
+                <option value="Sneakers">Sneakers</option>
+                <option value="Loafers">Loafers</option>
+                <option value="Sandals">Sandals</option>
+                <option value="Boots">Boots</option>
+                <option value="Slippers">Slippers</option>
+                <option value="Formal">Formal</option>
+                <option value="Casual">Casual</option>
+                <option value="Kids">Kids</option>
+                <option value="Sports">Sports</option>
+                <option value="Other">Other</option>
+              </select>
+              <small class="text-muted">Or type a custom category:</small>
+              <input type="text" name="category_custom" class="form-control mt-1"
+                     placeholder="Custom category (overrides dropdown if filled)">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Brand</label>
+              <input type="text" name="brand" class="form-control" placeholder="e.g. Nike, Adidas, Puma">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+              <textarea name="description" class="form-control" rows="4"
+                        placeholder="Describe the product — material, style, use case, standout features..."></textarea>
+              <small class="text-muted">Good descriptions increase conversions. Be specific.</small>
+            </div>
+
+          </div>
+          <hr>
+
+          <!-- ── SECTION 2: Pricing ── -->
+          <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span class="badge bg-success rounded-pill px-3 py-2">2</span>
+              <h6 class="mb-0 fw-bold">Pricing</h6>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Original Price (GH₵) <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text">GH₵</span>
+                  <input type="number" step="0.01" name="price" class="form-control" placeholder="0.00" required>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Sale Price (GH₵)</label>
+                <div class="input-group">
+                  <span class="input-group-text">GH₵</span>
+                  <input type="number" step="0.01" name="sale_price" id="sale_price" class="form-control" placeholder="0.00">
+                </div>
+                <small class="text-muted">Leave blank if not on sale.</small>
+              </div>
+            </div>
+
+            <div class="form-check mt-3">
+              <input class="form-check-input" type="checkbox" id="on_sale" name="on_sale">
+              <label class="form-check-label fw-semibold" for="on_sale">
+                🏷️ Mark as On Sale
+              </label>
+            </div>
+
+          </div>
+          <hr>
+
+          <!-- ── SECTION 3: Inventory ── -->
+          <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span class="badge bg-warning text-dark rounded-pill px-3 py-2">3</span>
+              <h6 class="mb-0 fw-bold">Inventory</h6>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Stock Count <span class="text-danger">*</span></label>
+                <input type="number" name="stock" class="form-control" min="0" placeholder="e.g. 50" required>
+                <small class="text-muted">How many units are available?</small>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">SKU / Product Code</label>
+                <input type="text" name="sku" class="form-control" placeholder="e.g. NK-AM270-BLK">
+                <small class="text-muted">Optional internal reference code.</small>
+              </div>
+            </div>
+
+          </div>
+          <hr>
+
+          <!-- ── SECTION 4: Variants ── -->
+          <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span class="badge bg-info text-dark rounded-pill px-3 py-2">4</span>
+              <h6 class="mb-0 fw-bold">Variants</h6>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Available Sizes</label>
+              <input type="text" name="sizes" class="form-control" placeholder="e.g. 39, 40, 41, 42, 43, 44">
+              <small class="text-muted">Separate with commas. Leave blank if one size fits all.</small>
+
+              <!-- Quick size presets -->
+              <div class="mt-2 d-flex flex-wrap gap-1" id="sizePresets">
+                <span class="text-muted small me-1">Quick add:</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm size-preset" data-sizes="39,40,41,42,43,44">EU 39–44</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm size-preset" data-sizes="40,41,42,43,44,45">EU 40–45</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm size-preset" data-sizes="36,37,38,39,40">EU 36–40</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm size-preset" data-sizes="S,M,L,XL,XXL">S–XXL</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm size-preset" data-sizes="One Size">One Size</button>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Available Colors</label>
+              <input type="text" name="colors" id="colorsInput" class="form-control" placeholder="e.g. Black, White, Red">
+              <small class="text-muted">Separate with commas. Use standard color names for swatches to display correctly.</small>
+
+              <!-- Color preview -->
+              <div id="colorPreviews" class="d-flex flex-wrap gap-2 mt-2"></div>
+
+              <!-- Quick color presets -->
+              <div class="mt-2 d-flex flex-wrap gap-1">
+                <span class="text-muted small me-1">Quick add:</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm color-preset" data-color="Black">⚫ Black</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm color-preset" data-color="White">⚪ White</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm color-preset" data-color="Brown">🟤 Brown</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm color-preset" data-color="Navy">🔵 Navy</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm color-preset" data-color="Red">🔴 Red</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm color-preset" data-color="Gray">🩶 Gray</button>
+              </div>
+            </div>
+
+          </div>
+          <hr>
+
+          <!-- ── SECTION 5: Images ── -->
+          <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span class="badge bg-danger rounded-pill px-3 py-2">5</span>
+              <h6 class="mb-0 fw-bold">Product Images</h6>
+            </div>
+
+            <div class="border border-2 border-dashed rounded-3 p-4 text-center" id="dropZone"
+                 style="border-color:#dee2e6; cursor:pointer; transition:.2s;"
+                 onmouseover="this.style.borderColor='#0d6efd'"
+                 onmouseout="this.style.borderColor='#dee2e6'">
+              <i class="bi bi-cloud-upload fs-1 text-muted"></i>
+              <p class="mb-1 fw-semibold">Drag & drop images here</p>
+              <p class="text-muted small mb-2">or click to browse</p>
+              <input type="file" name="images" id="images" class="form-control d-none" multiple accept="image/*" required>
+              <button type="button" class="btn btn-outline-primary btn-sm"
+                      onclick="document.getElementById('images').click()">
+                Browse Files
+              </button>
+            </div>
+
+            <div id="imagePreviewGrid" class="row g-2 mt-2"></div>
+            <small class="text-muted">First image will be the main product photo. Upload multiple for gallery view.</small>
+
+          </div>
+          <hr>
+
+          <!-- ── SECTION 6: Extras ── -->
+          <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <span class="badge bg-secondary rounded-pill px-3 py-2">6</span>
+              <h6 class="mb-0 fw-bold">Extra Options</h6>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="featured" name="featured">
+              <label class="form-check-label" for="featured">
+                ⭐ Feature on homepage carousel
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="new_arrival" name="new_arrival" checked>
+              <label class="form-check-label" for="new_arrival">
+                🆕 Mark as New Arrival
+              </label>
+            </div>
+
+            <div class="mb-3 mt-3">
+              <label class="form-label fw-semibold">Tags</label>
+              <input type="text" name="tags" class="form-control" placeholder="e.g. trending, summer, sale, gift">
+              <small class="text-muted">Comma-separated. Helps with search and filtering.</small>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Delivery Info</label>
+              <input type="text" name="delivery_info" class="form-control"
+                     value="Delivery in 2-4 working days" placeholder="e.g. Delivery in 2-4 working days">
+            </div>
+
           </div>
 
-          <div class="mb-3">
-            <label class="form-label" for="price">Price</label>
-            <input type="text" name="price" id="price" class="form-control" required>
+          <!-- Submit -->
+          <div class="d-grid gap-2 mt-4">
+            <button type="submit" class="btn btn-primary btn-lg fw-bold">
+              ✅ Add Product
+            </button>
+            <button type="reset" class="btn btn-outline-secondary">
+              🔄 Reset Form
+            </button>
           </div>
 
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="on_sale" name="on_sale">
-            <label class="form-check-label" for="on_sale">On Sale?</label>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label" for="sale_price">Sale Price</label>
-            <input type="number" step="0.01" class="form-control" id="sale_price" name="sale_price" placeholder="Enter sale price if applicable">
-          </div>
-
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="featured" name="featured">
-            <label class="form-check-label" for="featured">Feature this product on homepage carousel?</label>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label" for="category">Category</label>
-            <input type="text" name="category" id="category" class="form-control">
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label" for="description">Description</label>
-            <textarea name="description" id="description" class="form-control" rows="3"></textarea>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label" for="stock">Stock Count</label>
-            <input type="number" name="stock" id="stock" class="form-control" min="0" required>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label" for="sizes">Available Sizes</label>
-            <input type="text" name="sizes" id="sizes" class="form-control" placeholder="e.g. 39, 40, 41, 42, 43">
-            <small class="text-muted">Separate multiple sizes with commas.</small>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label" for="colors">Available Colors</label>
-            <input type="text" name="colors" id="colors" class="form-control" placeholder="e.g. Red, Blue, Black">
-            <small class="text-muted">Separate multiple colors with commas.</small>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label" for="images">Upload Images</label>
-            <input type="file" name="images" id="images" class="form-control" multiple required>
-          </div>
-
-          <button type="submit" class="btn btn-primary w-100">Add Product</button>
         </form>
       </div>
     </div>
@@ -117,7 +287,6 @@
                 GH₵ {{ p.price }}
               {% endif %}
             </p>
-
             <a href="{{ url_for('edit_product', product_id=p.id) }}" class="btn btn-warning btn-sm mb-1 w-100">✏️ Edit</a>
             <form method="POST" action="{{ url_for('delete', product_id=p.id) }}">
               <button type="submit" class="btn btn-danger btn-sm w-100">🗑 Delete</button>
@@ -129,286 +298,283 @@
     </div>
   </div>
 
-    <!-- 🧾 Orders Section -->
-<div id="section-orders" class="admin-section" style="display:none;">
-  <h4 class="mb-3">All Orders</h4>
-
-  <!-- 🔍 Search Bar -->
-  <div class="mb-3">
-    <input type="text" id="search-orders" class="form-control" placeholder="Search by Order ID or Customer Name..." />
+  <!-- 🧾 Orders Section -->
+  <div id="section-orders" class="admin-section" style="display:none;">
+    <h4 class="mb-3">All Orders</h4>
+    <div class="mb-3">
+      <input type="text" id="search-orders" class="form-control" placeholder="Search by Order ID or Customer Name..." />
+    </div>
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle" id="orders-table">
+        <thead class="table-light">
+          <tr>
+            <th>Order ID</th>
+            <th>Customer / Products</th>
+            <th>Total (GH₵)</th>
+            <th>Status</th>
+            <th>Time</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+         {% for o in orders | selectattr("status", "in", ["Pending", "Processing", "Paid", "Expired"]) | sort(attribute="local_time", reverse=True) %}
+          <tr>
+            <td><strong>{{ o.id }}</strong></td>
+            <td>
+              <div><strong>{{ o.name }}</strong></div>
+              <ul class="mb-0 small text-muted ps-3">
+                {% for item in o.get("products", []) %}
+                  <li>{{ item.name }} <span class="text-secondary">(x{{ item.quantity or 1 }})</span></li>
+                {% endfor %}
+              </ul>
+            </td>
+            <td>GH₵ {{ o.total }}</td>
+            <td>
+              {% if o.status == "Pending" %}<span class="badge bg-warning text-dark">Pending</span>
+              {% elif o.status == "Processing" %}<span class="badge bg-info text-dark">Processing</span>
+              {% elif o.status == "Paid" %}<span class="badge bg-success">Paid</span>
+              {% elif o.status == "Expired" %}<span class="badge bg-secondary">Expired</span>
+              {% endif %}
+            </td>
+            <td>{{ o.order_time }}</td>
+            <td>
+              <div class="d-flex flex-column flex-md-row gap-2">
+                <form method="POST" action="{{ url_for('mark_delivered', order_id=o.id) }}">
+                  <button type="submit" class="btn btn-sm btn-success w-100">Delivered ✅</button>
+                </form>
+                <form method="POST" action="{{ url_for('cancel_order', order_id=o.id) }}">
+                  <button type="submit" class="btn btn-sm btn-danger w-100">Cancel ❌</button>
+                </form>
+                <button class="btn btn-sm btn-secondary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#details-{{ o.id }}">
+                  Details 📄
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr class="collapse" id="details-{{ o.id }}">
+            <td colspan="6">
+              <div class="p-2 bg-light border rounded">
+                <h6 class="fw-bold mb-2">Order Details</h6>
+                <table class="table table-sm table-bordered mb-0">
+                  <thead class="table-secondary">
+                    <tr><th>Product Name</th><th>Price (GH₵)</th><th>Quantity</th><th>Color</th><th>Size</th></tr>
+                  </thead>
+                  <tbody>
+                    {% for item in o.get("products", []) %}
+                    <tr>
+                      <td>{{ item.name }}</td><td>{{ item.price }}</td>
+                      <td>{{ item.quantity or 1 }}</td>
+                      <td>{{ item.color or '-' }}</td><td>{{ item.size or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-bordered align-middle" id="orders-table">
-      <thead class="table-light">
-        <tr>
-          <th>Order ID</th>
-          <th>Customer / Products</th>
-          <th>Total (GH₵)</th>
-          <th>Status</th>
-          <th>Time</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-       {% for o in orders | selectattr("status", "in", ["Pending", "Processing", "Paid", "Expired"]) | sort(attribute="local_time", reverse=True) %}
-        <tr>
-          <td><strong>{{ o.id }}</strong></td>
-
-          <td>
-            <div><strong>{{ o.name }}</strong></div>
-            <ul class="mb-0 small text-muted ps-3">
-              {% for item in o.get("products", []) %}
-                <li>{{ item.name }} <span class="text-secondary">(x{{ item.quantity or 1 }})</span></li>
-              {% endfor %}
-            </ul>
-          </td>
-
-          <td>GH₵ {{ o.total }}</td>
-
-          <td>
-            {% if o.status == "Pending" %}
-              <span class="badge bg-warning text-dark">Pending</span>
-            {% elif o.status == "Processing" %}
-              <span class="badge bg-info text-dark">Processing</span>
-            {% elif o.status == "Paid" %}
-              <span class="badge bg-success">Paid</span>
-            {% elif o.status == "Expired" %}
-              <span class="badge bg-secondary">Expired</span>
-            {% endif %}
-          </td>
-
-          <td>{{ o.order_time }}</td>
-
-          <td>
-            <div class="d-flex flex-column flex-md-row gap-2">
-              <form method="POST" action="{{ url_for('mark_delivered', order_id=o.id) }}">
-                <button type="submit" class="btn btn-sm btn-success w-100">Delivered ✅</button>
-              </form>
-              <form method="POST" action="{{ url_for('cancel_order', order_id=o.id) }}">
-                <button type="submit" class="btn btn-sm btn-danger w-100">Cancel ❌</button>
-              </form>
-              <button class="btn btn-sm btn-secondary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#details-{{ o.id }}">
+  <!-- 🕓 Order History Section -->
+  <div id="section-history" class="admin-section" style="display:none;">
+    <h4 class="mb-3">Order History</h4>
+    <div class="mb-3">
+      <input type="text" id="search-history" class="form-control" placeholder="Search by Order ID or Customer Name..." />
+    </div>
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle" id="history-table">
+        <thead class="table-light">
+          <tr>
+            <th>Order ID</th><th>Customer / Products</th><th>Total (GH₵)</th>
+            <th>Status</th><th>Completed Time</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in orders | selectattr("status", "in", ["Delivered", "Cancelled"]) | sort(attribute="completed_time", reverse=True) %}
+          <tr>
+            <td><strong>{{ o.id }}</strong></td>
+            <td>
+              <div><strong>{{ o.name }}</strong></div>
+              <ul class="mb-0 small text-muted ps-3">
+                {% for item in o.get("products", []) %}
+                  <li>{{ item.name }} <span class="text-secondary">(x{{ item.quantity or 1 }})</span></li>
+                {% endfor %}
+              </ul>
+            </td>
+            <td>GH₵ {{ o.total }}</td>
+            <td>
+              {% if o.status == "Delivered" %}<span class="badge bg-success">Delivered</span>
+              {% elif o.status == "Cancelled" %}<span class="badge bg-danger">Cancelled</span>
+              {% endif %}
+            </td>
+            <td>{{ o.completed_time }}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#history-details-{{ o.id }}">
                 Details 📄
               </button>
-            </div>
-          </td>
-        </tr>
-
-        <tr class="collapse" id="details-{{ o.id }}">
-          <td colspan="6">
-            <div class="p-2 bg-light border rounded">
-              <h6 class="fw-bold mb-2">Order Details</h6>
-              <table class="table table-sm table-bordered mb-0">
-                <thead class="table-secondary">
-                  <tr>
-                    <th>Product Name</th>
-                    <th>Price (GH₵)</th>
-                    <th>Quantity</th>
-                    <th>Color</th>
-                    <th>Size</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for item in o.get("products", []) %}
-                  <tr>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.price }}</td>
-                    <td>{{ item.quantity or 1 }}</td>
-                    <td>{{ item.color or '-' }}</td>
-                    <td>{{ item.size or '-' }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+            </td>
+          </tr>
+          <tr class="collapse" id="history-details-{{ o.id }}">
+            <td colspan="6">
+              <div class="p-2 bg-light border rounded">
+                <h6 class="fw-bold mb-2">Order Details</h6>
+                <table class="table table-sm table-bordered mb-0">
+                  <thead class="table-secondary">
+                    <tr><th>Product Name</th><th>Price (GH₵)</th><th>Quantity</th><th>Color</th><th>Size</th></tr>
+                  </thead>
+                  <tbody>
+                    {% for item in o.get("products", []) %}
+                    <tr>
+                      <td>{{ item.name }}</td><td>{{ item.price }}</td>
+                      <td>{{ item.quantity or 1 }}</td>
+                      <td>{{ item.color or '-' }}</td><td>{{ item.size or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
+
 </div>
 
-<!-- 🕓 Order History Section -->
-<div id="section-history" class="admin-section" style="display:none;">
-  <h4 class="mb-3">Order History</h4>
-
-  <div class="mb-3">
-    <input type="text" id="search-history" class="form-control" placeholder="Search by Order ID or Customer Name..." />
-  </div>
-
-  <div class="table-responsive">
-    <table class="table table-bordered align-middle" id="history-table">
-      <thead class="table-light">
-        <tr>
-          <th>Order ID</th>
-          <th>Customer / Products</th>
-          <th>Total (GH₵)</th>
-          <th>Status</th>
-          <th>Completed Time</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for o in orders 
-             | selectattr("status", "in", ["Delivered", "Cancelled"]) 
-             | sort(attribute="completed_time", reverse=True) %}
-        <tr>
-          <td><strong>{{ o.id }}</strong></td>
-
-          <td>
-            <div><strong>{{ o.name }}</strong></div>
-            <ul class="mb-0 small text-muted ps-3">
-              {% for item in o.get("products", []) %}
-                <li>{{ item.name }} <span class="text-secondary">(x{{ item.quantity or 1 }})</span></li>
-              {% endfor %}
-            </ul>
-          </td>
-
-          <td>GH₵ {{ o.total }}</td>
-
-          <td>
-            {% if o.status == "Delivered" %}
-              <span class="badge bg-success">Delivered</span>
-            {% elif o.status == "Cancelled" %}
-              <span class="badge bg-danger">Cancelled</span>
-            {% endif %}
-          </td>
-
-          <td>{{ o.completed_time }}</td>
-
-          <td>
-            <button class="btn btn-sm btn-secondary w-100" type="button" data-bs-toggle="collapse" data-bs-target="#history-details-{{ o.id }}">
-              Details 📄
-            </button>
-          </td>
-        </tr>
-
-        <tr class="collapse" id="history-details-{{ o.id }}">
-          <td colspan="6">
-            <div class="p-2 bg-light border rounded">
-              <h6 class="fw-bold mb-2">Order Details</h6>
-              <table class="table table-sm table-bordered mb-0">
-                <thead class="table-secondary">
-                  <tr>
-                    <th>Product Name</th>
-                    <th>Price (GH₵)</th>
-                    <th>Quantity</th>
-                    <th>Color</th>
-                    <th>Size</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for item in o.get("products", []) %}
-                  <tr>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.price }}</td>
-                    <td>{{ item.quantity or 1 }}</td>
-                    <td>{{ item.color or '-' }}</td>
-                    <td>{{ item.size or '-' }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-
-
-<!-- JS: Payments Button & Search -->
 <script>
-  // 🔍 Live Search for Payments
-  function setupSearch(inputId, tableId) {
-    const input = document.getElementById(inputId);
-    const table = document.getElementById(tableId);
-    if (!input || !table) return;
+// ── Section Toggle ──
+const sections = {
+  'btn-add': 'section-add',
+  'btn-all': 'section-all',
+  'btn-orders': 'section-orders',
+  'btn-history': 'section-history',
+  'btn-payments': 'section-payments'
+};
+Object.entries(sections).forEach(([btnId, secId]) => {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+    const sec = document.getElementById(secId);
+    if (sec) sec.style.display = 'block';
+  });
+});
 
-    input.addEventListener('keyup', () => {
-      const filter = input.value.toLowerCase();
-      const rows = table.querySelectorAll('tbody tr');
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(filter) ? '' : 'none';
-      });
+// ── Live Search ──
+function setupSearch(inputId, tableId) {
+  const input = document.getElementById(inputId);
+  const table = document.getElementById(tableId);
+  if (!input || !table) return;
+  input.addEventListener('keyup', () => {
+    const filter = input.value.toLowerCase();
+    table.querySelectorAll('tbody tr:not(.collapse)').forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(filter) ? '' : 'none';
     });
-  }
-  setupSearch('search-payments', 'payments-table');
+  });
+}
+setupSearch('search-orders', 'orders-table');
+setupSearch('search-history', 'history-table');
+setupSearch('search-payments', 'payments-table');
 
-  // 💳 Payments Section Toggle
-  const btnPayments = document.getElementById('btn-payments');
-  const sectionPayments = document.getElementById('section-payments');
+// ── Size Presets ──
+document.querySelectorAll('.size-preset').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const sizesInput = document.querySelector('input[name="sizes"]');
+    sizesInput.value = btn.dataset.sizes;
+  });
+});
 
-  if (btnPayments && sectionPayments) {
-    btnPayments.addEventListener('click', () => {
-      // Hide all sections
-      document.querySelectorAll('.admin-section').forEach(sec => sec.style.display = 'none');
-      // Show payments section
-      sectionPayments.style.display = 'block';
-    });
+// ── Color Presets + Preview ──
+const colorsInput = document.getElementById('colorsInput');
+const colorPreviews = document.getElementById('colorPreviews');
+
+function renderColorPreviews() {
+  if (!colorPreviews) return;
+  colorPreviews.innerHTML = '';
+  const colors = colorsInput.value.split(',').map(c => c.trim()).filter(Boolean);
+  colors.forEach(color => {
+    const dot = document.createElement('div');
+    dot.style.cssText = `width:28px;height:28px;border-radius:50%;background:${color.toLowerCase()};
+      border:2px solid #fff;box-shadow:0 0 0 1.5px rgba(0,0,0,.2);`;
+    dot.title = color;
+    colorPreviews.appendChild(dot);
+  });
+}
+colorsInput?.addEventListener('input', renderColorPreviews);
+
+document.querySelectorAll('.color-preset').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const current = colorsInput.value.trim();
+    const newColor = btn.dataset.color;
+    const existing = current.split(',').map(c => c.trim()).filter(Boolean);
+    if (!existing.includes(newColor)) {
+      colorsInput.value = existing.length ? current + ', ' + newColor : newColor;
+    }
+    renderColorPreviews();
+  });
+});
+
+// ── Image Preview ──
+const imagesInput = document.getElementById('images');
+const previewGrid = document.getElementById('imagePreviewGrid');
+const dropZone = document.getElementById('dropZone');
+
+dropZone?.addEventListener('click', () => imagesInput.click());
+
+dropZone?.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.style.borderColor = '#0d6efd';
+  dropZone.style.background = '#f0f4ff';
+});
+dropZone?.addEventListener('dragleave', () => {
+  dropZone.style.borderColor = '#dee2e6';
+  dropZone.style.background = '';
+});
+dropZone?.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.style.borderColor = '#dee2e6';
+  dropZone.style.background = '';
+  imagesInput.files = e.dataTransfer.files;
+  renderImagePreviews(e.dataTransfer.files);
+});
+
+imagesInput?.addEventListener('change', () => renderImagePreviews(imagesInput.files));
+
+function renderImagePreviews(files) {
+  previewGrid.innerHTML = '';
+  Array.from(files).forEach((file, i) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const col = document.createElement('div');
+      col.className = 'col-4 col-md-3 col-lg-2';
+      col.innerHTML = `
+        <div class="position-relative">
+          <img src="${e.target.result}" class="img-thumbnail w-100"
+               style="height:90px;object-fit:cover;border-radius:10px;">
+          ${i === 0 ? '<span class="badge bg-success position-absolute top-0 start-0 m-1" style="font-size:.6rem;">Main</span>' : ''}
+        </div>`;
+      previewGrid.appendChild(col);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Sale price validation ──
+document.getElementById('on_sale')?.addEventListener('change', function() {
+  const salePriceInput = document.getElementById('sale_price');
+  if (this.checked) {
+    salePriceInput.required = true;
+    salePriceInput.closest('.col-md-6').querySelector('label').innerHTML =
+      'Sale Price (GH₵) <span class="text-danger">*</span>';
+  } else {
+    salePriceInput.required = false;
   }
+});
 </script>
 
- 
-
-<!-- 🧠 JS: Toggle + Search -->
-<script>
-  const btnAdd = document.getElementById('btn-add');
-  const btnAll = document.getElementById('btn-all');
-  const btnOrders = document.getElementById('btn-orders');
-  const btnHistory = document.getElementById('btn-history');
-  const sectionAdd = document.getElementById('section-add');
-  const sectionAll = document.getElementById('section-all');
-  const sectionOrders = document.getElementById('section-orders');
-  const sectionHistory = document.getElementById('section-history');
-
-  // Section Toggle
-  btnAdd.addEventListener('click', () => {
-    sectionAdd.style.display = 'block';
-    sectionAll.style.display = 'none';
-    sectionOrders.style.display = 'none';
-    sectionHistory.style.display = 'none';
-  });
-  btnAll.addEventListener('click', () => {
-    sectionAdd.style.display = 'none';
-    sectionAll.style.display = 'block';
-    sectionOrders.style.display = 'none';
-    sectionHistory.style.display = 'none';
-  });
-  btnOrders.addEventListener('click', () => {
-    sectionAdd.style.display = 'none';
-    sectionAll.style.display = 'none';
-    sectionOrders.style.display = 'block';
-    sectionHistory.style.display = 'none';
-  });
-  btnHistory.addEventListener('click', () => {
-    sectionAdd.style.display = 'none';
-    sectionAll.style.display = 'none';
-    sectionOrders.style.display = 'none';
-    sectionHistory.style.display = 'block';
-  });
-
-  // 🔍 Live Search (Order ID + Customer)
-  function setupSearch(inputId, tableId) {
-    const input = document.getElementById(inputId);
-    const table = document.getElementById(tableId);
-    input.addEventListener('keyup', () => {
-      const filter = input.value.toLowerCase();
-      const rows = table.querySelectorAll('tbody tr:not(.collapse)');
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(filter) ? '' : 'none';
-      });
-    });
-  }
-  setupSearch('search-orders', 'orders-table');
-  setupSearch('search-history', 'history-table');
-</script>
-</body>
-</html>
 {% endblock %}
