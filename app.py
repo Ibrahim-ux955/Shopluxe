@@ -910,7 +910,10 @@ def logout():
     flash("👋 Logged out.")
     return redirect(url_for('home'))  # ✅ changed 'index' to 'home'
 
-
+# DELETE THIS
+@app.route('/debug_session')
+def debug_session():
+    return str(dict(session))
 
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
