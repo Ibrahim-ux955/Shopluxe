@@ -85,68 +85,77 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
   <div class="a-card">
     <div class="a-card-head">
       <i class="bi bi-geo-alt-fill"></i>
-      <h6 class="a-card-title">Order Status</h6>
+      <h6 class="a-card-title">Order Sta ntus</h6>
       <div style="margin-left:auto;">
-        {% if order.status == 'Paid' or order.status == 'Processing' %}
-          <span class="status-pill s-processing">🔄 Processing</span>
-        {% elif order.status == 'Delivered' %}
-          <span class="status-pill s-delivered">✅ Delivered</span>
-        {% elif order.status == 'Cancelled' %}
-          <span class="status-pill s-cancelled">❌ Cancelled</span>
-        {% elif order.status == 'Pending' %}
-          <span class="status-pill s-pending">⏳ Pending</span>
-        {% else %}
-          <span class="status-pill s-paid">{{ order.status }}</span>
-        {% endif %}
+        <!-- Replace the status pill block -->
+       {% if order.status == 'Paid' or order.status == 'Processing' %}
+         <span class="status-pill s-processing">🔄 Processing</span>
+       {% elif order.status == 'Shipped' %}
+         <span class="status-pill s-processing">📦 Shipped</span>
+       {% elif order.status == 'Delivered' %}
+         <span class="status-pill s-delivered">✅ Delivered</span>
+       {% elif order.status == 'Cancelled' %}
+         <span class="status-pill s-cancelled">❌ Cancelled</span>
+       {% elif order.status == 'Pending' %}
+         <span class="status-pill s-pending">⏳ Pending</span>
+       {% else %}
+         <span class="status-pill s-paid">{{ order.status }}</span>
+       {% endif %}
       </div>
     </div>
     <div class="a-card-body">
       <div class="timeline">
 
-        <div class="tl-item">
-          <div class="tl-dot done"><i class="bi bi-check"></i></div>
-          <div class="tl-title">Order Placed</div>
-          <div class="tl-sub">Your order was received and payment confirmed.</div>
-          <div class="tl-time">{{ order.get('order_time','') }}</div>
-        </div>
+  <div class="tl-item">
+    <div class="tl-dot done"><i class="bi bi-check"></i></div>
+    <div class="tl-title">Order Placed</div>
+    <div class="tl-sub">Your order was received and payment confirmed.</div>
+    <div class="tl-time">{{ order.get('order_time','') }}</div>
+  </div>
 
-        <div class="tl-item">
-          {% if order.status in ['Paid','Processing','Delivered'] %}
-          <div class="tl-dot {% if order.status == 'Delivered' %}done{% else %}active{% endif %}"><i class="bi bi-{% if order.status == 'Delivered' %}check{% else %}gear{% endif %}"></i></div>
-          <div class="tl-title">Processing</div>
-          <div class="tl-sub">Your order is being prepared for shipment.</div>
-          {% else %}
-          <div class="tl-dot todo">2</div>
-          <div class="tl-title todo">Processing</div>
-          <div class="tl-sub">Waiting to start processing.</div>
-          {% endif %}
-        </div>
+  <div class="tl-item">
+    {% if order.status in ['Paid','Processing','Shipped','Delivered'] %}
+    <div class="tl-dot {% if order.status in ['Shipped','Delivered'] %}done{% else %}active{% endif %}">
+      <i class="bi bi-{% if order.status in ['Shipped','Delivered'] %}check{% else %}gear{% endif %}"></i>
+    </div>
+    <div class="tl-title">Processing</div>
+    <div class="tl-sub">Your order is being prepared for shipment.</div>
+    {% else %}
+    <div class="tl-dot todo">2</div>
+    <div class="tl-title todo">Processing</div>
+    <div class="tl-sub">Waiting to start processing.</div>
+    {% endif %}
+  </div>
 
-        <div class="tl-item">
-          {% if order.status == 'Delivered' %}
-          <div class="tl-dot done"><i class="bi bi-check"></i></div>
-          <div class="tl-title">Shipped</div>
-          <div class="tl-sub">Your order was dispatched for delivery.</div>
-          {% else %}
-          <div class="tl-dot todo">3</div>
-          <div class="tl-title todo">Shipped</div>
-          <div class="tl-sub">Your order will be dispatched soon.</div>
-          {% endif %}
-        </div>
+  <!-- ✅ NEW: Shipped step -->
+  <div class="tl-item">
+    {% if order.status in ['Shipped','Delivered'] %}
+    <div class="tl-dot {% if order.status == 'Delivered' %}done{% else %}active{% endif %}">
+      <i class="bi bi-{% if order.status == 'Delivered' %}check{% else %}truck{% endif %}"></i>
+    </div>
+    <div class="tl-title">{% if order.status == 'Shipped' %}On the Way 🚚{% else %}Shipped{% endif %}</div>
+    <div class="tl-sub">Your order has been dispatched for delivery.</div>
+    {% else %}
+    <div class="tl-dot todo">3</div>
+    <div class="tl-title todo">Shipped</div>
+    <div class="tl-sub">Your order will be dispatched soon.</div>
+    {% endif %}
+  </div>
 
-        <div class="tl-item">
-          {% if order.status == 'Delivered' %}
-          <div class="tl-dot done"><i class="bi bi-check"></i></div>
-          <div class="tl-title">Delivered 🎉</div>
-          <div class="tl-sub">Your order was successfully delivered.</div>
-          <div class="tl-time">{{ order.get('completed_time','') }}</div>
-          {% else %}
-          <div class="tl-dot todo">4</div>
-          <div class="tl-title todo">Delivered</div>
-          <div class="tl-sub">Expected within 2–4 working days.</div>
-          {% endif %}
-        </div>
+  <div class="tl-item">
+    {% if order.status == 'Delivered' %}
+    <div class="tl-dot done"><i class="bi bi-check"></i></div>
+    <div class="tl-title">Delivered 🎉</div>
+    <div class="tl-sub">Your order was successfully delivered.</div>
+    <div class="tl-time">{{ order.get('completed_time','') }}</div>
+    {% else %}
+    <div class="tl-dot todo">4</div>
+    <div class="tl-title todo">Delivered</div>
+    <div class="tl-sub">Expected within 2–4 working days.</div>
+    {% endif %}
+  </div>
 
+</div>
       </div>
     </div>
   </div>

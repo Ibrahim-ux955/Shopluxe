@@ -172,8 +172,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
           <select name="category" id="catSel" class="f-select" required>
             <option value="" disabled selected>Select category</option>
             <option>Sneakers</option><option>Heels</option><option>Sandals</option>
-            <option>Boots</option><option>Loafers</option><option>Slippers</option>
-            <option>Formal</option><option>Sport</option><option>Kids</option>
+            <option>Boots</option><option>Formal</option><option>Sport</option>
+            <option>Kids</option><option>Appliances</option><option>Software</option>
+            <option>Books</option><option>Jewelry And Accessories</option>
             <option value="custom">Other (custom)</option>
           </select>
           <input type="text" name="category_custom" id="catCustom" class="f-input mt-2" placeholder="Enter custom category" style="display:none;">
@@ -278,6 +279,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
   <div class="sum-grid">
     <div class="sum-card"><div class="sum-icon" style="background:#d1fae5;">✅</div><div><p class="sum-num">{{ orders|selectattr("status","equalto","Paid")|list|length }}</p><p class="sum-label">Paid Orders</p></div></div>
     <div class="sum-card"><div class="sum-icon" style="background:#fff3cd;">⏳</div><div><p class="sum-num">{{ orders|selectattr("status","equalto","Pending")|list|length }}</p><p class="sum-label">Pending</p></div></div>
+    <!-- ✅ NEW: Shipped count -->
+    <div class="sum-card"><div class="sum-icon" style="background:#dbeafe;">📦</div><div><p class="sum-num">{{ orders|selectattr("status","equalto","Shipped")|list|length }}</p><p class="sum-label">Shipped</p></div></div>
     <div class="sum-card"><div class="sum-icon" style="background:#d1fae5;">💰</div><div><p class="sum-num">GH₵ {{ orders|selectattr("status","equalto","Paid")|sum(attribute="total")|round(0)|int }}</p><p class="sum-label">Revenue</p></div></div>
   </div>
   <div class="a-card"><div class="a-card-body" style="padding:15px;">
@@ -286,13 +289,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
       <table class="o-table" id="ordTable">
         <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Time</th><th>Actions</th></tr></thead>
         <tbody>
-        {% for o in orders|selectattr("status","in",["Pending","Processing","Paid","Expired"])|sort(attribute="local_time",reverse=True) %}
+        <!-- ✅ Added Shipped to filter -->
+        {% for o in orders|selectattr("status","in",["Pending","Processing","Paid","Shipped","Expired"])|sort(attribute="local_time",reverse=True) %}
         <tr>
           <td><code style="font-size:.7rem;">{{ o.id[:14] }}...</code></td>
           <td><div style="font-weight:700;font-size:.82rem;">{{ o.name }}</div><div style="font-size:.7rem;color:#aaa;">{{ o.email }}</div></td>
           <td style="font-size:.74rem;color:var(--mid);">{% for item in o.get("products",[]) %}{{ item.name }} ×{{ item.quantity or 1 }}<br>{% endfor %}</td>
           <td><strong>GH₵ {{ o.total }}</strong></td>
-          <td>{% if o.status=="Paid" %}<span class="sbadge s-paid">✅ Paid</span>{% elif o.status=="Pending" %}<span class="sbadge s-pending">⏳ Pending</span>{% elif o.status=="Processing" %}<span class="sbadge s-process">🔄 Processing</span>{% else %}<span class="sbadge s-expired">💤 Expired</span>{% endif %}</td>
+          <!-- ✅ Added Shipped badge -->
+          <td>{% if o.status=="Paid" %}<span class="sbadge s-paid">✅ Paid</span>{% elif o.status=="Pending" %}<span class="sbadge s-pending">⏳ Pending</span>{% elif o.status=="Shipped" %}<span class="sbadge s-process">📦 Shipped</span>{% elif o.status=="Processing" %}<span class="sbadge s-process">🔄 Processing {% elif o.status=="Shipped" %}<span class="sbadge s-process">📦 Shipped</span>{% else %}<span class="sbadge s-expired">💤 Expired</span>{% endif %}</td>
           <td style="font-size:.74rem;white-space:nowrap;">{{ o.order_time }}</td>
           <td>
             <div class="o-actions">
@@ -324,7 +329,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
           <td><div style="font-weight:700;font-size:.82rem;">{{ o.name }}</div><div style="font-size:.7rem;color:#aaa;">{{ o.email }}</div></td>
           <td style="font-size:.74rem;color:var(--mid);">{% for item in o.get("products",[]) %}{{ item.name }} ×{{ item.quantity or 1 }}<br>{% endfor %}</td>
           <td><strong>GH₵ {{ o.total }}</strong></td>
-          <td>{% if o.status=="Delivered" %}<span class="sbadge s-delivered">✅ Delivered</span>{% else %}<span class="sbadge s-cancelled">❌ Cancelled</span>{% endif %}</td>
+          <td>{% if o.status=="Delivered" %}<span class="sbadge s-delivered">✅ Delivered</span>
+              {% elif o.status=="Shipped" %}<span class="sbadge s-process">📦 Shipped</span>
+              {% else %}<span class="sbadge s-cancelled">❌ Cancelled</span>{% endif %}</td>
           <td style="font-size:.74rem;">{{ o.completed_time }}</td>
           <td><button class="o-btn details" type="button" data-bs-toggle="collapse" data-bs-target="#hd-{{ loop.index }}"><i class="bi bi-chevron-down"></i></button></td>
         </tr>

@@ -432,14 +432,14 @@ select.form-select { display: none; } /* hide original select */
       <div class="gallery-wrap">
 
         <div class="main-img-wrap">
-          <span class="badge-delivery">🚚 Delivery in 2–4 days</span>
-          <img id="mainImage"
-               src="{{ url_for('static', filename='shoes/' + product.images[0]) }}"
-               alt="{{ product.name }}">
-          <button class="wishlist-btn" id="wishlistBtn" data-product-id="{{ product.id }}">
-            <i id="wishlistIcon"
-               class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == product.id %}-fill text-danger{% endif %}{% endfor %}"></i>
-          </button>
+         <span class="badge-delivery">🚚 {{ product.delivery_info or 'Delivery in 2-4 working days' }}</span>
+         <img id="mainImage"
+             src="{{ url_for('static', filename='shoes/' + product.images[0]) }}"
+            alt="{{ product.name }}">
+        <button class="wishlist-btn" id="wishlistBtn" data-product-id="{{ product.id }}">
+        <i id="wishlistIcon"
+           class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == product.id %}-fill text-danger{% endif %}{% endfor %}"></i>
+        </button>
         </div>
 
         <div class="thumbs-row">

@@ -2016,6 +2016,42 @@ def vendor_storefront(vendor_id):
     products = [p.to_dict() for p in Product.query.filter_by(vendor_id=vendor_id).all()]
     return render_template('vendor_storefront.html', vendor=vendor.to_dict(), products=products)
 
+@app.route('/vendor/mark-shipped/<order_id>', methods=['POST'])
+@vendor_required
+def vendor_mark_shipped(order_id):
+    order = Order.query.get(order_id)
+    if not order:
+        flash("❌ Order not found.")
+        return redirect(url_for('vendor_dashboard'))
+
+    order.status = 'Shipped'
+    db.session.commit()
+
+    # ✅ Notify admin
+    try:
+        send_email(
+            "vybezkhid7@gmail.com",
+            f"📦 Order Shipped — {order.name}",
+            f"""
+            <div style="font-family:sans-serif; padding:20px;">
+                <h2>📦 Vendor Marked Order as Shipped</h2>
+                <p><strong>Vendor:</strong> { session.get('shop_name') }</p>
+                <p><strong>Customer:</strong> {order.name} ({order.email})</p>
+                <p><strong>Order ID:</strong> {order_id}</p>
+                <p><strong>Total:</strong> GH₵ {order.total}</p>
+                <a href="https://www.shopluxe.online/admin"
+                   style="background:#198754;color:#fff;padding:10px 20px;
+                   border-radius:8px;text-decoration:none;">
+                   Go to Admin Panel
+                </a>
+            </div>
+            """
+        )
+    except Exception as e:
+        print("⚠️ Shipped email failed:", e)
+
+    flash("✅ Order marked as shipped. Admin has been notified.")
+    return redirect(url_for('vendor_dashboard'))
 # ============================================================
 # DB INIT & RUN
 # ============================================================

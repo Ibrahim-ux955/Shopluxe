@@ -129,10 +129,18 @@
           <input type="text" name="bank_name" class="f-input" placeholder="e.g. GCB Bank">
         </div>
       </div>
-      <div class="f-group">
-        <label class="f-label">Bank Account Number</label>
-        <input type="text" name="bank_account" class="f-input" placeholder="Your account number for payouts">
-      </div>
+      <!-- Replace the bank account input -->
+<div class="f-group">
+  <label class="f-label">Bank Account Number</label>
+  <input type="text" name="bank_account" class="f-input"
+         placeholder="Enter your account number"
+         inputmode="numeric"
+         pattern="[0-9]{10,16}"
+         maxlength="16"
+         oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+         title="Account number must be 10–16 digits">
+  <p class="f-hint">Numbers only · 10 to 16 digits</p>
+</div>
 
       <div class="terms-box">
         <input type="checkbox" id="terms" required>
