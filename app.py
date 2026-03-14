@@ -1714,7 +1714,9 @@ def ban_vendor(vendor_id):
     db.session.commit()
     flash(f"⛔ {vendor.shop_name} has been banned.")
     return redirect(url_for('admin_vendors'))
-
+  
+@app.route('/become-vendor', methods=['GET', 'POST'])
+def become_vendor():
 
 @app.route('/admin/payouts')
 def admin_payouts():
