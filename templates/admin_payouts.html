@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.ap-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.ap-header h1 { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--dark); margin: 0; }
+.ap-back { font-size: .85rem; color: #aaa; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: color .2s; }
+.ap-back:hover { color: var(--brand); }
+
+.ap-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+.ap-stat { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.04); }
+.ap-stat-label { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #aaa; margin-bottom: 8px; }
+.ap-stat-value { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; }
+
+.ap-filters { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.ap-filter-btn { padding: 7px 18px; border-radius: 8px; font-size: .82rem; font-weight: 700; cursor: pointer; border: 1.5px solid var(--border); background: var(--card); color: #aaa; font-family: 'DM Sans', sans-serif; transition: all .2s; }
+.ap-filter-btn.active, .ap-filter-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
+
+.ap-table-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.04); }
+.ap-table-card table { width: 100%; border-collapse: collapse; }
+.ap-table-card thead { background: var(--light); }
+.ap-table-card th { padding: 12px 18px; text-align: left; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #aaa; white-space: nowrap; }
+.ap-table-card td { padding: 14px 18px; border-top: 1px solid var(--border); vertical-align: middle; font-size: .85rem; }
+.ap-table-card tr:hover td { background: var(--light); }
+
+.ap-shop-cell { display: flex; align-items: center; gap: 10px; }
+.ap-shop-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--brand-light); border: 1px solid rgba(25,135,84,.2); display: flex; align-items: center; justify-content: center; font-size: .95rem; }
+
+.ap-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.ap-badge-green { background: #d1fae5; color: #065f46; }
+.ap-badge-orange { background: #fff3cd; color: #856404; }
+
+.btn-mark-paid { padding: 7px 14px; border-radius: 7px; font-size: 11px; font-weight: 700; background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity .2s; }
+.btn-mark-paid:hover { opacity: .75; }
+
+.ap-empty td { text-align: center; padding: 60px; color: #bbb; }
+.ap-order-id { font-family: monospace; font-size: .78rem; color: #aaa; }
+
+@media(max-width:900px){ .ap-stats { grid-template-columns: repeat(2,1fr); } .ap-table-card { overflow-x: auto; } }
+@media(max-width:500px){ .ap-stats { grid-template-columns: 1fr 1fr; } }
+</style>
+
+<div class="ap-header">
+  <h1>💸 Payout Management</h1>
+  <a href="{{ url_for('admin') }}" class="ap-back"><i class="bi bi-arrow-left"></i> Back to Admin</a>
+</div>
+
+{% set total_amount = payouts | sum(attribute='amount') %}
+{% set pending_amount = payouts | selectattr('status', 'equalto', 'Pending') | sum(attribute='amount') %}
+{% set paid_amount = payouts | selectattr('status', 'equalto', 'Paid') | sum(attribute='amount') %}
+{% set total_fees = payouts | sum(attribute='platform_fee') %}
+
+<div class="ap-stats">
+  <div class="ap-stat"><div class="ap-stat-label">Total Payouts</div><div class="ap-stat-value" style="color:#3b82f6;">{{ payouts|length }}</div></div>
+  <div class="ap-stat"><div class="ap-stat-label">Pending (GH₵)</div><div class="ap-stat-value" style="color:#f59e0b;">{{ "%.0f"|format(pending_amount) }}</div></div>
+  <div class="ap-stat"><div class="ap-stat-label">Paid Out (GH₵)</div><div class="ap-stat-value" style="color:#198754;">{{ "%.0f"|format(paid_amount) }}</div></div>
+  <div class="ap-stat"><div class="ap-stat-label">Platform Fees (GH₵)</div><div class="ap-stat-value" style="color:#c8890a;">{{ "%.0f"|format(total_fees) }}</div></div>
+</div>
+
+<div class="ap-filters">
+  <button class="ap-filter-btn active" onclick="filterPayouts('all',this)">All ({{ payouts|length }})</button>
+  <button class="ap-filter-btn" onclick="filterPayouts('Pending',this)">⏳ Pending</button>
+  <button class="ap-filter-btn" onclick="filterPayouts('Paid',this)">✓ Paid</button>
+</div>
+
+<div class="ap-table-card">
+  <table>
+    <thead>
+      <tr>
+        <th>Shop</th>
+        <th>Order</th>
+        <th>Vendor Gets</th>
+        <th>Platform Fee</th>
+        <th>Date</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if payouts %}
+        {% for p in payouts %}
+        <tr class="payout-row" data-status="{{ p.status }}">
+          <td>
+            <div class="ap-shop-cell">
+              <div class="ap-shop-icon">🏪</div>
+              <strong>{{ p.shop_name }}</strong>
+            </div>
+          </td>
+          <td><span class="ap-order-id">#{{ p.order_id[:12] if p.order_id else '—' }}...</span></td>
+          <td><strong style="color:var(--brand);">GH₵{{ "%.2f"|format(p.amount) }}</strong></td>
+          <td style="color:#c8890a;font-weight:600;">GH₵{{ "%.2f"|format(p.platform_fee) }}</td>
+          <td style="color:#aaa;font-size:.78rem;">{{ p.timestamp[:10] if p.timestamp else '—' }}</td>
+          <td>
+            {% if p.status == 'Paid' %}
+              <span class="ap-badge ap-badge-green">✓ Paid</span>
+            {% else %}
+              <span class="ap-badge ap-badge-orange">⏳ Pending</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if p.status == 'Pending' %}
+              <form method="POST" action="{{ url_for('mark_payout_paid', payout_id=p.id) }}" onsubmit="return confirm('Mark GH₵{{ '%.2f'|format(p.amount) }} as paid to {{ p.shop_name }}?')">
+                <button type="submit" class="btn-mark-paid">✓ Mark Paid</button>
+              </form>
+            {% else %}
+              <span style="color:#aaa;font-size:.78rem;">Completed</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr class="ap-empty"><td colspan="7">No payouts yet.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function filterPayouts(status, btn) {
+  document.querySelectorAll('.ap-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.payout-row').forEach(row => {
+    row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

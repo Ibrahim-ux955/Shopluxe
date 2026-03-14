@@ -79,9 +79,17 @@ class Product(db.Model):
     tags = db.Column(db.Text, default='[]')
     delivery_info = db.Column(db.String(200), default='Delivery in 2-4 working days')
     new_arrival = db.Column(db.Boolean, default=True)
+    vendor_id = db.Column(db.String, db.ForeignKey('vendors.id'), nullable=True)  # ✅ NEW
 
     def to_dict(self):
         images = json.loads(self.images or '[]')
+
+        # ✅ Fetch vendor shop name if vendor_id exists
+        vendor_name = None
+        if self.vendor_id:
+            vendor = Vendor.query.get(self.vendor_id)
+            vendor_name = vendor.shop_name if vendor else None
+
         return {
             'id': self.id,
             'name': self.name,
@@ -103,8 +111,9 @@ class Product(db.Model):
             'tags': json.loads(self.tags or '[]'),
             'delivery_info': self.delivery_info or 'Delivery in 2-4 working days',
             'new_arrival': self.new_arrival if self.new_arrival is not None else True,
+            'vendor_id': self.vendor_id or None,   # ✅ NEW
+            'vendor_name': vendor_name,             # ✅ NEW
         }
-
 
 class Order(db.Model):
     __tablename__ = 'orders'
@@ -198,6 +207,55 @@ class RestockRequest(db.Model):
     product_id = db.Column(db.String, default='')
     timestamp = db.Column(db.String, default='')
 
+class Vendor(db.Model):
+    __tablename__ = 'vendors'
+    id = db.Column(db.String, primary_key=True, default=lambda: str(uuid4()))
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    shop_name = db.Column(db.String, nullable=False)
+    shop_description = db.Column(db.Text, default='')
+    logo = db.Column(db.String, default='')
+    is_approved = db.Column(db.Boolean, default=False)
+    is_banned = db.Column(db.Boolean, default=False)
+    bank_name = db.Column(db.String, default='')
+    bank_account = db.Column(db.String, default='')
+    phone = db.Column(db.String, default='')
+    timestamp = db.Column(db.String, default='')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'shop_name': self.shop_name,
+            'shop_description': self.shop_description,
+            'logo': self.logo,
+            'is_approved': self.is_approved,
+            'is_banned': self.is_banned,
+            'bank_name': self.bank_name,
+            'bank_account': self.bank_account,
+            'phone': self.phone,
+            'timestamp': self.timestamp,
+        }
+
+class Payout(db.Model):
+    __tablename__ = 'payouts'
+    id = db.Column(db.String, primary_key=True, default=lambda: str(uuid4()))
+    vendor_id = db.Column(db.String, db.ForeignKey('vendors.id'), nullable=False)
+    order_id = db.Column(db.String, default='')
+    amount = db.Column(db.Float, default=0)
+    platform_fee = db.Column(db.Float, default=0)
+    status = db.Column(db.String, default='Pending')  # Pending, Paid
+    timestamp = db.Column(db.String, default='')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'vendor_id': self.vendor_id,
+            'order_id': self.order_id,
+            'amount': self.amount,
+            'platform_fee': self.platform_fee,
+            'status': self.status,
+            'timestamp': self.timestamp,
+        }
 
 # ============================================================
 # HELPER FUNCTIONS
@@ -566,7 +624,7 @@ def verify_payment():
     if Order.query.get(order_id):
         return redirect(url_for("order_confirmation", reference=order_id))
 
-    # ✅ Stock deduction + admin out-of-stock alert only
+    # ✅ Stock deduction + admin out-of-stock alert
     for item in items:
         product = Product.query.filter_by(name=item.get("name")).first()
         if product:
@@ -596,12 +654,15 @@ def verify_payment():
 
     db.session.commit()
 
-    # ✅ Store effective_price in order items
+    # ✅ Store effective_price and vendor_id in order items
     enriched_items = []
     for item in items:
+        # Pull vendor_id from the product in DB to ensure accuracy
+        product = Product.query.filter_by(name=item.get("name")).first()
         enriched_items.append({
             **item,
-            'price': item.get('effective_price') or item.get('price', 0)
+            'price': item.get('effective_price') or item.get('price', 0),
+            'vendor_id': product.vendor_id if product else None,  # ✅ NEW
         })
 
     new_order = Order(
@@ -614,6 +675,28 @@ def verify_payment():
     )
     db.session.add(new_order)
     db.session.commit()
+
+    # ✅ Create payout records per vendor
+    vendor_totals = {}
+    for item in enriched_items:
+        vid = item.get('vendor_id')
+        if vid:
+            subtotal = float(item.get('price', 0)) * int(item.get('quantity', 1))
+            vendor_totals[vid] = vendor_totals.get(vid, 0) + subtotal
+
+    for vid, subtotal in vendor_totals.items():
+        fee = round(subtotal * PLATFORM_FEE_PERCENT / 100, 2)
+        db.session.add(Payout(
+            id=str(uuid4()),
+            vendor_id=vid,
+            order_id=order_id,
+            amount=round(subtotal - fee, 2),
+            platform_fee=fee,
+            status='Pending',
+            timestamp=datetime.now(timezone.utc).isoformat()
+        ))
+    db.session.commit()
+
     session.pop('cart', None)
 
     track_order_url = url_for("track_order", order_id=order_id, _external=True)
@@ -984,6 +1067,13 @@ def login():
             session['user_name'] = user.name
             session['user_email'] = user.email
             session['is_admin'] = user.is_admin
+
+            # ✅ Set vendor session if approved
+            vendor = Vendor.query.filter_by(user_id=user.id).first()
+            if vendor and vendor.is_approved and not vendor.is_banned:
+                session['vendor_id'] = vendor.id
+                session['shop_name'] = vendor.shop_name
+
             flash("✅ Logged in successfully.")
             return redirect(url_for('profile'))
 
@@ -1526,7 +1616,7 @@ def google_callback():
             id=str(uuid4()),
             name=name,
             email=email,
-            password=generate_password_hash(str(uuid4())),  # random password
+            password=generate_password_hash(str(uuid4())),
             is_admin=False
         )
         db.session.add(user)
@@ -1538,8 +1628,122 @@ def google_callback():
     session['user_email'] = user.email
     session['is_admin'] = user.is_admin
 
+    # ✅ Set vendor session if approved
+    vendor = Vendor.query.filter_by(user_id=user.id).first()
+    if vendor and vendor.is_approved and not vendor.is_banned:
+        session['vendor_id'] = vendor.id
+        session['shop_name'] = vendor.shop_name
+
     flash(f"✅ Welcome, {user.name}!")
     return redirect(url_for('profile'))
+
+@app.route('/admin/vendors')
+def admin_vendors():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    vendors = Vendor.query.order_by(Vendor.timestamp.desc()).all()
+    vendor_list = []
+    for v in vendors:
+        user = User.query.get(v.user_id)
+        product_count = Product.query.filter_by(vendor_id=v.id).count()
+        vendor_list.append({
+            **v.to_dict(),
+            'user_name': user.name if user else 'Unknown',
+            'user_email': user.email if user else 'Unknown',
+            'product_count': product_count,
+        })
+
+    return render_template('admin_vendors.html', vendors=vendor_list)
+
+
+@app.route('/admin/approve-vendor/<vendor_id>', methods=['POST'])
+def approve_vendor(vendor_id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    vendor = Vendor.query.get(vendor_id)
+    if not vendor:
+        flash("❌ Vendor not found.")
+        return redirect(url_for('admin_vendors'))
+
+    vendor.is_approved = True
+    vendor.is_banned = False
+    db.session.commit()
+
+    # Notify vendor
+    user = User.query.get(vendor.user_id)
+    if user:
+        try:
+            send_email(
+                user.email,
+                "✅ Your ShopLuxe Vendor Account is Approved!",
+                f"""
+                <div style="font-family:sans-serif; padding:20px;">
+                    <h2 style="color:#198754;">Congratulations! 🎉</h2>
+                    <p>Hi {user.name}, your vendor account <strong>{vendor.shop_name}</strong>
+                       has been approved.</p>
+                    <p>You can now log in and start listing your products.</p>
+                    <a href="https://www.shopluxe.online/become-vendor"
+                       style="background:#198754;color:#fff;padding:10px 20px;
+                       border-radius:8px;text-decoration:none;">
+                       Go to Your Dashboard
+                    </a>
+                </div>
+                """
+            )
+        except Exception as e:
+            print("⚠️ Vendor approval email failed:", e)
+
+    flash(f"✅ {vendor.shop_name} approved.")
+    return redirect(url_for('admin_vendors'))
+
+
+@app.route('/admin/ban-vendor/<vendor_id>', methods=['POST'])
+def ban_vendor(vendor_id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    vendor = Vendor.query.get(vendor_id)
+    if not vendor:
+        flash("❌ Vendor not found.")
+        return redirect(url_for('admin_vendors'))
+
+    vendor.is_banned = True
+    vendor.is_approved = False
+    db.session.commit()
+    flash(f"⛔ {vendor.shop_name} has been banned.")
+    return redirect(url_for('admin_vendors'))
+
+
+@app.route('/admin/payouts')
+def admin_payouts():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    payouts = Payout.query.order_by(Payout.timestamp.desc()).all()
+    payout_list = []
+    for p in payouts:
+        vendor = Vendor.query.get(p.vendor_id)
+        payout_list.append({
+            **p.to_dict(),
+            'shop_name': vendor.shop_name if vendor else 'Unknown'
+        })
+
+    return render_template('admin_payouts.html', payouts=payout_list)
+
+
+@app.route('/admin/mark-payout-paid/<payout_id>', methods=['POST'])
+def mark_payout_paid(payout_id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    payout = Payout.query.get(payout_id)
+    if payout:
+        payout.status = 'Paid'
+        db.session.commit()
+        flash("✅ Payout marked as paid.")
+    return redirect(url_for('admin_payouts'))
 
 # ============================================================
 # DB INIT & RUN
@@ -1549,13 +1753,14 @@ with app.app_context():
     db.create_all()
 
     with db.engine.connect() as conn:
-        # Products table
+        # ✅ Products table
         for col, definition in [
             ("brand", "VARCHAR(100) DEFAULT ''"),
             ("sku", "VARCHAR(100) DEFAULT ''"),
             ("tags", "TEXT DEFAULT '[]'"),
             ("delivery_info", "VARCHAR(200) DEFAULT 'Delivery in 2-4 working days'"),
             ("new_arrival", "BOOLEAN DEFAULT 1"),
+            ("vendor_id", "VARCHAR DEFAULT NULL"),  # ✅ NEW
         ]:
             try:
                 conn.execute(db.text(f"ALTER TABLE products ADD COLUMN {col} {definition}"))
@@ -1573,9 +1778,40 @@ with app.app_context():
                 conn.commit()
             except:
                 pass
-        # ✅ Remove bad columns from reviews if they exist (can't drop in SQLite, so just ignore)
-        # SQLite doesn't support DROP COLUMN in older versions, so the Review model
-        # must NOT have these columns defined
+
+        # ✅ Vendors table — safety net for new columns
+        for col, definition in [
+            ("phone", "VARCHAR DEFAULT ''"),
+            ("bank_name", "VARCHAR DEFAULT ''"),
+            ("bank_account", "VARCHAR DEFAULT ''"),
+            ("logo", "VARCHAR DEFAULT ''"),
+            ("is_approved", "BOOLEAN DEFAULT 0"),
+            ("is_banned", "BOOLEAN DEFAULT 0"),
+            ("shop_description", "TEXT DEFAULT ''"),
+            ("timestamp", "VARCHAR DEFAULT ''"),
+        ]:
+            try:
+                conn.execute(db.text(f"ALTER TABLE vendors ADD COLUMN {col} {definition}"))
+                conn.commit()
+            except:
+                pass
+
+        # ✅ Payouts table — safety net
+        for col, definition in [
+            ("order_id", "VARCHAR DEFAULT ''"),
+            ("amount", "FLOAT DEFAULT 0"),
+            ("platform_fee", "FLOAT DEFAULT 0"),
+            ("status", "VARCHAR DEFAULT 'Pending'"),
+            ("timestamp", "VARCHAR DEFAULT ''"),
+        ]:
+            try:
+                conn.execute(db.text(f"ALTER TABLE payouts ADD COLUMN {col} {definition}"))
+                conn.commit()
+            except:
+                pass
+
+        # ✅ SQLite doesn't support DROP COLUMN in older versions, so the Review model
+        # must NOT have removed columns defined — just ignore them here
 
 if __name__ == "__main__":
     app.run()

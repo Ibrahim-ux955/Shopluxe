@@ -148,6 +148,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
   <button class="tab-btn" onclick="showTab('orders',this)"><i class="bi bi-receipt"></i> Orders <span class="tab-badge">{{ orders|selectattr("status","in",["Pending","Processing","Paid"])|list|length }}</span></button>
   <button class="tab-btn" onclick="showTab('history',this)"><i class="bi bi-clock-history"></i> History</button>
   <button class="tab-btn" onclick="showTab('payments',this)"><i class="bi bi-credit-card"></i> Payments</button>
+  <!-- ✅ VENDOR: two new admin tabs -->
+  <button class="tab-btn" onclick="window.location.href='{{ url_for('admin_vendors') }}'"><i class="bi bi-shop"></i> Vendors</button>
+  <button class="tab-btn" onclick="window.location.href='{{ url_for('admin_payouts') }}'"><i class="bi bi-cash-stack"></i> Payouts</button>
 </div>
 
 <!-- ADD PRODUCT -->

@@ -318,6 +318,12 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
         <li><a class="dropdown-item" href="{{ url_for('settings') }}"><i class="bi bi-gear me-2"></i>Settings</a></li>
         <li><a class="dropdown-item" href="{{ url_for('cart') }}"><i class="bi bi-bag me-2"></i>My Cart</a></li>
         <li><a class="dropdown-item" href="{{ url_for('wishlist') }}"><i class="bi bi-heart me-2"></i>Wishlist</a></li>
+        <!-- ✅ VENDOR: show dashboard if vendor, else show "Sell on ShopLuxe" -->
+        {% if session.get('vendor_id') %}
+        <li><a class="dropdown-item" href="{{ url_for('vendor_dashboard') }}"><i class="bi bi-shop me-2" style="color:var(--brand);"></i>My Vendor Dashboard</a></li>
+        {% else %}
+        <li><a class="dropdown-item" href="{{ url_for('become_vendor') }}"><i class="bi bi-shop me-2" style="color:var(--brand);"></i>Sell on ShopLuxe</a></li>
+        {% endif %}
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
       </ul>
@@ -355,6 +361,12 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
         <li><a class="dropdown-item" href="{{ url_for('filtered', category='New Arrivals') }}"><i class="bi bi-stars me-2" style="color:#198754;"></i>New Arrivals ✨</a></li>
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item" href="{{ url_for('categories') }}"><i class="bi bi-grid me-2"></i>All Categories</a></li>
+        <!-- ✅ VENDOR: smart link in categories dropdown -->
+        {% if session.get('vendor_id') %}
+        <li><a class="dropdown-item" href="{{ url_for('vendor_dashboard') }}"><i class="bi bi-shop me-2" style="color:var(--brand);"></i>My Vendor Dashboard</a></li>
+        {% else %}
+        <li><a class="dropdown-item" href="{{ url_for('become_vendor') }}"><i class="bi bi-shop me-2" style="color:var(--brand);"></i>Sell on ShopLuxe</a></li>
+        {% endif %}
       </ul>
     </div>
   </div>
@@ -483,6 +495,13 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   <a href="{{ url_for('login') }}" class="bnav-item {% if active_page=='login' %}active{% endif %}">
     <i class="bi bi-box-arrow-in-right"></i>
     <span>Sign In</span>
+  </a>
+  {% endif %}
+  <!-- ✅ VENDOR: show My Shop button on mobile bottom nav -->
+  {% if session.get('vendor_id') %}
+  <a href="{{ url_for('vendor_dashboard') }}" class="bnav-item">
+    <i class="bi bi-shop"></i>
+    <span>My Shop</span>
   </a>
   {% endif %}
   {% if session.get('admin_logged_in') %}

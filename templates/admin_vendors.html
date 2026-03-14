@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.av-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.av-header h1 { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--dark); margin: 0; }
+.av-back { font-size: .85rem; color: #aaa; text-decoration: none; display: flex; align-items: center; gap: 5px; transition: color .2s; }
+.av-back:hover { color: var(--brand); }
+
+.av-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+.av-stat { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.04); }
+.av-stat-label { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #aaa; margin-bottom: 8px; }
+.av-stat-value { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; }
+
+.av-search { margin-bottom: 18px; }
+.av-search input { border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 16px; font-size: .88rem; font-family: 'DM Sans', sans-serif; color: var(--dark); outline: none; width: 300px; max-width: 100%; background: var(--card); transition: border-color .2s; }
+.av-search input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(25,135,84,.1); }
+
+.av-table-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.04); }
+.av-table-card table { width: 100%; border-collapse: collapse; }
+.av-table-card thead { background: var(--light); }
+.av-table-card th { padding: 12px 18px; text-align: left; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #aaa; white-space: nowrap; }
+.av-table-card td { padding: 14px 18px; border-top: 1px solid var(--border); vertical-align: middle; font-size: .85rem; }
+.av-table-card tr:hover td { background: var(--light); }
+
+.av-vendor-cell { display: flex; align-items: center; gap: 12px; }
+.av-logo { width: 42px; height: 42px; border-radius: 10px; object-fit: cover; background: var(--light); border: 1px solid var(--border); }
+.av-logo-ph { width: 42px; height: 42px; border-radius: 10px; background: var(--light); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.av-name { font-weight: 700; font-size: .88rem; color: var(--dark); }
+.av-desc-preview { font-size: .72rem; color: #bbb; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.av-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.av-badge-green { background: #d1fae5; color: #065f46; }
+.av-badge-red { background: #fee2e2; color: #991b1b; }
+.av-badge-orange { background: #fff3cd; color: #856404; }
+
+.av-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.av-btn { padding: 6px 13px; border-radius: 7px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; transition: opacity .2s; text-decoration: none; display: inline-block; }
+.av-btn-approve { background: #d1fae5; color: #065f46; }
+.av-btn-ban { background: #fee2e2; color: #991b1b; }
+.av-btn-view { background: #dbeafe; color: #1e40af; }
+.av-btn:hover { opacity: .75; }
+
+.av-empty td { text-align: center; padding: 60px; color: #bbb; }
+
+@media(max-width:900px){ .av-stats { grid-template-columns: repeat(2,1fr); } .av-table-card { overflow-x: auto; } }
+@media(max-width:500px){ .av-stats { grid-template-columns: 1fr 1fr; } }
+</style>
+
+<div class="av-header">
+  <h1>🏪 Vendor Management</h1>
+  <a href="{{ url_for('admin') }}" class="av-back"><i class="bi bi-arrow-left"></i> Back to Admin</a>
+</div>
+
+{% set total = vendors|length %}
+{% set approved = vendors|selectattr('is_approved')|list|length %}
+{% set banned = vendors|selectattr('is_banned')|list|length %}
+{% set pending = total - approved - banned %}
+
+<div class="av-stats">
+  <div class="av-stat"><div class="av-stat-label">Total Vendors</div><div class="av-stat-value" style="color:#3b82f6;">{{ total }}</div></div>
+  <div class="av-stat"><div class="av-stat-label">Approved</div><div class="av-stat-value" style="color:#198754;">{{ approved }}</div></div>
+  <div class="av-stat"><div class="av-stat-label">Pending</div><div class="av-stat-value" style="color:#f59e0b;">{{ pending }}</div></div>
+  <div class="av-stat"><div class="av-stat-label">Banned</div><div class="av-stat-value" style="color:#dc3545;">{{ banned }}</div></div>
+</div>
+
+<div class="av-search">
+  <input type="text" id="vendorSearch" placeholder="🔍 Search by shop name or email..." oninput="filterVendors()">
+</div>
+
+<div class="av-table-card">
+  <table>
+    <thead>
+      <tr>
+        <th>Vendor</th>
+        <th>Owner</th>
+        <th>Products</th>
+        <th>Phone</th>
+        <th>Bank</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if vendors %}
+        {% for v in vendors %}
+        <tr class="vendor-row" data-name="{{ v.shop_name|lower }}" data-email="{{ v.user_email|lower }}">
+          <td>
+            <div class="av-vendor-cell">
+              {% if v.logo %}
+                <img src="{{ url_for('static', filename='shoes/' + v.logo) }}" class="av-logo" alt="">
+              {% else %}
+                <div class="av-logo-ph">🏪</div>
+              {% endif %}
+              <div>
+                <div class="av-name">{{ v.shop_name }}</div>
+                {% if v.shop_description %}
+                  <div class="av-desc-preview">{{ v.shop_description }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+          <td>
+            <div style="font-weight:600;font-size:.85rem;">{{ v.user_name }}</div>
+            <div style="font-size:.72rem;color:#aaa;">{{ v.user_email }}</div>
+          </td>
+          <td><strong>{{ v.product_count }}</strong></td>
+          <td style="font-size:.82rem;">{{ v.phone or '—' }}</td>
+          <td>
+            <div style="font-size:.82rem;">{{ v.bank_name or '—' }}</div>
+            {% if v.bank_account %}<div style="font-size:.72rem;color:#aaa;">{{ v.bank_account[:4] }}****</div>{% endif %}
+          </td>
+          <td>
+            {% if v.is_banned %}<span class="av-badge av-badge-red">⛔ Banned</span>
+            {% elif v.is_approved %}<span class="av-badge av-badge-green">✓ Approved</span>
+            {% else %}<span class="av-badge av-badge-orange">⏳ Pending</span>{% endif %}
+          </td>
+          <td>
+            <div class="av-actions">
+              <a href="{{ url_for('vendor_storefront', vendor_id=v.id) }}" class="av-btn av-btn-view" target="_blank">View</a>
+              {% if not v.is_approved or v.is_banned %}
+                <form method="POST" action="{{ url_for('approve_vendor', vendor_id=v.id) }}" style="display:inline;">
+                  <button type="submit" class="av-btn av-btn-approve">✓ Approve</button>
+                </form>
+              {% endif %}
+              {% if not v.is_banned %}
+                <form method="POST" action="{{ url_for('ban_vendor', vendor_id=v.id) }}" style="display:inline;" onsubmit="return confirm('Ban {{ v.shop_name }}?')">
+                  <button type="submit" class="av-btn av-btn-ban">⛔ Ban</button>
+                </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr class="av-empty"><td colspan="7">No vendor applications yet.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function filterVendors() {
+  const q = document.getElementById('vendorSearch').value.toLowerCase();
+  document.querySelectorAll('.vendor-row').forEach(row => {
+    row.style.display = (row.dataset.name.includes(q) || row.dataset.email.includes(q)) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}
