@@ -165,6 +165,88 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #bbb; }
+
+  /* ══ MOBILE TEXT SIZE FIX ══ */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+@media(max-width: 768px) {
+  body { font-size: 15px; }
+
+  /* Nav & cat bar */
+  .cat-link { font-size: .82rem !important; }
+  .bnav-item span { font-size: .72rem !important; }
+  .bnav-item i { font-size: 1.3rem !important; }
+
+  /* Flash */
+  .flash-msg { font-size: .9rem !important; }
+
+  /* Cards & product text */
+  .p-card-name, .prod-name, .wish-name,
+  .order-item-name, .item-name,
+  .cart-name { font-size: .95rem !important; }
+
+  .p-price, .pay-amt, .prod-price,
+  .order-item-price, .item-price,
+  .cart-price, .price-now { font-size: 1rem !important; }
+
+  .p-card-brand, .wish-brand, .cart-meta,
+  .order-item-meta, .item-meta,
+  .p-card-stock, .prod-stock,
+  .f-hint, .field-hint { font-size: .78rem !important; }
+
+  /* Buttons */
+  .p-card-btn, .btn-cart, .btn-submit,
+  .btn-save, .btn-send, .btn-reset,
+  .btn-checkout, .btn-pay { font-size: .9rem !important; }
+
+  /* Page titles */
+  .section-title, .cat-page-title, .page-title,
+  .wish-title, .cart-title, .admin-header h1 { font-size: 1.5rem !important; }
+
+  /* Form elements */
+  .f-label, .field-label { font-size: .78rem !important; }
+  .f-input, .f-select, .f-textarea,
+  .field-input { font-size: .92rem !important; }
+
+  /* Cards body */
+  .a-card-title { font-size: .92rem !important; }
+  .a-card-body, .info-value,
+  .tl-title, .tl-sub { font-size: .88rem !important; }
+  .info-label { font-size: .72rem !important; }
+
+  /* Summary / totals */
+  .summary-row, .totals-row,
+  .totals-row.grand { font-size: .9rem !important; }
+  .totals-row.grand { font-size: 1rem !important; }
+
+  /* Hero */
+  .hero-name { font-size: 1.2rem !important; }
+  .hero-price { font-size: 1rem !important; }
+
+  /* Section headers */
+  .section-head .section-title { font-size: 1.1rem !important; }
+  .section-subtitle { font-size: .78rem !important; }
+
+  /* Admin */
+  .tab-btn { font-size: .82rem !important; padding: 7px 12px !important; }
+  .admin-stat-num { font-size: 1.1rem !important; }
+  .admin-stat-label { font-size: .72rem !important; }
+
+  /* Footer */
+  .footer-col-title { font-size: .82rem !important; }
+  .footer-link { font-size: .82rem !important; }
+  .footer-bottom { font-size: .78rem !important; }
+
+  /* Support / FAQ */
+  .faq-q { font-size: .9rem !important; }
+  .faq-a { font-size: .86rem !important; }
+  .contact-title { font-size: .95rem !important; }
+  .contact-sub { font-size: .78rem !important; }
+
+  /* Settings / profile */
+  .pref-info strong { font-size: .9rem !important; }
+  .pref-info small { font-size: .76rem !important; }
+}
   </style>
 </head>
 
