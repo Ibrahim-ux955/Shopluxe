@@ -262,29 +262,7 @@ body { font-family: 'DM Sans', sans-serif; }
     </div>
   </a>
 
-  <a href="{{ url_for('filtered', category='Loafers') }}" class="cat-card" style="animation-delay:.17s">
-    <img src="{{ url_for('static', filename='categories/loafers.jpg') }}" alt="Loafers"
-         onerror="this.style.background='linear-gradient(135deg,#fa709a,#fee140)'">
-    <div class="cat-card-body">
-      <span class="cat-card-icon">👞</span>
-      <p class="cat-card-name">Loafers</p>
-      <p class="cat-card-desc">Effortlessly smart</p>
-      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
-    </div>
-  </a>
-
-  <a href="{{ url_for('filtered', category='Slippers') }}" class="cat-card" style="animation-delay:.20s">
-    <img src="{{ url_for('static', filename='categories/slippers.jpg') }}" alt="Slippers"
-         onerror="this.style.background='linear-gradient(135deg,#a18cd1,#fbc2eb)'">
-    <div class="cat-card-body">
-      <span class="cat-card-icon">🥿</span>
-      <p class="cat-card-name">Slippers</p>
-      <p class="cat-card-desc">Comfort at home</p>
-      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
-    </div>
-  </a>
-
-  <a href="{{ url_for('filtered', category='Formal') }}" class="cat-card" style="animation-delay:.23s">
+  <a href="{{ url_for('filtered', category='Formal') }}" class="cat-card" style="animation-delay:.17s">
     <img src="{{ url_for('static', filename='categories/formal.jpg') }}" alt="Formal"
          onerror="this.style.background='linear-gradient(135deg,#1a1a2e,#16213e)'">
     <div class="cat-card-body">
@@ -295,7 +273,7 @@ body { font-family: 'DM Sans', sans-serif; }
     </div>
   </a>
 
-  <a href="{{ url_for('filtered', category='Sport') }}" class="cat-card" style="animation-delay:.26s">
+  <a href="{{ url_for('filtered', category='Sport') }}" class="cat-card" style="animation-delay:.20s">
     <img src="{{ url_for('static', filename='categories/sport.jpg') }}" alt="Sport"
          onerror="this.style.background='linear-gradient(135deg,#0ba360,#3cba92)'">
     <div class="cat-card-body">
@@ -306,7 +284,7 @@ body { font-family: 'DM Sans', sans-serif; }
     </div>
   </a>
 
-  <a href="{{ url_for('filtered', category='Kids') }}" class="cat-card" style="animation-delay:.29s">
+  <a href="{{ url_for('filtered', category='Kids') }}" class="cat-card" style="animation-delay:.23s">
     <img src="{{ url_for('static', filename='categories/kids.jpg') }}" alt="Kids"
          onerror="this.style.background='linear-gradient(135deg,#f7971e,#ffd200)'">
     <div class="cat-card-body">
@@ -317,8 +295,56 @@ body { font-family: 'DM Sans', sans-serif; }
     </div>
   </a>
 
+  <!-- ✅ NEW: Appliances -->
+  <a href="{{ url_for('filtered', category='Appliances') }}" class="cat-card" style="animation-delay:.26s">
+    <img src="{{ url_for('static', filename='categories/appliances.jpg') }}" alt="Appliances"
+         onerror="this.style.background='linear-gradient(135deg,#2c3e50,#3498db)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">🏠</span>
+      <p class="cat-card-name">Appliances</p>
+      <p class="cat-card-desc">Home & kitchen</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <!-- ✅ NEW: Software -->
+  <a href="{{ url_for('filtered', category='Software') }}" class="cat-card" style="animation-delay:.29s">
+    <img src="{{ url_for('static', filename='categories/software.jpg') }}" alt="Software"
+         onerror="this.style.background='linear-gradient(135deg,#0f0c29,#302b63)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">💻</span>
+      <p class="cat-card-name">Software</p>
+      <p class="cat-card-desc">Apps & digital tools</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <!-- ✅ NEW: Books -->
+  <a href="{{ url_for('filtered', category='Books') }}" class="cat-card" style="animation-delay:.32s">
+    <img src="{{ url_for('static', filename='categories/books.jpg') }}" alt="Books"
+         onerror="this.style.background='linear-gradient(135deg,#834d9b,#d04ed6)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">📚</span>
+      <p class="cat-card-name">Books</p>
+      <p class="cat-card-desc">Read & discover</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <!-- ✅ NEW: Jewelry, Eyewear, Watches & Accessories -->
+  <a href="{{ url_for('filtered', category='Accessories') }}" class="cat-card" style="animation-delay:.35s">
+    <img src="{{ url_for('static', filename='categories/accessories.jpg') }}" alt="Accessories"
+         onerror="this.style.background='linear-gradient(135deg,#c8a96e,#a07840)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">💍</span>
+      <p class="cat-card-name">Jewelry & Accessories</p>
+      <p class="cat-card-desc">Watches, eyewear & more</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
   <!-- Special: Sale -->
-  <a href="{{ url_for('filtered', category='Sale') }}" class="cat-card special-sale" style="animation-delay:.32s">
+  <a href="{{ url_for('filtered', category='Sale') }}" class="cat-card special-sale" style="animation-delay:.38s">
     <img src="{{ url_for('static', filename='categories/sale.jpg') }}" alt="Sale"
          onerror="this.style.background='linear-gradient(135deg,#ff6600,#ff0000)'">
     <div class="cat-card-body">
@@ -330,7 +356,7 @@ body { font-family: 'DM Sans', sans-serif; }
   </a>
 
   <!-- Special: New Arrivals -->
-  <a href="{{ url_for('filtered', category='new') }}" class="cat-card special-new" style="animation-delay:.35s">
+  <a href="{{ url_for('filtered', category='new') }}" class="cat-card special-new" style="animation-delay:.41s">
     <img src="{{ url_for('static', filename='categories/new.jpg') }}" alt="New Arrivals"
          onerror="this.style.background='linear-gradient(135deg,#198754,#0d6efd)'">
     <div class="cat-card-body">

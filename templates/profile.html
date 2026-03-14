@@ -1,125 +1,271 @@
 {% extends 'base.html' %}
-
 {% block content %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-
 <style>
-  body {
-    background-color: #f8f9fa;
-  }
-  .profile-card {
-    border: none;
-    border-radius: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-  }
-  .profile-avatar {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 4px solid #ffffff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  }
-  .profile-name {
-    font-weight: 600;
-    font-size: 1.3rem;
-  }
-  .profile-email {
-    color: #6c757d;
-  }
-  .stat-item h6 {
-    font-weight: 600;
-    font-size: 1.1rem;
-  }
-  .list-group-item {
-    border: none;
-    padding: 15px 20px;
-    font-weight: 500;
-  }
-  .list-group-item i {
-    font-size: 1.1rem;
-    color: #6c757d;
-  }
-  .list-group-item:hover {
-    background-color: #f1f3f5;
-    cursor: pointer;
-  }
-  .logout-btn {
-    border-radius: 10px;
-  }
+/* ── PROFILE PAGE ── */
+.pf-wrap { max-width: 1100px; margin: 0 auto; padding: 0 0 60px; }
+
+/* HERO BANNER */
+.pf-hero {
+  background: linear-gradient(135deg, var(--dark) 0%, #1e2a4e 100%);
+  border-radius: 20px; padding: 32px 36px; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  position: relative; overflow: hidden;
+}
+.pf-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 80% 50%, rgba(25,135,84,.15) 0%, transparent 60%);
+}
+.pf-avatar {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand), #0d6efd);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; font-weight: 700; color: #fff;
+  border: 3px solid rgba(255,255,255,.2); flex-shrink: 0; position: relative; z-index: 1;
+}
+.pf-hero-info { flex: 1; position: relative; z-index: 1; }
+.pf-hello { font-size: .78rem; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+.pf-name { font-family: 'Playfair Display', serif; font-size: 1.7rem; color: #fff; margin: 0 0 4px; }
+.pf-email { font-size: .82rem; color: rgba(255,255,255,.45); }
+.pf-hero-stats { display: flex; gap: 24px; flex-wrap: wrap; position: relative; z-index: 1; }
+.pf-hstat { text-align: center; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 12px 20px; min-width: 80px; }
+.pf-hstat-num { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #fff; font-weight: 700; }
+.pf-hstat-label { font-size: .68rem; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+/* GRID LAYOUT */
+.pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.pf-grid-full { grid-column: 1 / -1; }
+
+/* SECTION CARDS */
+.pf-section {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,.05);
+  transition: box-shadow .2s;
+}
+.pf-section:hover { box-shadow: 0 4px 20px rgba(0,0,0,.09); }
+.pf-section-head {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--light);
+}
+.pf-section-title { font-size: .82rem; font-weight: 800; color: var(--dark); text-transform: uppercase; letter-spacing: 1px; margin: 0; display: flex; align-items: center; gap: 8px; }
+.pf-section-link { font-size: .78rem; color: var(--brand); text-decoration: none; font-weight: 600; }
+.pf-section-link:hover { text-decoration: underline; }
+.pf-section-body { padding: 0; }
+
+/* MENU ITEMS */
+.pf-menu-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 15px 20px; text-decoration: none; color: var(--dark);
+  border-bottom: 1px solid var(--border); transition: background .15s;
+}
+.pf-menu-item:last-child { border-bottom: none; }
+.pf-menu-item:hover { background: var(--light); }
+.pf-menu-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.pf-menu-text strong { display: block; font-size: .88rem; font-weight: 700; color: var(--dark); }
+.pf-menu-text span { font-size: .74rem; color: #aaa; }
+.pf-menu-arrow { margin-left: auto; color: #ccc; font-size: .8rem; flex-shrink: 0; }
+.pf-menu-item:hover .pf-menu-arrow { color: var(--brand); }
+
+/* ORDER PREVIEW */
+.pf-order-empty { padding: 32px 20px; text-align: center; }
+.pf-order-empty i { font-size: 2.2rem; color: #ddd; display: block; margin-bottom: 10px; }
+.pf-order-empty p { color: #aaa; font-size: .85rem; margin: 0 0 14px; }
+.btn-pf-shop { background: var(--brand); color: #fff; border: none; border-radius: 8px; padding: 9px 22px; font-size: .82rem; font-weight: 700; text-decoration: none; font-family: 'DM Sans', sans-serif; transition: opacity .2s; display: inline-block; }
+.btn-pf-shop:hover { opacity: .88; color: #fff; }
+
+/* VENDOR BANNER */
+.pf-vendor-banner {
+  background: linear-gradient(135deg, #0f5132, #198754);
+  border-radius: 14px; padding: 20px 24px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.pf-vendor-banner-icon { font-size: 2rem; flex-shrink: 0; }
+.pf-vendor-banner-text strong { display: block; color: #fff; font-size: .95rem; font-weight: 700; margin-bottom: 3px; }
+.pf-vendor-banner-text span { font-size: .78rem; color: rgba(255,255,255,.65); }
+.btn-pf-vendor {
+  margin-left: auto; background: #fff; color: var(--brand);
+  border: none; border-radius: 8px; padding: 9px 20px;
+  font-size: .82rem; font-weight: 800; text-decoration: none;
+  font-family: 'DM Sans', sans-serif; transition: opacity .2s; white-space: nowrap;
+}
+.btn-pf-vendor:hover { opacity: .88; color: var(--brand); }
+
+/* LOGOUT */
+.pf-logout {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; background: transparent; border: 1.5px solid #fecaca;
+  border-radius: 10px; padding: 13px; font-size: .88rem; font-weight: 700;
+  color: #dc3545; font-family: 'DM Sans', sans-serif; cursor: pointer;
+  text-decoration: none; transition: background .2s;
+}
+.pf-logout:hover { background: #fff5f5; color: #dc3545; }
+
+@media(max-width:700px){
+  .pf-grid { grid-template-columns: 1fr; }
+  .pf-hero { padding: 24px 20px; flex-direction: column; text-align: center; }
+  .pf-hero-stats { justify-content: center; }
+  .pf-vendor-banner { flex-direction: column; text-align: center; }
+  .btn-pf-vendor { margin-left: 0; }
+}
 </style>
 
-<div class="container mt-5" style="max-width: 500px;">
-  <div class="card profile-card">
-    <div class="card-body text-center p-4">
+<div class="pf-wrap">
 
-      <!-- Profile Header -->
-      <img src="{{ user.profile_image or url_for('static', filename='images/default-avatar.png') }}"
-           alt="Avatar"
-           class="profile-avatar mb-3">
-      <h5 class="profile-name">{{ user.name }}</h5>
-      <p class="profile-email">{{ user.email }}</p>
-
-      <!-- Dynamic Stats -->
-      <div class="row text-center my-4">
-        <div class="col stat-item">
-          <h6>{{ stats.orders }}</h6>
-          <p class="text-muted mb-0">Orders</p>
-        </div>
-        <div class="col stat-item">
-          <h6>{{ stats.reviews }}</h6>
-          <p class="text-muted mb-0">Reviews</p>
-        </div>
-        <div class="col stat-item">
-          <h6>${{ "%.2f"|format(stats.spent) }}</h6>
-          <p class="text-muted mb-0">Spent</p>
-        </div>
+  <!-- HERO -->
+  <div class="pf-hero">
+    <div class="pf-avatar">{{ user.name[0].upper() }}</div>
+    <div class="pf-hero-info">
+      <div class="pf-hello">Welcome back</div>
+      <h1 class="pf-name">{{ user.name }}</h1>
+      <div class="pf-email">{{ user.email }}</div>
+    </div>
+    <div class="pf-hero-stats">
+      <div class="pf-hstat">
+        <div class="pf-hstat-num">{{ stats.orders }}</div>
+        <div class="pf-hstat-label">Orders</div>
       </div>
+      <div class="pf-hstat">
+        <div class="pf-hstat-num">{{ stats.reviews }}</div>
+        <div class="pf-hstat-label">Reviews</div>
+      </div>
+      <div class="pf-hstat">
+        <div class="pf-hstat-num">GH₵{{ "%.0f"|format(stats.spent) }}</div>
+        <div class="pf-hstat-label">Spent</div>
+      </div>
+    </div>
+  </div>
 
-      <hr>
+  <!-- VENDOR BANNER -->
+  <div style="margin-bottom:16px;">
+    {% if session.get('vendor_id') %}
+    <div class="pf-vendor-banner">
+      <div class="pf-vendor-banner-icon">🏪</div>
+      <div class="pf-vendor-banner-text">
+        <strong>{{ session.get('shop_name') }}</strong>
+        <span>Your vendor store is active and live</span>
+      </div>
+      <a href="{{ url_for('vendor_dashboard') }}" class="btn-pf-vendor">Go to Dashboard →</a>
+    </div>
+    {% else %}
+    <div class="pf-vendor-banner">
+      <div class="pf-vendor-banner-icon">💰</div>
+      <div class="pf-vendor-banner-text">
+        <strong>Start selling on ShopLuxe</strong>
+        <span>List your products and reach customers across Ghana</span>
+      </div>
+      <a href="{{ url_for('become_vendor') }}" class="btn-pf-vendor">Become a Vendor →</a>
+    </div>
+    {% endif %}
+  </div>
 
-      <!-- Profile Menu -->
-<div class="list-group text-start">
-  <a href="{{ url_for('order_confirmation') }}" class="list-group-item d-flex justify-content-between align-items-center">
-    <span><i class="bi bi-bag me-2"></i>Product Management</span>
-    <i class="bi bi-chevron-right"></i>
-  </a>
+  <!-- MAIN GRID -->
+  <div class="pf-grid">
 
-  <a href="{{ url_for('order_confirmation') }}" class="list-group-item d-flex justify-content-between align-items-center">
-    <span><i class="bi bi-box-seam me-2"></i>My Orders</span>
-    <i class="bi bi-chevron-right"></i>
-  </a>
+    <!-- ORDERS -->
+    <div class="pf-section pf-grid-full">
+      <div class="pf-section-head">
+        <h2 class="pf-section-title"><i class="bi bi-bag" style="color:var(--brand);"></i> My Orders</h2>
+        <a href="{{ url_for('orders') }}" class="pf-section-link">View all →</a>
+      </div>
+      <div class="pf-section-body">
+        {% if stats.orders == 0 %}
+        <div class="pf-order-empty">
+          <i class="bi bi-bag-x"></i>
+          <p>You haven't placed any orders yet.</p>
+          <a href="{{ url_for('home') }}" class="btn-pf-shop">Start Shopping</a>
+        </div>
+        {% else %}
+        <a href="{{ url_for('orders') }}" class="pf-menu-item">
+          <div class="pf-menu-icon" style="background:#d1fae5;">📦</div>
+          <div class="pf-menu-text">
+            <strong>{{ stats.orders }} Order{% if stats.orders != 1 %}s{% endif %}</strong>
+            <span>Track, return or buy again</span>
+          </div>
+          <i class="bi bi-chevron-right pf-menu-arrow"></i>
+        </a>
+        {% endif %}
+      </div>
+    </div>
 
-  <a href="#" class="list-group-item d-flex justify-content-between align-items-center">
-    <span><i class="bi bi-person-gear me-2"></i>Account Settings</span>
-    <i class="bi bi-chevron-right"></i>
-  </a>
-
-  <a href="#" class="list-group-item d-flex justify-content-between align-items-center">
-    <span><i class="bi bi-geo-alt me-2"></i>Shipping Address</span>
-    <i class="bi bi-chevron-right"></i>
-  </a>
-
-  <a href="#" class="list-group-item d-flex justify-content-between align-items-center">
-    <span><i class="bi bi-credit-card me-2"></i>Payment Methods</span>
-    <i class="bi bi-chevron-right"></i>
-  </a>
-
-  <a href="#" class="list-group-item d-flex justify-content-between align-items-center">
-    <span><i class="bi bi-question-circle me-2"></i>Help & Support</span>
-    <i class="bi bi-chevron-right"></i>
-  </a>
-</div>
-
-      <!-- Logout -->
-      <div class="mt-4">
-        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger w-100 logout-btn py-2 fw-semibold"
-           onclick="return confirm('Are you sure you want to logout?')">
-          🚪 Logout
+    <!-- ACCOUNT -->
+    <div class="pf-section">
+      <div class="pf-section-head">
+        <h2 class="pf-section-title"><i class="bi bi-person" style="color:#3b82f6;"></i> Account</h2>
+      </div>
+      <div class="pf-section-body">
+        <a href="{{ url_for('settings') }}" class="pf-menu-item">
+          <div class="pf-menu-icon" style="background:#dbeafe;">⚙️</div>
+          <div class="pf-menu-text">
+            <strong>Account Settings</strong>
+            <span>Name, password, preferences</span>
+          </div>
+          <i class="bi bi-chevron-right pf-menu-arrow"></i>
+        </a>
+        <a href="{{ url_for('wishlist') }}" class="pf-menu-item">
+          <div class="pf-menu-icon" style="background:#fce7f3;">❤️</div>
+          <div class="pf-menu-text">
+            <strong>Wishlist</strong>
+            <span>Items you've saved</span>
+          </div>
+          <i class="bi bi-chevron-right pf-menu-arrow"></i>
+        </a>
+        <a href="{{ url_for('support') }}" class="pf-menu-item">
+          <div class="pf-menu-icon" style="background:#ede9fe;">🎧</div>
+          <div class="pf-menu-text">
+            <strong>Help & Support</strong>
+            <span>FAQs, contact us</span>
+          </div>
+          <i class="bi bi-chevron-right pf-menu-arrow"></i>
         </a>
       </div>
-
     </div>
+
+    <!-- SHOPPING -->
+    <div class="pf-section">
+      <div class="pf-section-head">
+        <h2 class="pf-section-title"><i class="bi bi-shop" style="color:var(--accent);"></i> Shopping</h2>
+      </div>
+      <div class="pf-section-body">
+        <a href="{{ url_for('cart') }}" class="pf-menu-item">
+          <div class="pf-menu-icon" style="background:#fff3cd;">🛒</div>
+          <div class="pf-menu-text">
+            <strong>My Cart</strong>
+            <span>{{ session.get('cart', [])|length }} item{% if session.get('cart', [])|length != 1 %}s{% endif %} in cart</span>
+          </div>
+          <i class="bi bi-chevron-right pf-menu-arrow"></i>
+        </a>
+        <a href="{{ url_for('filtered', category='Sale') }}" class="pf-menu-item">
+          <div class="pf-menu-icon" style="background:#fee2e2;">🏷️</div>
+          <div class="pf-menu-text">
+            <strong>Deals & Sale</strong>
+            <span>Today's best offers</span>
+          </div>
+          <i class="bi bi-chevron-right pf-menu-arrow"></i>
+        </a>
+        <a href="{{ url_for('filtered', category='New Arrivals') }}" class="pf-menu-item">
+          <div class="pf-menu-icon" style="background:#d1fae5;">✨</div>
+          <div class="pf-menu-text">
+            <strong>New Arrivals</strong>
+            <span>Just landed this week</span>
+          </div>
+          <i class="bi bi-chevron-right pf-menu-arrow"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- LOGOUT -->
+    <div class="pf-grid-full" style="margin-top:4px;">
+      <a href="{{ url_for('logout') }}" class="pf-logout"
+         onclick="return confirm('Are you sure you want to logout?')">
+        <i class="bi bi-box-arrow-right"></i> Sign Out
+      </a>
+    </div>
+
   </div>
 </div>
 {% endblock %}

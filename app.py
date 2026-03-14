@@ -425,7 +425,7 @@ def live_search():
 def filtered(category):
     if category == 'Sale':
         products = [p.to_dict() for p in Product.query.filter_by(on_sale=True).all()]
-    elif category == 'New Arrivals':
+    elif category in ('New Arrivals', 'new'):
         products = [p.to_dict() for p in Product.query.filter_by(new_arrival=True).all()]
     else:
         products = [p.to_dict() for p in Product.query.filter(
@@ -1818,6 +1818,203 @@ def mark_payout_paid(payout_id):
         db.session.commit()
         flash("✅ Payout marked as paid.")
     return redirect(url_for('admin_payouts'))
+  
+  # ============================================================
+# VENDOR ROUTES
+# ============================================================
+
+PLATFORM_FEE_PERCENT = 10
+
+from functools import wraps
+
+def vendor_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('vendor_id'):
+            flash("❌ Vendor access required.")
+            return redirect(url_for('become_vendor'))
+        vendor = Vendor.query.get(session['vendor_id'])
+        if not vendor or not vendor.is_approved or vendor.is_banned:
+            flash("⛔ Your vendor account is not active.")
+            return redirect(url_for('home'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.route('/vendor/dashboard')
+@vendor_required
+def vendor_dashboard():
+    vendor = Vendor.query.get(session['vendor_id'])
+    products = Product.query.filter_by(vendor_id=vendor.id).all()
+    products_dicts = [p.to_dict() for p in products]
+
+    all_orders = Order.query.all()
+    vendor_orders = []
+    total_earnings = 0
+    pending_payout = 0
+
+    for order in all_orders:
+        items = json.loads(order.products or '[]')
+        vendor_items = [i for i in items if i.get('vendor_id') == vendor.id]
+        if vendor_items:
+            subtotal = sum(float(i.get('price', 0)) * int(i.get('quantity', 1)) for i in vendor_items)
+            fee = round(subtotal * PLATFORM_FEE_PERCENT / 100, 2)
+            earnings = round(subtotal - fee, 2)
+            total_earnings += earnings
+
+            payout = Payout.query.filter_by(vendor_id=vendor.id, order_id=order.id).first()
+            if not payout or payout.status == 'Pending':
+                pending_payout += earnings
+
+            vendor_orders.append({
+                **order.to_dict(),
+                'vendor_items': vendor_items,
+                'vendor_subtotal': subtotal,
+                'vendor_earnings': earnings,
+                'payout_status': payout.status if payout else 'Pending'
+            })
+
+    stats = {
+        'total_products': len(products),
+        'total_orders': len(vendor_orders),
+        'total_earnings': round(total_earnings, 2),
+        'pending_payout': round(pending_payout, 2),
+    }
+
+    return render_template('vendor_dashboard.html', vendor=vendor.to_dict(),
+                           products=products_dicts, orders=vendor_orders, stats=stats)
+
+
+@app.route('/vendor/add-product', methods=['GET', 'POST'])
+@vendor_required
+def vendor_add_product():
+    vendor = Vendor.query.get(session['vendor_id'])
+
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip().title()
+        price = request.form.get('price', '0').strip()
+        on_sale = 'on_sale' in request.form
+        sale_price = request.form.get('sale_price', '').strip() or None
+        category = request.form.get('category', '').strip()
+        if category == 'custom':
+            category = request.form.get('category_custom', '').strip().title()
+        description = request.form.get('description', '').strip()
+        stock = int(request.form.get('stock', 0))
+        sizes = json.dumps([s.strip() for s in request.form.get('sizes', '').split(',') if s.strip()])
+        colors = json.dumps([c.strip() for c in request.form.get('colors', '').split(',') if c.strip()])
+        brand = request.form.get('brand', '').strip()
+        sku = request.form.get('sku', '').strip()
+        tags = json.dumps([t.strip() for t in request.form.get('tags', '').split(',') if t.strip()])
+        delivery_info = request.form.get('delivery_info', 'Delivery in 2-4 working days').strip()
+        new_arrival = 'new_arrival' in request.form
+
+        images = request.files.getlist('images')
+        image_filenames = []
+        for img in images:
+            if img and img.filename:
+                filename = secure_filename(img.filename)
+                img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                image_filenames.append(filename)
+
+        new_product = Product(
+            name=name, price=price, on_sale=on_sale, sale_price=sale_price,
+            category=category, description=description, stock=stock,
+            sizes=sizes, colors=colors, images=json.dumps(image_filenames),
+            brand=brand, sku=sku, tags=tags, delivery_info=delivery_info,
+            new_arrival=new_arrival, vendor_id=vendor.id,
+            timestamp=datetime.now(timezone.utc).isoformat()
+        )
+        db.session.add(new_product)
+        db.session.commit()
+        flash("✅ Product listed successfully!")
+        return redirect(url_for('vendor_dashboard'))
+
+    return render_template('vendor_add_product.html', vendor=vendor.to_dict())
+
+
+@app.route('/vendor/edit-product/<product_id>', methods=['GET', 'POST'])
+@vendor_required
+def vendor_edit_product(product_id):
+    product = Product.query.get(product_id)
+
+    if not product or product.vendor_id != session['vendor_id']:
+        flash("❌ Product not found or access denied.")
+        return redirect(url_for('vendor_dashboard'))
+
+    if request.method == 'POST':
+        product.name = request.form.get('name', '').strip().title()
+        product.price = request.form.get('price', '').strip()
+        product.sale_price = request.form.get('sale_price', '').strip() or None
+        product.on_sale = 'on_sale' in request.form
+        product.description = request.form.get('description', '').strip()
+        product.stock = int(request.form.get('stock', 0))
+        product.brand = request.form.get('brand', '').strip()
+        product.delivery_info = request.form.get('delivery_info', '').strip()
+
+        category = request.form.get('category', '')
+        if category == 'custom':
+            category = request.form.get('category_custom', '').strip().title()
+        product.category = category
+
+        product.sizes = json.dumps([s.strip() for s in request.form.get('sizes', '').split(',') if s.strip()])
+        product.colors = json.dumps([c.strip() for c in request.form.get('colors', '').split(',') if c.strip()])
+        product.tags = json.dumps([t.strip() for t in request.form.get('tags', '').split(',') if t.strip()])
+
+        remove_images = request.form.getlist('remove_images')
+        existing_images = json.loads(product.images or '[]')
+        kept_images = [img for img in existing_images if img not in remove_images]
+        new_images = request.files.getlist('new_images')
+        for file in new_images:
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                kept_images.append(filename)
+        product.images = json.dumps(kept_images)
+        product.timestamp = datetime.now(timezone.utc).isoformat()
+
+        db.session.commit()
+        flash("✅ Product updated!")
+        return redirect(url_for('vendor_dashboard'))
+
+    return render_template('vendor_edit_product.html', product=product.to_dict())
+
+
+@app.route('/vendor/delete-product/<product_id>', methods=['POST'])
+@vendor_required
+def vendor_delete_product(product_id):
+    product = Product.query.get(product_id)
+    if not product or product.vendor_id != session['vendor_id']:
+        flash("❌ Access denied.")
+        return redirect(url_for('vendor_dashboard'))
+
+    for img in json.loads(product.images or '[]'):
+        img_path = os.path.join(app.config['UPLOAD_FOLDER'], img)
+        if os.path.exists(img_path):
+            os.remove(img_path)
+
+    db.session.delete(product)
+    db.session.commit()
+    flash("🗑️ Product deleted.")
+    return redirect(url_for('vendor_dashboard'))
+
+
+@app.route('/vendor/logout')
+def vendor_logout():
+    session.pop('vendor_id', None)
+    session.pop('shop_name', None)
+    flash("👋 Vendor session ended.")
+    return redirect(url_for('home'))
+
+
+@app.route('/shop/vendor/<vendor_id>')
+def vendor_storefront(vendor_id):
+    vendor = Vendor.query.get(vendor_id)
+    if not vendor or not vendor.is_approved:
+        flash("❌ Store not found.")
+        return redirect(url_for('home'))
+
+    products = [p.to_dict() for p in Product.query.filter_by(vendor_id=vendor_id).all()]
+    return render_template('vendor_storefront.html', vendor=vendor.to_dict(), products=products)
 
 # ============================================================
 # DB INIT & RUN
