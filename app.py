@@ -1721,13 +1721,16 @@ def become_vendor():
         flash("❌ Please log in first.")
         return redirect(url_for('login'))
 
-    # Already a vendor?
     existing = Vendor.query.filter_by(user_id=session['user_id']).first()
     if existing:
-        if existing.is_approved:
+        if existing.is_approved and not existing.is_banned:
+            # ✅ Refresh session in case they were approved after login
             session['vendor_id'] = existing.id
             session['shop_name'] = existing.shop_name
             return redirect(url_for('vendor_dashboard'))
+        elif existing.is_banned:
+            flash("⛔ Your vendor account has been banned.")
+            return redirect(url_for('home'))
         else:
             flash("⏳ Your vendor application is pending admin approval.")
             return render_template('vendor_pending.html')
@@ -1830,13 +1833,26 @@ from functools import wraps
 def vendor_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not session.get('vendor_id'):
-            flash("❌ Vendor access required.")
+        if not session.get('user_id'):
+            flash("❌ Please log in first.")
+            return redirect(url_for('login'))
+
+        # ✅ Always re-check DB, don't rely only on session
+        vendor = Vendor.query.filter_by(user_id=session['user_id']).first()
+        if not vendor:
+            flash("❌ Vendor account not found.")
             return redirect(url_for('become_vendor'))
-        vendor = Vendor.query.get(session['vendor_id'])
-        if not vendor or not vendor.is_approved or vendor.is_banned:
-            flash("⛔ Your vendor account is not active.")
+        if vendor.is_banned:
+            flash("⛔ Your vendor account has been banned.")
             return redirect(url_for('home'))
+        if not vendor.is_approved:
+            flash("⏳ Your account is pending approval.")
+            return render_template('vendor_pending.html')
+
+        # ✅ Refresh session with latest vendor data
+        session['vendor_id'] = vendor.id
+        session['shop_name'] = vendor.shop_name
+
         return f(*args, **kwargs)
     return decorated
 
