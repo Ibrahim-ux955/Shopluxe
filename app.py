@@ -1717,6 +1717,78 @@ def ban_vendor(vendor_id):
   
 @app.route('/become-vendor', methods=['GET', 'POST'])
 def become_vendor():
+    if not session.get('user_id'):
+        flash("❌ Please log in first.")
+        return redirect(url_for('login'))
+
+    # Already a vendor?
+    existing = Vendor.query.filter_by(user_id=session['user_id']).first()
+    if existing:
+        if existing.is_approved:
+            session['vendor_id'] = existing.id
+            session['shop_name'] = existing.shop_name
+            return redirect(url_for('vendor_dashboard'))
+        else:
+            flash("⏳ Your vendor application is pending admin approval.")
+            return render_template('vendor_pending.html')
+
+    if request.method == 'POST':
+        shop_name = request.form.get('shop_name', '').strip()
+        shop_description = request.form.get('shop_description', '').strip()
+        phone = request.form.get('phone', '').strip()
+        bank_name = request.form.get('bank_name', '').strip()
+        bank_account = request.form.get('bank_account', '').strip()
+
+        if not shop_name:
+            flash("❌ Shop name is required.")
+            return redirect(url_for('become_vendor'))
+
+        logo_filename = ''
+        logo = request.files.get('logo')
+        if logo and logo.filename:
+            logo_filename = secure_filename(logo.filename)
+            logo.save(os.path.join(app.config['UPLOAD_FOLDER'], logo_filename))
+
+        new_vendor = Vendor(
+            id=str(uuid4()),
+            user_id=session['user_id'],
+            shop_name=shop_name,
+            shop_description=shop_description,
+            phone=phone,
+            bank_name=bank_name,
+            bank_account=bank_account,
+            logo=logo_filename,
+            is_approved=False,
+            timestamp=datetime.now(timezone.utc).isoformat()
+        )
+        db.session.add(new_vendor)
+        db.session.commit()
+
+        try:
+            send_email(
+                "vybezkhid7@gmail.com",
+                "🛍️ New Vendor Application — ShopLuxe",
+                f"""
+                <div style="font-family:sans-serif; padding:20px;">
+                    <h2>New Vendor Application</h2>
+                    <p><strong>Shop:</strong> {shop_name}</p>
+                    <p><strong>User:</strong> {session.get('user_name')} ({session.get('user_email')})</p>
+                    <p><strong>Phone:</strong> {phone}</p>
+                    <a href="https://www.shopluxe.online/admin/vendors"
+                       style="background:#198754;color:#fff;padding:10px 20px;
+                       border-radius:8px;text-decoration:none;">
+                       Review Application
+                    </a>
+                </div>
+                """
+            )
+        except Exception as e:
+            print("⚠️ Vendor application email failed:", e)
+
+        flash("✅ Application submitted! We'll review and get back to you.")
+        return render_template('vendor_pending.html')
+
+    return render_template('become_vendor.html')
 
 @app.route('/admin/payouts')
 def admin_payouts():
