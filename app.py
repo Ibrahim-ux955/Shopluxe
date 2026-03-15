@@ -84,6 +84,7 @@ class Product(db.Model):
     slot_length = db.Column(db.String, default='')           # ✅ NEW
     slot_width = db.Column(db.String, default='')            # ✅ NEW
     slot_depth = db.Column(db.String, default='')            # ✅ NEW
+    new_arrival_until = db.Column(db.String, default='')  # ✅ NEW
 
     def to_dict(self):
         images = json.loads(self.images or '[]')
@@ -120,6 +121,7 @@ class Product(db.Model):
             'slot_length': self.slot_length or '',             # ✅ NEW
             'slot_width': self.slot_width or '',               # ✅ NEW
             'slot_depth': self.slot_depth or '',               # ✅ NEW
+            'new_arrival_until': self.new_arrival_until or '',  # ✅ NEW
         }
 class Order(db.Model):
     __tablename__ = 'orders'
@@ -375,15 +377,32 @@ def todatetime_filter(s):
 
 @app.route('/')
 def home():
-    all_products = [p.to_dict() for p in Product.query.all()]
+    now = datetime.now(timezone.utc)
 
-    # ✅ Most Popular — only products that have been purchased at least once
+    # ✅ Auto-expire new_arrival when date passes
+    all_products_raw = Product.query.all()
+    for p in all_products_raw:
+        if p.new_arrival and p.new_arrival_until:
+            try:
+                until = datetime.fromisoformat(p.new_arrival_until)
+                if until.tzinfo is None:
+                    until = until.replace(tzinfo=timezone.utc)
+                if now > until:
+                    p.new_arrival = False
+                    p.new_arrival_until = ''
+            except Exception:
+                pass
+    db.session.commit()
+
+    all_products = [p.to_dict() for p in all_products_raw]
+
+    # ✅ Most Popular — only products purchased at least once
     popular_products = sorted(
         [p for p in all_products if p.get('popularity', 0) > 0],
         key=lambda p: p.get('popularity', 0), reverse=True
     )[:6]
 
-    # ✅ New Arrivals — only if new_arrival is checked
+    # ✅ New Arrivals — only if new_arrival is checked and not expired
     new_products = [p for p in all_products if p.get('new_arrival')][:6]
 
     # ✅ Featured — only if featured is checked
@@ -881,7 +900,12 @@ def admin():
                 filename = secure_filename(img.filename)
                 img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 image_filenames.append(filename)
-
+         
+         # ✅ Set new_arrival_until to 30 days from now if new_arrival is ticked       
+        new_arrival_until = ''
+        if new_arrival:
+            new_arrival_until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat() 
+ 
         new_product = Product(
             name=name, price=price, on_sale=on_sale, sale_price=sale_price,
             featured=featured, category=category, description=description,
@@ -889,6 +913,7 @@ def admin():
             images=json.dumps(image_filenames),
             brand=brand, sku=sku, tags=tags,
             delivery_info=delivery_info, new_arrival=new_arrival,
+             new_arrival_until=new_arrival_until,  # ✅ NEW
             product_type=product_type,        # ✅
             slot_length=slot_length,           # ✅
             slot_width=slot_width,             # ✅
@@ -957,6 +982,12 @@ def edit_product(product_id):
         product.new_arrival = 'new_arrival' in request.form
 
         product.stock = int(request.form.get('stock', 0))
+        
+        product.new_arrival = 'new_arrival' in request.form
+        if product.new_arrival:
+            product.new_arrival_until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        else:
+            product.new_arrival_until = ''
 
         # ✅ Dimension / size type fields
         product_type = request.form.get('product_type', 'standard')
@@ -1994,7 +2025,7 @@ def vendor_add_product():
         price = request.form.get('price', '0').strip()
         on_sale = 'on_sale' in request.form
         sale_price = request.form.get('sale_price', '').strip() or None
-        featured = 'featured' in request.form          # ✅ was missing
+        featured = 'featured' in request.form
         new_arrival = 'new_arrival' in request.form
         category = request.form.get('category', '').strip()
         if category == 'custom':
@@ -2007,7 +2038,6 @@ def vendor_add_product():
         tags = json.dumps([t.strip() for t in request.form.get('tags', '').split(',') if t.strip()])
         delivery_info = request.form.get('delivery_info', 'Delivery in 2-4 working days').strip()
 
-        # ✅ Dimension / size type fields
         product_type = request.form.get('product_type', 'standard')
         slot_length = request.form.get('slot_length', '').strip()
         slot_width = request.form.get('slot_width', '').strip()
@@ -2017,6 +2047,9 @@ def vendor_add_product():
             sizes = json.dumps([s.strip() for s in request.form.get('sizes', '').split(',') if s.strip()])
         else:
             sizes = json.dumps([])
+
+        # ✅ Set 30-day new arrival expiry
+        new_arrival_until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat() if new_arrival else ''
 
         images = request.files.getlist('images')
         image_filenames = []
@@ -2028,15 +2061,17 @@ def vendor_add_product():
 
         new_product = Product(
             name=name, price=price, on_sale=on_sale, sale_price=sale_price,
-            featured=featured,                         # ✅
+            featured=featured,
             category=category, description=description, stock=stock,
             sizes=sizes, colors=colors, images=json.dumps(image_filenames),
             brand=brand, sku=sku, tags=tags, delivery_info=delivery_info,
-            new_arrival=new_arrival, vendor_id=vendor.id,
-            product_type=product_type,                 # ✅
-            slot_length=slot_length,                   # ✅
-            slot_width=slot_width,                     # ✅
-            slot_depth=slot_depth,                     # ✅
+            new_arrival=new_arrival,
+            new_arrival_until=new_arrival_until,  # ✅
+            vendor_id=vendor.id,
+            product_type=product_type,
+            slot_length=slot_length,
+            slot_width=slot_width,
+            slot_depth=slot_depth,
             timestamp=datetime.now(timezone.utc).isoformat()
         )
         db.session.add(new_product)
@@ -2061,6 +2096,7 @@ def vendor_edit_product(product_id):
         product.price = request.form.get('price', '').strip()
         product.sale_price = request.form.get('sale_price', '').strip() or None
         product.on_sale = 'on_sale' in request.form
+        product.featured = 'featured' in request.form
         product.description = request.form.get('description', '').strip()
         product.stock = int(request.form.get('stock', 0))
         product.brand = request.form.get('brand', '').strip()
@@ -2071,7 +2107,24 @@ def vendor_edit_product(product_id):
             category = request.form.get('category_custom', '').strip().title()
         product.category = category
 
-        product.sizes = json.dumps([s.strip() for s in request.form.get('sizes', '').split(',') if s.strip()])
+        # ✅ Reset 30-day clock if new_arrival is ticked
+        product.new_arrival = 'new_arrival' in request.form
+        if product.new_arrival:
+            product.new_arrival_until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        else:
+            product.new_arrival_until = ''
+
+        # ✅ Dimension / size type fields
+        product_type = request.form.get('product_type', 'standard')
+        product.product_type = product_type
+        if product_type == 'standard':
+            product.sizes = json.dumps([s.strip() for s in request.form.get('sizes', '').split(',') if s.strip()])
+        else:
+            product.sizes = json.dumps([])
+            product.slot_length = request.form.get('slot_length', '').strip()
+            product.slot_width = request.form.get('slot_width', '').strip()
+            product.slot_depth = request.form.get('slot_depth', '').strip()
+
         product.colors = json.dumps([c.strip() for c in request.form.get('colors', '').split(',') if c.strip()])
         product.tags = json.dumps([t.strip() for t in request.form.get('tags', '').split(',') if t.strip()])
 
@@ -2227,6 +2280,7 @@ with app.app_context():
             ("slot_length", "VARCHAR DEFAULT ''"),
             ("slot_width", "VARCHAR DEFAULT ''"),
             ("slot_depth", "VARCHAR DEFAULT ''"),
+            ("new_arrival_until", "VARCHAR DEFAULT ''"),  # ✅ NEW
         ]:
             try:
                 conn.execute(db.text(f"ALTER TABLE products ADD COLUMN {col} {definition}"))
