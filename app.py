@@ -79,12 +79,15 @@ class Product(db.Model):
     tags = db.Column(db.Text, default='[]')
     delivery_info = db.Column(db.String(200), default='Delivery in 2-4 working days')
     new_arrival = db.Column(db.Boolean, default=True)
-    vendor_id = db.Column(db.String, db.ForeignKey('vendors.id'), nullable=True)  # ✅ NEW
+    vendor_id = db.Column(db.String, db.ForeignKey('vendors.id'), nullable=True)
+    product_type = db.Column(db.String, default='standard')  # ✅ NEW
+    slot_length = db.Column(db.String, default='')           # ✅ NEW
+    slot_width = db.Column(db.String, default='')            # ✅ NEW
+    slot_depth = db.Column(db.String, default='')            # ✅ NEW
 
     def to_dict(self):
         images = json.loads(self.images or '[]')
 
-        # ✅ Fetch vendor shop name if vendor_id exists
         vendor_name = None
         if self.vendor_id:
             vendor = Vendor.query.get(self.vendor_id)
@@ -111,10 +114,13 @@ class Product(db.Model):
             'tags': json.loads(self.tags or '[]'),
             'delivery_info': self.delivery_info or 'Delivery in 2-4 working days',
             'new_arrival': self.new_arrival if self.new_arrival is not None else True,
-            'vendor_id': self.vendor_id or None,   # ✅ NEW
-            'vendor_name': vendor_name,             # ✅ NEW
+            'vendor_id': self.vendor_id or None,
+            'vendor_name': vendor_name,
+            'product_type': self.product_type or 'standard',  # ✅ NEW
+            'slot_length': self.slot_length or '',             # ✅ NEW
+            'slot_width': self.slot_width or '',               # ✅ NEW
+            'slot_depth': self.slot_depth or '',               # ✅ NEW
         }
-
 class Order(db.Model):
     __tablename__ = 'orders'
     id = db.Column(db.String, primary_key=True)
@@ -801,19 +807,29 @@ def admin():
         featured = 'featured' in request.form
         new_arrival = 'new_arrival' in request.form
 
-        # ✅ Custom category overrides dropdown
         category = request.form.get('category', '')
         if category == 'custom':
             category = request.form.get('category_custom', '').strip().title()
 
         description = request.form.get('description', '').strip()
         stock = int(request.form.get('stock', 0))
-        sizes = json.dumps([s.strip() for s in request.form.get('sizes', '').split(',') if s.strip()])
-        colors = json.dumps([c.strip() for c in request.form.get('colors', '').split(',') if c.strip()])
         brand = request.form.get('brand', '').strip()
         sku = request.form.get('sku', '').strip()
-        tags = json.dumps([t.strip() for t in request.form.get('tags', '').split(',') if t.strip()])
         delivery_info = request.form.get('delivery_info', 'Delivery in 2-4 working days').strip()
+        tags = json.dumps([t.strip() for t in request.form.get('tags', '').split(',') if t.strip()])
+
+        # ✅ Dimension / size type fields
+        product_type = request.form.get('product_type', 'standard')
+        slot_length = request.form.get('slot_length', '').strip()
+        slot_width = request.form.get('slot_width', '').strip()
+        slot_depth = request.form.get('slot_depth', '').strip()
+
+        if product_type == 'standard':
+            sizes = json.dumps([s.strip() for s in request.form.get('sizes', '').split(',') if s.strip()])
+        else:
+            sizes = json.dumps([])
+
+        colors = json.dumps([c.strip() for c in request.form.get('colors', '').split(',') if c.strip()])
 
         images = request.files.getlist('images')
         image_filenames = []
@@ -830,7 +846,10 @@ def admin():
             images=json.dumps(image_filenames),
             brand=brand, sku=sku, tags=tags,
             delivery_info=delivery_info, new_arrival=new_arrival,
-            # ✅ Store as string since timestamp is db.Column(db.String)
+            product_type=product_type,        # ✅
+            slot_length=slot_length,           # ✅
+            slot_width=slot_width,             # ✅
+            slot_depth=slot_depth,             # ✅
             timestamp=datetime.now(timezone.utc).isoformat()
         )
         db.session.add(new_product)
@@ -838,7 +857,6 @@ def admin():
         flash("✅ Product added successfully!")
         return redirect(url_for('admin'))
 
-    # ✅ Load from DB not load_data()
     products = [p.to_dict() for p in Product.query.order_by(Product.timestamp.desc()).all()]
     orders = [o.to_dict() for o in Order.query.order_by(Order.timestamp.desc()).all()]
     return render_template('admin.html', products=products, orders=orders, active_page='admin')
@@ -876,48 +894,49 @@ def edit_product(product_id):
         return redirect(url_for('admin'))
 
     if request.method == 'POST':
-        old_stock = product.stock  # ✅ Save before update for restock notification
+        old_stock = product.stock
 
-        # ── Basic Info ──
         product.name = request.form.get('name', '').strip().title()
         product.brand = request.form.get('brand', '').strip()
         product.sku = request.form.get('sku', '').strip()
         product.description = request.form.get('description', '').strip()
         product.delivery_info = request.form.get('delivery_info', 'Delivery in 2-4 working days').strip()
 
-        # ── Category ──
         category = request.form.get('category')
         if category == 'custom':
             category = request.form.get('category_custom', '').strip().title()
         product.category = category
 
-        # ── Pricing ──
         product.price = request.form.get('price', '').strip()
         product.sale_price = request.form.get('sale_price', '').strip() or None
         product.on_sale = 'on_sale' in request.form
         product.featured = 'featured' in request.form
         product.new_arrival = 'new_arrival' in request.form
 
-        # ── Inventory ──
         product.stock = int(request.form.get('stock', 0))
 
-        # ── Sizes & Colors ──
-        sizes_raw = request.form.get('sizes', '')
-        product.sizes = json.dumps([s.strip() for s in sizes_raw.split(',') if s.strip()])
+        # ✅ Dimension / size type fields
+        product_type = request.form.get('product_type', 'standard')
+        product.product_type = product_type
+        if product_type == 'standard':
+            sizes_raw = request.form.get('sizes', '')
+            product.sizes = json.dumps([s.strip() for s in sizes_raw.split(',') if s.strip()])
+        else:
+            product.sizes = json.dumps([])
+            product.slot_length = request.form.get('slot_length', '').strip()
+            product.slot_width = request.form.get('slot_width', '').strip()
+            product.slot_depth = request.form.get('slot_depth', '').strip()
 
         colors_raw = request.form.get('colors', '')
         product.colors = json.dumps([c.strip() for c in colors_raw.split(',') if c.strip()])
 
-        # ── Tags ──
         tags_raw = request.form.get('tags', '')
         product.tags = json.dumps([t.strip() for t in tags_raw.split(',') if t.strip()])
 
-        # ── Images: remove checked ──
         remove_images = request.form.getlist('remove_images')
         existing_images = json.loads(product.images or '[]')
         kept_images = [img for img in existing_images if img not in remove_images]
 
-        # ── Images: add new uploads ──
         new_images = request.files.getlist('new_images')
         for file in new_images:
             if file and file.filename:
@@ -927,32 +946,21 @@ def edit_product(product_id):
 
         product.images = json.dumps(kept_images)
         product.timestamp = datetime.now(timezone.utc).isoformat()
-
         db.session.commit()
 
-        # ✅ Notify restock waitlist if stock went from 0 to > 0
         if old_stock == 0 and product.stock > 0:
             waitlist = RestockRequest.query.filter_by(product_id=product.id).all()
             for req in waitlist:
                 try:
-                    send_email(
-                        req.email,
-                        f"✅ Back in Stock — {product.name}",
-                        f"""
-                        <div style="font-family:sans-serif; padding:20px;">
-                            <h2 style="color:#198754;">Good news! 🎉</h2>
-                            <p><strong>{product.name}</strong> is back in stock.</p>
-                            <a href="https://www.shopluxe.online/product/{product.id}"
-                               style="background:#198754;color:#fff;padding:10px 20px;
-                               border-radius:8px;text-decoration:none;">
-                               Shop Now
-                            </a>
-                        </div>
-                        """
-                    )
+                    send_email(req.email, f"✅ Back in Stock — {product.name}",
+                        f"""<div style="font-family:sans-serif;padding:20px;">
+                        <h2 style="color:#198754;">Good news! 🎉</h2>
+                        <p><strong>{product.name}</strong> is back in stock.</p>
+                        <a href="https://www.shopluxe.online/product/{product.id}"
+                        style="background:#198754;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;">
+                        Shop Now</a></div>""")
                 except Exception as e:
                     print("⚠️ Restock alert failed:", e)
-
             RestockRequest.query.filter_by(product_id=product.id).delete()
             db.session.commit()
 
@@ -1911,18 +1919,29 @@ def vendor_add_product():
         price = request.form.get('price', '0').strip()
         on_sale = 'on_sale' in request.form
         sale_price = request.form.get('sale_price', '').strip() or None
+        featured = 'featured' in request.form          # ✅ was missing
+        new_arrival = 'new_arrival' in request.form
         category = request.form.get('category', '').strip()
         if category == 'custom':
             category = request.form.get('category_custom', '').strip().title()
         description = request.form.get('description', '').strip()
         stock = int(request.form.get('stock', 0))
-        sizes = json.dumps([s.strip() for s in request.form.get('sizes', '').split(',') if s.strip()])
         colors = json.dumps([c.strip() for c in request.form.get('colors', '').split(',') if c.strip()])
         brand = request.form.get('brand', '').strip()
         sku = request.form.get('sku', '').strip()
         tags = json.dumps([t.strip() for t in request.form.get('tags', '').split(',') if t.strip()])
         delivery_info = request.form.get('delivery_info', 'Delivery in 2-4 working days').strip()
-        new_arrival = 'new_arrival' in request.form
+
+        # ✅ Dimension / size type fields
+        product_type = request.form.get('product_type', 'standard')
+        slot_length = request.form.get('slot_length', '').strip()
+        slot_width = request.form.get('slot_width', '').strip()
+        slot_depth = request.form.get('slot_depth', '').strip()
+
+        if product_type == 'standard':
+            sizes = json.dumps([s.strip() for s in request.form.get('sizes', '').split(',') if s.strip()])
+        else:
+            sizes = json.dumps([])
 
         images = request.files.getlist('images')
         image_filenames = []
@@ -1934,10 +1953,15 @@ def vendor_add_product():
 
         new_product = Product(
             name=name, price=price, on_sale=on_sale, sale_price=sale_price,
+            featured=featured,                         # ✅
             category=category, description=description, stock=stock,
             sizes=sizes, colors=colors, images=json.dumps(image_filenames),
             brand=brand, sku=sku, tags=tags, delivery_info=delivery_info,
             new_arrival=new_arrival, vendor_id=vendor.id,
+            product_type=product_type,                 # ✅
+            slot_length=slot_length,                   # ✅
+            slot_width=slot_width,                     # ✅
+            slot_depth=slot_depth,                     # ✅
             timestamp=datetime.now(timezone.utc).isoformat()
         )
         db.session.add(new_product)
