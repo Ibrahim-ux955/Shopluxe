@@ -1422,11 +1422,18 @@ def checkout():
         flash("⚠️ Your cart is empty.")
         return redirect(url_for("cart"))
 
+    # ✅ Validate stock before checkout
+    for item in cart_items:
+        product = Product.query.get(item.get('id'))
+        if product and product.stock <= 0:
+            flash(f"❌ '{product.name}' is out of stock. Please remove it from your cart.")
+            return redirect(url_for('cart'))
+
     subtotal = sum(p['effective_price'] * p['quantity'] for p in cart_items)
     payout_fee = round(min((subtotal * 0.0195) + 0.50, 500), 2)
     total = round(subtotal + payout_fee, 2)
-     
-      # ✅ Load saved address if logged in
+
+    # ✅ Load saved address for autofill
     saved_address = {}
     if session.get('user_id'):
         user = User.query.get(session['user_id'])
@@ -1444,7 +1451,8 @@ def checkout():
         subtotal=subtotal,
         payout_fee=payout_fee,
         total=total,
-        paystack_public_key=PAYSTACK_PUBLIC_KEY
+        paystack_public_key=PAYSTACK_PUBLIC_KEY,
+        saved_address=saved_address
     )
 # ============================================================
 # WISHLIST ROUTES
