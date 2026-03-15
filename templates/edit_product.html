@@ -39,7 +39,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 }
 .btn-back:hover { border-color: var(--brand); color: var(--brand); }
 
-/* ── SECTION CARD ── */
 .section-card {
   background: var(--card); border-radius: var(--radius);
   box-shadow: var(--shadow); margin-bottom: 20px;
@@ -64,7 +63,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 .section-title { font-weight: 700; font-size: .9rem; color: var(--dark); margin: 0; }
 .section-body { padding: 22px; }
 
-/* ── FORM ELEMENTS ── */
 .field-label {
   font-size: .74rem; font-weight: 600; color: var(--mid);
   text-transform: uppercase; letter-spacing: .5px;
@@ -85,9 +83,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 }
 .field-textarea { resize: vertical; min-height: 90px; }
 
-.input-prefix {
-  position: relative;
-}
+.input-prefix { position: relative; }
 .prefix-label {
   position: absolute; left: 12px; top: 50%;
   transform: translateY(-50%);
@@ -100,9 +96,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 
 .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-@media(max-width:600px){
-  .row-2, .row-3 { grid-template-columns: 1fr; }
-}
+@media(max-width:600px){ .row-2, .row-3 { grid-template-columns: 1fr; } }
 
 /* ── TOGGLE SWITCH ── */
 .toggle-row {
@@ -111,31 +105,25 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
   border-radius: 10px; margin-bottom: 10px;
   transition: border-color .2s, background .2s;
 }
-.toggle-row:has(input:checked) {
-  border-color: var(--brand); background: var(--brand-light);
-}
+.toggle-row:has(input:checked) { border-color: var(--brand); background: var(--brand-light); }
 .toggle-info strong { font-size: .85rem; color: var(--dark); display: block; }
 .toggle-info small { font-size: .74rem; color: #999; }
-.toggle-switch {
-  position: relative; width: 42px; height: 24px; flex-shrink: 0;
-}
+.toggle-switch { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }
 .toggle-slider {
   position: absolute; inset: 0; background: #ddd;
-  border-radius: 24px; cursor: pointer;
-  transition: background .2s;
+  border-radius: 24px; cursor: pointer; transition: background .2s;
 }
 .toggle-slider::before {
   content: ''; position: absolute;
   width: 18px; height: 18px; border-radius: 50%;
   background: #fff; left: 3px; top: 3px;
-  transition: transform .2s;
-  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  transition: transform .2s; box-shadow: 0 1px 4px rgba(0,0,0,.2);
 }
 .toggle-switch input:checked + .toggle-slider { background: var(--brand); }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
 
-/* ── TAGS INPUT ── */
+/* ── TAGS ── */
 .tags-container {
   display: flex; flex-wrap: wrap; gap: 6px;
   border: 1.5px solid var(--border); border-radius: 10px;
@@ -149,23 +137,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
   border-radius: 20px; padding: 3px 10px;
   font-size: .76rem; font-weight: 600;
 }
-.tag-pill button {
-  background: none; border: none; color: var(--brand);
-  cursor: pointer; padding: 0; font-size: .8rem; line-height: 1;
-}
-.tag-input-field {
-  border: none; outline: none; font-size: .82rem;
-  font-family: 'DM Sans', sans-serif; min-width: 120px;
-  flex: 1; padding: 2px 4px;
-}
+.tag-pill button { background: none; border: none; color: var(--brand); cursor: pointer; padding: 0; font-size: .8rem; line-height: 1; }
+.tag-input-field { border: none; outline: none; font-size: .82rem; font-family: 'DM Sans', sans-serif; min-width: 120px; flex: 1; padding: 2px 4px; }
 
-/* ── COLOR PRESETS ── */
+/* ── COLORS ── */
 .color-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .color-dot {
   width: 28px; height: 28px; border-radius: 50%;
   cursor: pointer; border: 2px solid transparent;
-  transition: transform .15s, border-color .15s;
-  position: relative;
+  transition: transform .15s, border-color .15s; position: relative;
 }
 .color-dot:hover { transform: scale(1.15); }
 .color-dot.active { border-color: var(--dark); }
@@ -175,42 +155,34 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
   font-size: .6rem; color: #fff; font-weight: 700;
 }
 
-/* ── SIZE PRESETS ── */
+/* ── SIZES ── */
 .size-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .size-btn {
   padding: 5px 12px; border: 1.5px solid var(--border);
   border-radius: 8px; font-size: .78rem; font-weight: 600;
-  cursor: pointer; background: #fff; color: var(--mid);
-  transition: all .15s;
+  cursor: pointer; background: #fff; color: var(--mid); transition: all .15s;
 }
 .size-btn:hover { border-color: var(--brand); color: var(--brand); }
 .size-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
 
-/* ── IMAGE GRID ── */
+/* ── IMAGES ── */
 .image-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 10px; margin-bottom: 14px;
 }
 .image-thumb {
   position: relative; border-radius: 10px; overflow: hidden;
-  border: 2px solid var(--border); aspect-ratio: 1;
-  transition: border-color .2s;
+  border: 2px solid var(--border); aspect-ratio: 1; transition: border-color .2s;
 }
 .image-thumb:hover { border-color: var(--danger); }
-.image-thumb img {
-  width: 100%; height: 100%; object-fit: cover;
-}
+.image-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .image-thumb .remove-overlay {
   position: absolute; inset: 0; background: rgba(220,53,69,.7);
   display: flex; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity .2s;
-  flex-direction: column; gap: 4px;
+  opacity: 0; transition: opacity .2s; flex-direction: column; gap: 4px;
 }
 .image-thumb:hover .remove-overlay { opacity: 1; }
-.image-thumb .remove-overlay label {
-  color: #fff; font-size: .7rem; font-weight: 700; cursor: pointer;
-}
-.image-thumb input[type=checkbox]:checked ~ .remove-overlay,
+.image-thumb .remove-overlay label { color: #fff; font-size: .7rem; font-weight: 700; cursor: pointer; }
 .image-thumb:has(input:checked) .remove-overlay { opacity: 1; }
 .image-thumb:has(input:checked) { border-color: var(--danger); }
 .image-thumb:has(input:checked) .remove-overlay { background: rgba(220,53,69,.85); }
@@ -220,19 +192,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
   padding: 24px; text-align: center; cursor: pointer;
   transition: border-color .2s, background .2s;
 }
-.drop-zone:hover, .drop-zone.dragover {
-  border-color: var(--brand); background: var(--brand-light);
-}
+.drop-zone:hover, .drop-zone.dragover { border-color: var(--brand); background: var(--brand-light); }
 .drop-zone i { font-size: 2rem; color: #ccc; margin-bottom: 8px; display: block; }
 .drop-zone p { font-size: .82rem; color: #aaa; margin: 0; }
 .drop-zone strong { color: var(--brand); }
-.preview-grid {
-  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;
-}
-.preview-thumb {
-  width: 70px; height: 70px; border-radius: 8px;
-  object-fit: cover; border: 2px solid var(--brand-light);
-}
+.preview-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.preview-thumb { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 2px solid var(--brand-light); }
 
 /* ── SUBMIT BAR ── */
 .submit-bar {
@@ -250,21 +215,18 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
   display: flex; align-items: center; gap: 8px;
 }
 .btn-save:hover { opacity: .92; transform: translateY(-1px); }
-
 .btn-cancel {
   background: none; border: 1.5px solid var(--border);
   border-radius: 12px; padding: 12px 24px;
   font-size: .88rem; font-weight: 600; color: var(--mid);
   cursor: pointer; text-decoration: none;
-  font-family: 'DM Sans', sans-serif;
-  transition: border-color .2s, color .2s;
+  font-family: 'DM Sans', sans-serif; transition: border-color .2s, color .2s;
 }
 .btn-cancel:hover { border-color: var(--danger); color: var(--danger); }
 </style>
 
 <div class="edit-page">
 
-  <!-- Header -->
   <div class="page-header">
     <div>
       <h1 class="page-title">Edit Product</h1>
@@ -275,7 +237,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
     </a>
   </div>
 
-  <!-- Flash -->
   {% with messages = get_flashed_messages() %}
     {% if messages %}{% for m in messages %}
       <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;
@@ -287,34 +248,28 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 
   <form method="POST" enctype="multipart/form-data">
 
-    <!-- ── SECTION 1: Basic Info ── -->
+    <!-- SECTION 1: Basic Info -->
     <div class="section-card" style="animation-delay:.05s">
-      <div class="section-head">
-        <div class="section-num">1</div>
-        <h6 class="section-title">Basic Information</h6>
-      </div>
+      <div class="section-head"><div class="section-num">1</div><h6 class="section-title">Basic Information</h6></div>
       <div class="section-body">
         <div class="mb-3">
           <label class="field-label">Product Name <span class="required">*</span></label>
-          <input type="text" name="name" class="field-input"
-                 value="{{ product.name }}" placeholder="e.g. Nike Air Max 270" required>
+          <input type="text" name="name" class="field-input" value="{{ product.name }}" placeholder="e.g. Nike Air Max 270" required>
         </div>
         <div class="row-2 mb-3">
           <div>
             <label class="field-label">Brand</label>
-            <input type="text" name="brand" class="field-input"
-                   value="{{ product.brand or '' }}" placeholder="e.g. Nike, Adidas">
+            <input type="text" name="brand" class="field-input" value="{{ product.brand or '' }}" placeholder="e.g. Nike, Adidas">
           </div>
           <div>
             <label class="field-label">SKU</label>
-            <input type="text" name="sku" class="field-input"
-                   value="{{ product.sku or '' }}" placeholder="e.g. NK-AM270-BLK">
+            <input type="text" name="sku" class="field-input" value="{{ product.sku or '' }}" placeholder="e.g. NK-AM270-BLK">
           </div>
         </div>
         <div class="mb-3">
           <label class="field-label">Category <span class="required">*</span></label>
           <select name="category" id="categorySelect" class="field-select" required>
-            {% set cats = ['Sneakers','Heels','Sandals','Boots','Loafers','Slippers','Formal','Sport','Kids'] %}
+            {% set cats = ['Sneakers','Heels','Sandals','Boots','Formal','Sport','Kids','Appliances','Software','Books','Jewelry And Accessories'] %}
             {% for c in cats %}
               <option value="{{ c }}" {% if product.category == c %}selected{% endif %}>{{ c }}</option>
             {% endfor %}
@@ -327,86 +282,57 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
         </div>
         <div class="mb-0">
           <label class="field-label">Description</label>
-          <textarea name="description" class="field-textarea"
-                    placeholder="Describe the product in detail...">{{ product.description }}</textarea>
+          <textarea name="description" class="field-textarea" placeholder="Describe the product in detail...">{{ product.description }}</textarea>
         </div>
       </div>
     </div>
 
-    <!-- ── SECTION 2: Pricing ── -->
+    <!-- SECTION 2: Pricing -->
     <div class="section-card" style="animation-delay:.1s">
-      <div class="section-head">
-        <div class="section-num">2</div>
-        <h6 class="section-title">Pricing & Sale</h6>
-      </div>
+      <div class="section-head"><div class="section-num">2</div><h6 class="section-title">Pricing & Sale</h6></div>
       <div class="section-body">
         <div class="row-2 mb-3">
           <div>
             <label class="field-label">Regular Price <span class="required">*</span></label>
             <div class="input-prefix">
               <span class="prefix-label">GH₵</span>
-              <input type="text" name="price" class="field-input"
-                     value="{{ product.price }}" placeholder="0.00" required>
+              <input type="text" name="price" class="field-input" value="{{ product.price }}" placeholder="0.00" required>
             </div>
           </div>
           <div>
             <label class="field-label">Sale Price</label>
             <div class="input-prefix">
               <span class="prefix-label">GH₵</span>
-              <input type="text" name="sale_price" id="salePriceInput" class="field-input"
-                     value="{{ product.sale_price or '' }}" placeholder="0.00">
+              <input type="text" name="sale_price" id="salePriceInput" class="field-input" value="{{ product.sale_price or '' }}" placeholder="0.00">
             </div>
             <div class="field-hint">Required if "On Sale" is enabled</div>
           </div>
         </div>
 
-        <label class="toggle-row">
-          <div class="toggle-info">
-            <strong>🏷️ On Sale</strong>
-            <small>Show sale badge and discounted price</small>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" name="on_sale" id="onSaleToggle" {% if product.on_sale %}checked{% endif %}>
-            <span class="toggle-slider"></span>
-          </label>
-        </label>
-
-        <label class="toggle-row">
-          <div class="toggle-info">
-            <strong>⭐ Featured Product</strong>
-            <small>Show on homepage featured section</small>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" name="featured" {% if product.featured %}checked{% endif %}>
-            <span class="toggle-slider"></span>
-          </label>
-        </label>
-
-        <label class="toggle-row">
-          <div class="toggle-info">
-            <strong>🆕 New Arrival</strong>
-            <small>Show "New" badge on product</small>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" name="new_arrival" {% if product.new_arrival %}checked{% endif %}>
-            <span class="toggle-slider"></span>
-          </label>
-        </label>
+        <!-- ✅ FIXED: outer div not label to prevent nested label bug -->
+        <div class="toggle-row">
+          <div class="toggle-info"><strong>🏷️ On Sale</strong><small>Show sale badge and discounted price</small></div>
+          <label class="toggle-switch"><input type="checkbox" name="on_sale" id="onSaleToggle" {% if product.on_sale %}checked{% endif %}><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><strong>⭐ Featured Product</strong><small>Show on homepage featured section</small></div>
+          <label class="toggle-switch"><input type="checkbox" name="featured" {% if product.featured %}checked{% endif %}><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><strong>🆕 New Arrival</strong><small>Show "New" badge on product</small></div>
+          <label class="toggle-switch"><input type="checkbox" name="new_arrival" {% if product.new_arrival %}checked{% endif %}><span class="toggle-slider"></span></label>
+        </div>
       </div>
     </div>
 
-    <!-- ── SECTION 3: Inventory ── -->
+    <!-- SECTION 3: Inventory -->
     <div class="section-card" style="animation-delay:.15s">
-      <div class="section-head">
-        <div class="section-num">3</div>
-        <h6 class="section-title">Inventory</h6>
-      </div>
+      <div class="section-head"><div class="section-num">3</div><h6 class="section-title">Inventory</h6></div>
       <div class="section-body">
         <div class="row-2">
           <div>
             <label class="field-label">Stock Count <span class="required">*</span></label>
-            <input type="number" name="stock" class="field-input"
-                   min="0" value="{{ product.stock }}" required>
+            <input type="number" name="stock" class="field-input" min="0" value="{{ product.stock }}" required>
           </div>
           <div>
             <label class="field-label">Delivery Info</label>
@@ -418,21 +344,42 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
       </div>
     </div>
 
-    <!-- ── SECTION 4: Variants ── -->
+    <!-- SECTION 4: Variants -->
     <div class="section-card" style="animation-delay:.2s">
-      <div class="section-head">
-        <div class="section-num">4</div>
-        <h6 class="section-title">Sizes & Colors</h6>
-      </div>
+      <div class="section-head"><div class="section-num">4</div><h6 class="section-title">Sizes & Colors</h6></div>
       <div class="section-body">
 
-        <!-- Sizes -->
-        <div class="mb-4">
+        <!-- ✅ Size Type Selector -->
+        <div class="mb-3">
+          <label class="field-label">Size Type</label>
+          <div class="row-2" style="margin-bottom:14px;">
+            <label style="border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s;" id="typeStandardLabel">
+              <input type="radio" name="product_type" value="standard"
+                     {% if product.product_type != 'slot' %}checked{% endif %}
+                     onchange="switchProductType('standard')" style="accent-color:var(--brand);">
+              <div>
+                <div style="font-size:.83rem;font-weight:700;color:var(--dark);">👟 Shoe / Clothing</div>
+                <div style="font-size:.68rem;color:#aaa;">e.g. 39, 40 or S, M, L</div>
+              </div>
+            </label>
+            <label style="border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s;" id="typeSlotLabel">
+              <input type="radio" name="product_type" value="slot"
+                     {% if product.product_type == 'slot' %}checked{% endif %}
+                     onchange="switchProductType('slot')" style="accent-color:var(--brand);">
+              <div>
+                <div style="font-size:.83rem;font-weight:700;color:var(--dark);">📦 Dimensions</div>
+                <div style="font-size:.68rem;color:#aaa;">Length × Width × Depth (cm)</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- ✅ Standard Sizes -->
+        <div id="shoeSizesGroup" class="mb-4">
           <label class="field-label">Available Sizes</label>
           <div class="size-presets" id="sizePresets">
             {% for s in ['36','37','38','39','40','41','42','43','44','45','S','M','L','XL','XXL'] %}
-            <button type="button" class="size-btn
-              {% if product.sizes and s in product.sizes %}active{% endif %}"
+            <button type="button" class="size-btn {% if product.sizes and s in product.sizes %}active{% endif %}"
               onclick="toggleSize(this, '{{ s }}')">{{ s }}</button>
             {% endfor %}
           </div>
@@ -442,23 +389,36 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
           <div class="field-hint">Click presets or type custom sizes separated by commas</div>
         </div>
 
+        <!-- ✅ Slot Dimensions -->
+        <div id="slotSizesGroup" style="display:none;" class="mb-4">
+          <div class="row-2 mb-3">
+            <div>
+              <label class="field-label">Length (cm)</label>
+              <input type="number" name="slot_length" class="field-input" step="0.1" min="0"
+                     value="{{ product.slot_length or '' }}" placeholder="e.g. 30">
+            </div>
+            <div>
+              <label class="field-label">Width (cm)</label>
+              <input type="number" name="slot_width" class="field-input" step="0.1" min="0"
+                     value="{{ product.slot_width or '' }}" placeholder="e.g. 20">
+            </div>
+          </div>
+          <div>
+            <label class="field-label">Depth (cm)</label>
+            <input type="number" name="slot_depth" class="field-input" step="0.1" min="0"
+                   value="{{ product.slot_depth or '' }}" placeholder="e.g. 15">
+            <div class="field-hint">Physical dimensions of the product in centimetres</div>
+          </div>
+        </div>
+
         <!-- Colors -->
         <div>
           <label class="field-label">Available Colors</label>
           <div class="color-presets" id="colorPresets">
-            {% set color_map = [
-              ('Black','#1a1a1a'),('White','#f5f5f5'),('Red','#ef4444'),
-              ('Blue','#3b82f6'),('Green','#22c55e'),('Yellow','#eab308'),
-              ('Pink','#ec4899'),('Brown','#92400e'),('Gray','#6b7280'),
-              ('Navy','#1e3a5f'),('Orange','#f97316'),('Purple','#8b5cf6')
-            ] %}
+            {% set color_map = [('Black','#1a1a1a'),('White','#f5f5f5'),('Red','#ef4444'),('Blue','#3b82f6'),('Green','#22c55e'),('Yellow','#eab308'),('Pink','#ec4899'),('Brown','#92400e'),('Gray','#6b7280'),('Navy','#1e3a5f'),('Orange','#f97316'),('Purple','#8b5cf6')] %}
             {% for name, hex in color_map %}
-            <div class="color-dot
-              {% if product.colors and name in product.colors %}active{% endif %}"
-              style="background:{{ hex }};"
-              title="{{ name }}"
-              onclick="toggleColor(this, '{{ name }}')">
-            </div>
+            <div class="color-dot {% if product.colors and name in product.colors %}active{% endif %}"
+                 style="background:{{ hex }};" title="{{ name }}" onclick="toggleColor(this, '{{ name }}')"></div>
             {% endfor %}
           </div>
           <input type="text" name="colors" id="colorsInput" class="field-input"
@@ -470,14 +430,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
       </div>
     </div>
 
-    <!-- ── SECTION 5: Images ── -->
+    <!-- SECTION 5: Images -->
     <div class="section-card" style="animation-delay:.25s">
-      <div class="section-head">
-        <div class="section-num">5</div>
-        <h6 class="section-title">Product Images</h6>
-      </div>
+      <div class="section-head"><div class="section-num">5</div><h6 class="section-title">Product Images</h6></div>
       <div class="section-body">
-
         {% if product.images %}
         <label class="field-label">Current Images <span style="color:#999;text-transform:none;font-weight:400;">(hover to remove)</span></label>
         <div class="image-grid mb-4">
@@ -494,47 +450,36 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
           {% endfor %}
         </div>
         {% endif %}
-
         <label class="field-label">Add New Images</label>
         <div class="drop-zone" id="dropZone" onclick="document.getElementById('newImages').click()">
           <i class="bi bi-cloud-upload"></i>
           <p>Drag & drop images here or <strong>click to browse</strong></p>
           <p style="font-size:.72rem;">JPG, PNG, WEBP · Max 5MB each</p>
         </div>
-        <input type="file" name="new_images" id="newImages" multiple accept="image/*"
-               style="display:none;" onchange="previewImages(this)">
+        <input type="file" name="new_images" id="newImages" multiple accept="image/*" style="display:none;" onchange="previewImages(this)">
         <div class="preview-grid" id="previewGrid"></div>
-
       </div>
     </div>
 
-    <!-- ── SECTION 6: Tags ── -->
+    <!-- SECTION 6: Tags -->
     <div class="section-card" style="animation-delay:.3s">
-      <div class="section-head">
-        <div class="section-num">6</div>
-        <h6 class="section-title">Tags</h6>
-      </div>
+      <div class="section-head"><div class="section-num">6</div><h6 class="section-title">Tags</h6></div>
       <div class="section-body">
         <label class="field-label">Product Tags</label>
         <div class="tags-container" id="tagsContainer" onclick="document.getElementById('tagField').focus()">
           {% if product.tags %}
             {% for tag in product.tags %}
-            <span class="tag-pill">
-              {{ tag }}
-              <button type="button" onclick="removeTag(this)">×</button>
-            </span>
+            <span class="tag-pill">{{ tag }}<button type="button" onclick="removeTag(this)">×</button></span>
             {% endfor %}
           {% endif %}
-          <input type="text" id="tagField" class="tag-input-field"
-                 placeholder="Type tag and press Enter...">
+          <input type="text" id="tagField" class="tag-input-field" placeholder="Type tag and press Enter...">
         </div>
-        <input type="hidden" name="tags" id="tagsHidden"
-               value="{{ product.tags | join(',') if product.tags else '' }}">
+        <input type="hidden" name="tags" id="tagsHidden" value="{{ product.tags | join(',') if product.tags else '' }}">
         <div class="field-hint">Press Enter or comma to add a tag</div>
       </div>
     </div>
 
-    <!-- ── SUBMIT ── -->
+    <!-- SUBMIT -->
     <div class="submit-bar">
       <div style="font-size:.8rem; color:#999;">
         <i class="bi bi-clock" style="color:var(--brand);"></i>
@@ -542,9 +487,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
       </div>
       <div style="display:flex;gap:10px;align-items:center;">
         <a href="{{ url_for('admin') }}" class="btn-cancel">Cancel</a>
-        <button type="submit" class="btn-save">
-          <i class="bi bi-check-circle"></i> Save Changes
-        </button>
+        <button type="submit" class="btn-save"><i class="bi bi-check-circle"></i> Save Changes</button>
       </div>
     </div>
 
@@ -552,24 +495,30 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 </div>
 
 <script>
-// ── Category custom toggle ──
+// Category custom toggle
 document.getElementById('categorySelect').addEventListener('change', function() {
   const custom = document.getElementById('categoryCustom');
   custom.style.display = this.value === 'custom' ? 'block' : 'none';
   if (this.value !== 'custom') custom.value = '';
 });
 
-// ── Size presets ──
-function toggleSize(btn, size) {
-  btn.classList.toggle('active');
-  updateSizes();
+// ✅ Size type switcher
+function switchProductType(type) {
+  document.getElementById('shoeSizesGroup').style.display = type === 'standard' ? 'block' : 'none';
+  document.getElementById('slotSizesGroup').style.display = type === 'slot' ? 'block' : 'none';
+  document.getElementById('typeStandardLabel').style.borderColor = type === 'standard' ? 'var(--brand)' : 'var(--border)';
+  document.getElementById('typeStandardLabel').style.background = type === 'standard' ? 'var(--brand-light)' : '#fff';
+  document.getElementById('typeSlotLabel').style.borderColor = type === 'slot' ? 'var(--brand)' : 'var(--border)';
+  document.getElementById('typeSlotLabel').style.background = type === 'slot' ? 'var(--brand-light)' : '#fff';
 }
+switchProductType('{{ product.product_type or "standard" }}');
+
+// Size presets
+function toggleSize(btn, size) { btn.classList.toggle('active'); updateSizes(); }
 function updateSizes() {
   const active = [...document.querySelectorAll('.size-btn.active')].map(b => b.textContent.trim());
-  const manual = document.getElementById('sizesInput').value
-    .split(',').map(s => s.trim()).filter(Boolean);
-  const merged = [...new Set([...active, ...manual])];
-  document.getElementById('sizesInput').value = merged.join(', ');
+  const manual = document.getElementById('sizesInput').value.split(',').map(s => s.trim()).filter(Boolean);
+  document.getElementById('sizesInput').value = [...new Set([...active, ...manual])].join(', ');
 }
 document.getElementById('sizesInput').addEventListener('change', function() {
   const vals = this.value.split(',').map(s => s.trim());
@@ -578,20 +527,15 @@ document.getElementById('sizesInput').addEventListener('change', function() {
   });
 });
 
-// ── Color presets ──
-function toggleColor(dot, name) {
-  dot.classList.toggle('active');
-  updateColors();
-}
+// Color presets
+function toggleColor(dot, name) { dot.classList.toggle('active'); updateColors(); }
 function updateColors() {
   const active = [...document.querySelectorAll('.color-dot.active')].map(d => d.title);
-  const manual = document.getElementById('colorsInput').value
-    .split(',').map(c => c.trim()).filter(Boolean);
-  const merged = [...new Set([...active, ...manual])];
-  document.getElementById('colorsInput').value = merged.join(', ');
+  const manual = document.getElementById('colorsInput').value.split(',').map(c => c.trim()).filter(Boolean);
+  document.getElementById('colorsInput').value = [...new Set([...active, ...manual])].join(', ');
 }
 
-// ── Drag & drop images ──
+// Drag & drop images
 const dropZone = document.getElementById('dropZone');
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
@@ -603,7 +547,6 @@ dropZone.addEventListener('drop', e => {
   input.files = dt.files;
   previewImages(input);
 });
-
 function previewImages(input) {
   const grid = document.getElementById('previewGrid');
   grid.innerHTML = '';
@@ -611,15 +554,14 @@ function previewImages(input) {
     const reader = new FileReader();
     reader.onload = e => {
       const img = document.createElement('img');
-      img.src = e.target.result;
-      img.className = 'preview-thumb';
+      img.src = e.target.result; img.className = 'preview-thumb';
       grid.appendChild(img);
     };
     reader.readAsDataURL(file);
   });
 }
 
-// ── Tags ──
+// Tags
 const tagField = document.getElementById('tagField');
 tagField.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' || e.key === ',') {
@@ -635,16 +577,13 @@ function addTag(text) {
   document.getElementById('tagsContainer').insertBefore(pill, tagField);
   updateTagsHidden();
 }
-function removeTag(btn) {
-  btn.parentElement.remove();
-  updateTagsHidden();
-}
+function removeTag(btn) { btn.parentElement.remove(); updateTagsHidden(); }
 function updateTagsHidden() {
   const tags = [...document.querySelectorAll('.tag-pill')].map(p => p.childNodes[0].textContent.trim());
   document.getElementById('tagsHidden').value = tags.join(',');
 }
 
-// ── Sale price validation ──
+// Sale price validation
 document.getElementById('onSaleToggle').addEventListener('change', function() {
   const sp = document.getElementById('salePriceInput');
   sp.required = this.checked;

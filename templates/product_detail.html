@@ -516,15 +516,38 @@ select.form-select { display: none; } /* hide original select */
 
         <div class="section-divider"></div>
 
-        <!-- Sizes -->
-        {% if product.sizes %}
-          <div class="option-label">Size</div>
-          <div class="size-grid">
-            {% for size in product.sizes %}
-              <button type="button" class="size-btn" data-size="{{ size }}">{{ size }}</button>
-            {% endfor %}
-          </div>
-        {% endif %}
+        <!-- Sizes / Dimensions -->
+{% if product.product_type == 'slot' %}
+  {% if product.slot_length or product.slot_width or product.slot_depth %}
+  <div class="option-label">Dimensions</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+    {% if product.slot_length %}
+    <div style="background:var(--brand-light);border:1.5px solid rgba(25,135,84,.2);color:var(--brand);border-radius:10px;padding:8px 16px;font-size:.85rem;font-weight:600;">
+      📏 L: {{ product.slot_length }} cm
+    </div>
+    {% endif %}
+    {% if product.slot_width %}
+    <div style="background:var(--brand-light);border:1.5px solid rgba(25,135,84,.2);color:var(--brand);border-radius:10px;padding:8px 16px;font-size:.85rem;font-weight:600;">
+      📐 W: {{ product.slot_width }} cm
+    </div>
+    {% endif %}
+    {% if product.slot_depth %}
+    <div style="background:var(--brand-light);border:1.5px solid rgba(25,135,84,.2);color:var(--brand);border-radius:10px;padding:8px 16px;font-size:.85rem;font-weight:600;">
+      🧊 D: {{ product.slot_depth }} cm
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+{% else %}
+  {% if product.sizes %}
+    <div class="option-label">Size</div>
+    <div class="size-grid">
+      {% for size in product.sizes %}
+        <button type="button" class="size-btn" data-size="{{ size }}">{{ size }}</button>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endif %}
 
         <!-- Colors -->
         {% if product.colors %}

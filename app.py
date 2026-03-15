@@ -1276,8 +1276,49 @@ def add_to_cart(product_id):
     return redirect(request.referrer or url_for('home'))
 
 
+@app.route('/add_to_cart/<product_id>', methods=['POST'])
+def add_to_cart(product_id):
+    product = Product.query.get(product_id)
+    if not product:
+        flash("❌ Product not found.")
+        return redirect(request.referrer or url_for('home'))
+
+    # ✅ Block out-of-stock
+    if product.stock <= 0:
+        flash("❌ This product is out of stock.")
+        return redirect(request.referrer or url_for('home'))
+
+    quantity = int(request.form.get("quantity", 1))
+    color = request.form.get("color", "-")
+    size = request.form.get("size", "-")
+    cart = get_cart()
+
+    for item in cart:
+        if item['product_id'] == product_id and item.get('color') == color and item.get('size') == size:
+            item['quantity'] += quantity
+            break
+    else:
+        cart.append({'product_id': product_id, 'quantity': quantity, 'color': color, 'size': size})
+
+    session['cart'] = cart
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True, 'message': '🛒 Added to cart!', 'count': len(cart)})
+
+    flash("🛒 Product added to cart!")
+    return redirect(request.referrer or url_for('home'))
+
+
 @app.route('/add_to_cart_ajax/<product_id>', methods=['POST'])
 def add_to_cart_ajax(product_id):
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify({'success': False, 'message': '❌ Product not found.'})
+
+    # ✅ Block out-of-stock
+    if product.stock <= 0:
+        return jsonify({'success': False, 'message': '❌ This product is out of stock.'})
+
     color = request.form.get("color", "-")
     size = request.form.get("size", "-")
     cart = session.get('cart', [])
@@ -2067,6 +2108,8 @@ def vendor_mark_shipped(order_id):
     order.status = 'Shipped'
     db.session.commit()
 
+    track_url = url_for('track_order', order_id=order_id, _external=True)
+
     # ✅ Notify admin
     try:
         send_email(
@@ -2075,22 +2118,60 @@ def vendor_mark_shipped(order_id):
             f"""
             <div style="font-family:sans-serif; padding:20px;">
                 <h2>📦 Vendor Marked Order as Shipped</h2>
-                <p><strong>Vendor:</strong> { session.get('shop_name') }</p>
+                <p><strong>Vendor:</strong> {session.get('shop_name')}</p>
                 <p><strong>Customer:</strong> {order.name} ({order.email})</p>
                 <p><strong>Order ID:</strong> {order_id}</p>
                 <p><strong>Total:</strong> GH₵ {order.total}</p>
                 <a href="https://www.shopluxe.online/admin"
                    style="background:#198754;color:#fff;padding:10px 20px;
-                   border-radius:8px;text-decoration:none;">
-                   Go to Admin Panel
-                </a>
+                   border-radius:8px;text-decoration:none;">Go to Admin Panel</a>
             </div>
             """
         )
     except Exception as e:
-        print("⚠️ Shipped email failed:", e)
+        print("⚠️ Admin shipped email failed:", e)
 
-    flash("✅ Order marked as shipped. Admin has been notified.")
+    # ✅ NEW: Notify customer
+    try:
+        items = json.loads(order.products or '[]')
+        item_lines = "".join(
+            f"<div style='margin-bottom:8px;'><strong>{i.get('name')}</strong> "
+            f"× {i.get('quantity',1)} — GH₵ {i.get('price',0)}</div>"
+            for i in items
+        )
+        send_email(
+            order.email,
+            "📦 Your ShopLuxe Order Has Been Shipped!",
+            f"""
+            <div style="font-family:sans-serif;padding:20px;max-width:540px;">
+                <h2 style="color:#198754;">Your order is on its way! 🚚</h2>
+                <p>Hi <strong>{order.name}</strong>, great news — your order has been shipped
+                   and is heading your way.</p>
+                <div style="background:#f4f6f9;border-radius:12px;padding:16px;margin:18px 0;">
+                    <p style="margin:0 0 10px;font-weight:700;color:#1a1a2e;">Order Summary</p>
+                    {item_lines}
+                    <hr style="border:none;border-top:1px solid #e0e0e0;margin:12px 0;">
+                    <p style="margin:0;font-weight:700;color:#198754;">Total: GH₵ {order.total}</p>
+                </div>
+                <p style="color:#666;font-size:.88rem;">
+                    You can track your order status using the button below.
+                </p>
+                <a href="{track_url}"
+                   style="display:inline-block;background:#198754;color:#fff;
+                   padding:12px 24px;border-radius:10px;text-decoration:none;
+                   font-weight:700;margin-top:8px;">
+                   📦 Track My Order
+                </a>
+                <p style="color:#aaa;font-size:.75rem;margin-top:20px;">
+                    Thank you for shopping with ShopLuxe 🛍️
+                </p>
+            </div>
+            """
+        )
+    except Exception as e:
+        print("⚠️ Customer shipped email failed:", e)
+
+    flash("✅ Order marked as shipped. Admin and customer have been notified.")
     return redirect(url_for('vendor_dashboard'))
 # ============================================================
 # DB INIT & RUN
@@ -2107,7 +2188,11 @@ with app.app_context():
             ("tags", "TEXT DEFAULT '[]'"),
             ("delivery_info", "VARCHAR(200) DEFAULT 'Delivery in 2-4 working days'"),
             ("new_arrival", "BOOLEAN DEFAULT 1"),
-            ("vendor_id", "VARCHAR DEFAULT NULL"),  # ✅ NEW
+            ("vendor_id", "VARCHAR DEFAULT NULL"),
+            ("product_type", "VARCHAR DEFAULT 'standard'"),  # ✅ NEW
+            ("slot_length", "VARCHAR DEFAULT ''"),            # ✅ NEW
+            ("slot_width", "VARCHAR DEFAULT ''"),             # ✅ NEW
+            ("slot_depth", "VARCHAR DEFAULT ''"),             # ✅ NEW
         ]:
             try:
                 conn.execute(db.text(f"ALTER TABLE products ADD COLUMN {col} {definition}"))
@@ -2159,6 +2244,8 @@ with app.app_context():
 
         # ✅ SQLite doesn't support DROP COLUMN in older versions, so the Review model
         # must NOT have removed columns defined — just ignore them here
+
+
 
 if __name__ == "__main__":
     app.run()
