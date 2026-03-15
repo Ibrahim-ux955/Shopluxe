@@ -38,7 +38,6 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
 .btn-cancel { background:none; border:1.5px solid var(--border); border-radius:10px; padding:11px 20px; font-size:.86rem; font-weight:600; color:var(--mid); cursor:pointer; font-family:'DM Sans',sans-serif; text-decoration:none; display:inline-flex; align-items:center; gap:5px; transition:border-color .2s; }
 .btn-cancel:hover { border-color:var(--brand); color:var(--brand); }
 
-/* Toggle switch */
 .pref-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
 .pref-row:last-child { border-bottom:none; padding-bottom:0; }
 .pref-info strong { font-size:.86rem; color:var(--dark); display:block; }
@@ -50,24 +49,25 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
 .toggle-sw input:checked + .toggle-sl { background:var(--brand); }
 .toggle-sw input:checked + .toggle-sl::before { transform:translateX(18px); }
 
-/* Avatar */
 .avatar-wrap { display:flex; align-items:center; gap:18px; margin-bottom:20px; }
 .avatar-circle { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--brand),#0d6efd); color:#fff; font-family:'Playfair Display',serif; font-size:1.8rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .avatar-info h6 { font-weight:700; color:var(--dark); margin:0 0 3px; font-size:.95rem; }
 .avatar-info p { font-size:.76rem; color:#aaa; margin:0 0 8px; }
 .btn-change-avatar { background:var(--brand-light); color:var(--brand); border:none; border-radius:8px; padding:6px 14px; font-size:.74rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
 
-/* Danger zone */
 .danger-zone { border:1.5px solid #fce4e4; border-radius:var(--radius); padding:18px 20px; }
 .danger-title { font-size:.86rem; font-weight:700; color:var(--danger); margin-bottom:4px; }
 .danger-sub { font-size:.76rem; color:#aaa; margin-bottom:14px; }
 .btn-danger { background:#fce4e4; color:var(--danger); border:none; border-radius:10px; padding:10px 20px; font-size:.82rem; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; display:inline-flex; align-items:center; gap:5px; transition:background .2s; }
 .btn-danger:hover { background:#dc3545; color:#fff; }
 
-/* Strength bar */
 .strength-bar { height:4px; border-radius:4px; background:var(--border); margin-top:-8px; margin-bottom:12px; overflow:hidden; }
 .strength-fill { height:100%; border-radius:4px; width:0%; transition:width .3s,background .3s; }
 .strength-text { font-size:.68rem; color:#aaa; margin-bottom:10px; }
+
+/* ✅ Address section divider */
+.addr-divider { height:1px; background:var(--border); margin:16px 0 18px; }
+.addr-section-label { font-size:.7rem; font-weight:700; color:var(--mid); text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px; display:flex; align-items:center; gap:6px; }
 </style>
 
 <div class="settings-page">
@@ -124,6 +124,65 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
           <button type="submit" class="btn-save"><i class="bi bi-check-circle"></i> Save Changes</button>
           <a href="{{ url_for('profile') }}" class="btn-cancel"><i class="bi bi-arrow-left"></i> Back to Profile</a>
         </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ✅ NEW: DELIVERY ADDRESS -->
+  <div class="a-card">
+    <div class="a-card-head"><i class="bi bi-geo-alt-fill"></i><h6 class="a-card-title">Delivery Address</h6></div>
+    <div class="a-card-body">
+      <p style="font-size:.78rem;color:#aaa;margin-bottom:18px;">
+        Your saved address will be autofilled at checkout so you don't have to type it every time.
+      </p>
+      <form method="POST" action="{{ url_for('update_profile') }}">
+        <input type="hidden" name="action" value="update_address">
+
+        <div class="mb-3">
+          <label class="f-label">Street Address</label>
+          <div class="input-wrap">
+            <i class="bi bi-geo-alt input-icon"></i>
+            <input type="text" name="address" class="f-input"
+                   value="{{ user.get('address', '') if user else '' }}"
+                   placeholder="e.g. 12 Independence Ave, Osu">
+          </div>
+        </div>
+
+        <div class="row-2 mb-3">
+          <div>
+            <label class="f-label">City / Town</label>
+            <div class="input-wrap">
+              <i class="bi bi-building input-icon"></i>
+              <input type="text" name="city" class="f-input"
+                     value="{{ user.get('city', '') if user else '' }}"
+                     placeholder="e.g. Accra">
+            </div>
+          </div>
+          <div>
+            <label class="f-label">Region</label>
+            <div class="input-wrap">
+              <i class="bi bi-map input-icon"></i>
+              <select name="region" class="f-input">
+                <option value="" disabled {% if not user or not user.get('region') %}selected{% endif %}>Select region</option>
+                {% for r in ['Greater Accra','Ashanti','Western','Eastern','Central','Northern','Upper East','Upper West','Volta','Brong-Ahafo','Oti','Savannah','North East','Western North','Ahafo','Bono East'] %}
+                <option value="{{ r }}" {% if user and user.get('region') == r %}selected{% endif %}>{{ r }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="f-label">Delivery Note <span style="color:#bbb;font-weight:400;text-transform:none;">(optional)</span></label>
+          <div class="input-wrap">
+            <i class="bi bi-chat-text input-icon"></i>
+            <input type="text" name="delivery_note" class="f-input"
+                   value="{{ user.get('delivery_note', '') if user else '' }}"
+                   placeholder="e.g. Blue gate, call on arrival, near the church...">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-save"><i class="bi bi-geo-alt"></i> Save Address</button>
       </form>
     </div>
   </div>

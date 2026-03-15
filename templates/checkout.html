@@ -275,7 +275,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
         <div class="input-group-wrap">
           <i class="bi bi-geo-alt input-icon"></i>
           <input type="text" id="field-address" class="form-control"
-                 placeholder="e.g. 12 Independence Ave, Osu" required>
+       placeholder="e.g. 12 Independence Ave, Osu"
+       value="{{ saved_address.get('address', '') }}" required>
         </div>
       </div>
       <div class="col-md-6">
@@ -283,7 +284,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
         <div class="input-group-wrap">
           <i class="bi bi-building input-icon"></i>
           <input type="text" id="field-city" class="form-control"
-                 placeholder="e.g. Accra" required>
+       placeholder="e.g. Accra"
+       value="{{ saved_address.get('city', '') }}" required>
         </div>
       </div>
       <div class="col-md-6">
@@ -291,9 +293,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
         <div class="input-group-wrap">
           <i class="bi bi-map input-icon"></i>
           <select id="field-region" class="form-control" required>
-            <option value="" disabled selected>Select region</option>
+            <option value="" disabled {% if not saved_address.get('region') %}selected{% endif %}>Select region</option>
             {% for r in ['Greater Accra','Ashanti','Western','Eastern','Central','Northern','Upper East','Upper West','Volta','Brong-Ahafo','Oti','Savannah','North East','Western North','Ahafo','Bono East'] %}
-            <option value="{{ r }}">{{ r }}</option>
+            <option value="{{ r }}" {% if saved_address.get('region') == r %}selected{% endif %}>{{ r }}</option>
             {% endfor %}
           </select>
         </div>
@@ -303,8 +305,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
         <div class="input-group-wrap">
           <i class="bi bi-chat-text input-icon"></i>
           <input type="text" id="field-note" class="form-control"
-                 placeholder="e.g. Blue gate, call on arrival, near the church...">
-        </div>
+       placeholder="e.g. Blue gate, call on arrival, near the church..."
+       value="{{ saved_address.get('delivery_note', '') }}">
       </div>
 
     </div>

@@ -148,8 +148,10 @@ class Order(db.Model):
             'name': self.name,
             'email': self.email,
             'phone': self.phone,
-            'address': self.address or '',            # ✅ NEW
-            'delivery_note': self.delivery_note or '', # ✅ NEW
+            'address': self.address or '',        # ✅ NEW
+            'city': self.city or '',              # ✅ NEW
+            'region': self.region or '',          # ✅ NEW
+            'delivery_note': self.delivery_note or '',  # ✅ NEW
             'amount': self.amount,
             'total': self.total,
             'products': json.loads(self.products or '[]'),
@@ -174,6 +176,10 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     reset_token = db.Column(db.String, nullable=True)
     reset_token_expiry = db.Column(db.String, nullable=True)
+    address = db.Column(db.String, default='')        # ✅ NEW
+    city = db.Column(db.String, default='')           # ✅ NEW
+    region = db.Column(db.String, default='')         # ✅ NEW
+    delivery_note = db.Column(db.String, default='')  # ✅ NEW
 
     def to_dict(self):
         return {
@@ -506,12 +512,13 @@ def product_detail(product_id):
         user_rating=user_rating
     )
 
-
 @app.route('/settings')
 def settings():
     if not session.get('user_id'):
         return redirect(url_for('login'))
-    return render_template('settings.html')
+    user = User.query.get(session['user_id'])
+    return render_template('settings.html', user=user.to_dict() if user else {})
+
 
 @app.route('/update_profile', methods=['POST'])
 def update_profile():
@@ -540,6 +547,15 @@ def update_profile():
             user.password = generate_password_hash(new_pw)
             db.session.commit()
             flash("✅ Password updated successfully.")
+
+    # ✅ NEW: Save delivery address
+    elif action == 'update_address':
+        user.address = request.form.get('address', '').strip()
+        user.city = request.form.get('city', '').strip()
+        user.region = request.form.get('region', '').strip()
+        user.delivery_note = request.form.get('delivery_note', '').strip()
+        db.session.commit()
+        flash("✅ Delivery address saved.")
 
     return redirect(url_for('settings'))
 
@@ -710,6 +726,14 @@ def verify_payment():
             timestamp=datetime.now(timezone.utc).isoformat()
         ))
     db.session.commit()
+    
+    # ✅ Save address to user profile for autofill next time
+    if email:
+        user = User.query.filter_by(email=email).first()
+        if user and address:
+            user.address = address
+            user.delivery_note = delivery_note
+            db.session.commit()
 
     session.pop('cart', None)
 
@@ -1401,6 +1425,18 @@ def checkout():
     subtotal = sum(p['effective_price'] * p['quantity'] for p in cart_items)
     payout_fee = round(min((subtotal * 0.0195) + 0.50, 500), 2)
     total = round(subtotal + payout_fee, 2)
+     
+      # ✅ Load saved address if logged in
+    saved_address = {}
+    if session.get('user_id'):
+        user = User.query.get(session['user_id'])
+        if user:
+            saved_address = {
+                'address': user.address or '',
+                'city': user.city or '',
+                'region': user.region or '',
+                'delivery_note': user.delivery_note or '',
+            }
 
     return render_template(
         'checkout.html',
@@ -2194,6 +2230,10 @@ with app.app_context():
         for col, definition in [
             ("reset_token", "VARCHAR DEFAULT NULL"),
             ("reset_token_expiry", "VARCHAR DEFAULT NULL"),
+            ("address", "VARCHAR DEFAULT ''"),        # ✅ NEW
+            ("city", "VARCHAR DEFAULT ''"),           # ✅ NEW
+            ("region", "VARCHAR DEFAULT ''"),         # ✅ NEW
+            ("delivery_note", "VARCHAR DEFAULT ''"),  # ✅ NEW
         ]:
             try:
                 conn.execute(db.text(f"ALTER TABLE users ADD COLUMN {col} {definition}"))
