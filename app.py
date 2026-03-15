@@ -803,7 +803,11 @@ def track_order(order_id):
     if not order:
         flash("⚠️ Order not found.")
         return redirect(url_for('home'))
-    return render_template("track_order.html", order=order.to_dict())
+
+    # ✅ Pass all products so we can look up images by name
+    all_products = [p.to_dict() for p in Product.query.all()]
+
+    return render_template("track_order.html", order=order.to_dict(), all_products=all_products)
 
 @app.route('/orders')
 def orders():

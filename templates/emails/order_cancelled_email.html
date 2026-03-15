@@ -1,4 +1,144 @@
-<p>Hello {{ name }},</p>
-<p>Your order <strong>{{ order_id }}</strong> has been <strong>cancelled</strong>.</p>
-<p>You can track your order here: <a href="{{ track_order_url }}">Track Order</a></p>
-<p>Thank you,<br>ShopLuxe Team</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Cancelled - ShopLuxe</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f0f2f5; color: #0f1111; }
+  .wrap { max-width: 620px; margin: 24px auto; background: #fff; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+
+  .hdr { background: #131921; padding: 16px 24px; }
+  .hdr-logo { font-family: Georgia, serif; font-size: 22px; font-weight: 700; color: #fff; }
+  .hdr-logo span { color: #ff9900; }
+  .hdr-tagline { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 2px; }
+
+  .hero { background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%); padding: 28px 24px; text-align: center; }
+  .hero-icon { font-size: 44px; margin-bottom: 10px; }
+  .hero h1 { font-size: 22px; color: #fff; font-weight: 700; margin-bottom: 6px; }
+  .hero p { font-size: 13px; color: rgba(255,255,255,.8); }
+
+  .body { padding: 24px; }
+
+  .greeting { font-size: 15px; margin-bottom: 16px; line-height: 1.6; }
+
+  .status-banner { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 6px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .status-icon { font-size: 24px; flex-shrink: 0; }
+  .status-text strong { display: block; font-size: 14px; color: #991b1b; }
+  .status-text span { font-size: 12px; color: #b91c1c; }
+
+  .order-box { border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-bottom: 20px; }
+  .order-box-head { background: #f0f2f5; padding: 12px 16px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
+  .order-box-head .label { font-size: 11px; color: #767676; text-transform: uppercase; letter-spacing: .5px; }
+  .order-box-head .value { font-size: 13px; font-weight: 700; color: #0f1111; }
+  .order-box-body { padding: 16px; font-size: 13px; color: #555; }
+  .order-ref { font-family: monospace; font-size: 13px; font-weight: 700; color: #0f1111; background: #f0f2f5; padding: 8px 14px; border-radius: 6px; display: inline-block; margin-top: 4px; }
+
+  .info-box { border: 1px solid #ddd; border-radius: 6px; padding: 16px; margin-bottom: 20px; }
+  .info-box h3 { font-size: 14px; font-weight: 700; color: #0f1111; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+  .info-row { display: flex; gap: 10px; font-size: 13px; color: #555; margin-bottom: 8px; }
+  .info-row:last-child { margin-bottom: 0; }
+
+  .cta-wrap { text-align: center; margin: 20px 0; }
+  .btn-shop { display: inline-block; background: #ff9900; color: #0f1111 !important; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 14px; margin-right: 8px; }
+  .btn-support { display: inline-block; background: #f0f2f5; color: #0f1111 !important; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 14px; border: 1px solid #ddd; }
+
+  .help-box { background: #f7f8f9; border-radius: 6px; padding: 16px; margin-bottom: 20px; font-size: 13px; color: #555; line-height: 1.6; }
+  .help-box a { color: #0066c0; text-decoration: none; }
+
+  .ftr { background: #232f3e; padding: 20px 24px; text-align: center; }
+  .ftr-links { margin-bottom: 10px; }
+  .ftr-links a { font-size: 11px; color: rgba(255,255,255,.55); margin: 0 8px; text-decoration: none; }
+  .ftr p { font-size: 11px; color: rgba(255,255,255,.45); margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <div class="hdr-logo">Shop<span>Luxe</span></div>
+    <div class="hdr-tagline">Ghana's Premium Online Store</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-icon">❌</div>
+    <h1>Order Cancelled</h1>
+    <p>We're sorry to inform you that your order has been cancelled.</p>
+  </div>
+
+  <div class="body">
+
+    <p class="greeting">Hi <strong>{{ name }}</strong>,<br><br>
+    Your order has been cancelled. If you did not request this cancellation or have any concerns, please contact our support team immediately.</p>
+
+    <div class="status-banner">
+      <div class="status-icon">🚫</div>
+      <div class="status-text">
+        <strong>Order Cancelled</strong>
+        <span>No charges will be retained — any payment will be refunded within 3–5 business days</span>
+      </div>
+    </div>
+
+    <div class="order-box">
+      <div class="order-box-head">
+        <div>
+          <div class="label">Order Reference</div>
+          <div class="value">#{{ order_id[:16].upper() if order_id else 'N/A' }}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="label">Status</div>
+          <div class="value" style="color:#dc2626;">Cancelled</div>
+        </div>
+      </div>
+      <div class="order-box-body">
+        <p>If you believe this was a mistake or need assistance, please reach out to us as soon as possible.</p>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <h3>ℹ️ What Happens Next</h3>
+      <div class="info-row">
+        <span>💰</span>
+        <span>If you were charged, a <strong>full refund</strong> will be processed within 3–5 business days.</span>
+      </div>
+      <div class="info-row">
+        <span>📦</span>
+        <span>Your items will <strong>not be shipped</strong>.</span>
+      </div>
+      <div class="info-row">
+        <span>🛍️</span>
+        <span>You can <strong>place a new order</strong> anytime on ShopLuxe.</span>
+      </div>
+    </div>
+
+    <div class="cta-wrap">
+      <a href="https://www.shopluxe.online" class="btn-shop">🛍️ Continue Shopping</a>
+      <a href="https://www.shopluxe.online/support" class="btn-support">💬 Contact Support</a>
+    </div>
+
+    <div class="help-box">
+      <strong>Need help?</strong><br>
+      Email us at <a href="mailto:orders@shopluxe.online">orders@shopluxe.online</a>
+      or visit our <a href="https://www.shopluxe.online/support">Support Center</a>.
+      We're available 24/7.
+    </div>
+
+    <p style="font-size:13px;color:#555;">We hope to serve you again soon.<br>
+    <strong>The ShopLuxe Team</strong></p>
+
+  </div>
+
+  <div class="ftr">
+    <div class="ftr-links">
+      <a href="https://www.shopluxe.online">Home</a>
+      <a href="https://www.shopluxe.online/orders">My Orders</a>
+      <a href="https://www.shopluxe.online/support">Support</a>
+    </div>
+    <p>ShopLuxe · Accra, Ghana 🇬🇭</p>
+    <p>© 2025 ShopLuxe. All rights reserved.</p>
+  </div>
+
+</div>
+</body>
+</html>

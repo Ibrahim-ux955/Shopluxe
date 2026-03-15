@@ -85,7 +85,7 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
   <div class="a-card">
     <div class="a-card-head">
       <i class="bi bi-geo-alt-fill"></i>
-      <h6 class="a-card-title">Order Sta ntus</h6>
+      <h6 class="a-card-title">Order Status</h6>
       <div style="margin-left:auto;">
         <!-- Replace the status pill block -->
        {% if order.status == 'Paid' or order.status == 'Processing' %}
@@ -172,29 +172,56 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
       </div>
     </div>
   </div>
-
-  <!-- Items -->
+  
+  <!-- Delivery Address -->
+  {% if order.get('address') %}
   <div class="a-card">
-    <div class="a-card-head"><i class="bi bi-bag-check"></i><h6 class="a-card-title">Order Items</h6></div>
+    <div class="a-card-head"><i class="bi bi-geo-alt-fill"></i><h6 class="a-card-title">Delivery Address</h6></div>
     <div class="a-card-body">
-      {% for item in order.get('products') or order.get('items',[]) %}
-      <div class="order-item">
-        {% set img = item.get('images',[None])[0] if item.get('images') else item.get('image','placeholder.jpg') %}
-        <img src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
-             alt="{{ item['name'] }}" onerror="this.src='{{ url_for('static', filename='shoes/placeholder.jpg') }}'">
-        <div style="flex:1;min-width:0;">
-          <div class="item-name">{{ item['name'] }}</div>
-          <div class="item-meta">Qty: {{ item.get('quantity',1) }}{% if item.get('color') and item.get('color')!='-' %} · {{ item['color'] }}{% endif %}{% if item.get('size') and item.get('size')!='-' %} · Size {{ item['size'] }}{% endif %}</div>
-        </div>
-        <div class="item-price">GH₵ {{ "%.2f"|format((item.get('effective_price') or item.get('price',0))|float) }}</div>
+      <div style="font-size:.88rem;font-weight:600;color:var(--dark);margin-bottom:4px;">
+        <i class="bi bi-geo-alt" style="color:var(--brand);"></i> {{ order['address'] }}
       </div>
-      {% endfor %}
-      <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:2px solid var(--border);margin-top:4px;font-weight:800;font-size:1rem;">
-        <span>Total Paid</span>
-        <span style="color:var(--brand);">GH₵ {{ "%.2f"|format((order.get('total') or order.get('amount',0))|float) }}</span>
+      {% if order.get('delivery_note') %}
+      <div style="font-size:.78rem;color:#888;margin-top:6px;">
+        <i class="bi bi-chat-text"></i> <em>Note: {{ order['delivery_note'] }}</em>
       </div>
+      {% endif %}
     </div>
   </div>
+  {% endif %}
+
+  
+  <!-- Items -->
+<div class="a-card">
+  <div class="a-card-head"><i class="bi bi-bag-check"></i><h6 class="a-card-title">Order Items</h6></div>
+  <div class="a-card-body">
+    {% for item in order.get('products') or order.get('items',[]) %}
+    <div class="order-item">
+      {% set product = none %}
+      {% for p in all_products %}
+        {% if p.name == item.name or p.id == item.get('product_id') %}
+          {% set product = p %}
+        {% endif %}
+      {% endfor %}
+      {% if product and product.images %}
+        <img src="{{ url_for('static', filename='shoes/' ~ product.images[0]) }}"
+             alt="{{ item.name }}" onerror="this.src='{{ url_for('static', filename='shoes/placeholder.jpg') }}'">
+      {% else %}
+        <img src="{{ url_for('static', filename='shoes/placeholder.jpg') }}" alt="{{ item.name }}">
+      {% endif %}
+      <div style="flex:1;min-width:0;">
+        <div class="item-name">{{ item.name }}</div>
+        <div class="item-meta">Qty: {{ item.get('quantity',1) }}{% if item.get('color') and item.get('color')!='-' %} · {{ item.color }}{% endif %}{% if item.get('size') and item.get('size')!='-' %} · Size {{ item.size }}{% endif %}</div>
+      </div>
+      <div class="item-price">GH₵ {{ "%.2f"|format((item.get('effective_price') or item.get('price',0))|float) }}</div>
+    </div>
+    {% endfor %}
+    <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:2px solid var(--border);margin-top:4px;font-weight:800;font-size:1rem;">
+      <span>Total Paid</span>
+      <span style="color:var(--brand);">GH₵ {{ "%.2f"|format((order.get('total') or order.get('amount',0))|float) }}</span>
+    </div>
+  </div>
+</div>
 
   <!-- CTA -->
   <a href="{{ url_for('home') }}" class="btn-home">
