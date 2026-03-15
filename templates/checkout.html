@@ -231,43 +231,85 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
     <div>
 
       <!-- Step 1: Contact Info -->
-      <div class="step-card">
-        <div class="step-header">
-          <div class="step-num">1</div>
-          <h6 class="step-title">Contact Information</h6>
+<div class="step-card">
+  <div class="step-header">
+    <div class="step-num">1</div>
+    <h6 class="step-title">Contact & Delivery Information</h6>
+  </div>
+  <div class="step-body">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Full Name</label>
+        <div class="input-group-wrap">
+          <i class="bi bi-person input-icon"></i>
+          <input type="text" id="field-name" class="form-control"
+                 placeholder="John Mensah"
+                 value="{{ session.get('user_name', '') }}" required>
         </div>
-        <div class="step-body">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Full Name</label>
-              <div class="input-group-wrap">
-                <i class="bi bi-person input-icon"></i>
-                <input type="text" id="field-name" class="form-control"
-                       placeholder="John Mensah"
-                       value="{{ session.get('user_name', '') }}" required>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Phone Number</label>
-              <div class="input-group-wrap">
-                <i class="bi bi-telephone input-icon"></i>
-                <input type="tel" id="field-phone" class="form-control"
-                       placeholder="024 000 0000" required>
-              </div>
-            </div>
-            <div class="col-12">
-              <label class="form-label">Email Address</label>
-              <div class="input-group-wrap">
-                <i class="bi bi-envelope input-icon"></i>
-                <input type="email" id="field-email" class="form-control"
-                       placeholder="you@email.com"
-                       value="{{ session.get('user_email', '') }}" required>
-              </div>
-            </div>
-          </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Phone Number</label>
+        <div class="input-group-wrap">
+          <i class="bi bi-telephone input-icon"></i>
+          <input type="tel" id="field-phone" class="form-control"
+                 placeholder="024 000 0000" required>
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Email Address</label>
+        <div class="input-group-wrap">
+          <i class="bi bi-envelope input-icon"></i>
+          <input type="email" id="field-email" class="form-control"
+                 placeholder="you@email.com"
+                 value="{{ session.get('user_email', '') }}" required>
         </div>
       </div>
 
+      <!-- ✅ NEW: Delivery Address Fields -->
+      <div class="col-12">
+        <div style="height:1px;background:var(--border);margin:6px 0 12px;"></div>
+        <div style="font-size:.78rem;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">📍 Delivery Address</div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Street Address</label>
+        <div class="input-group-wrap">
+          <i class="bi bi-geo-alt input-icon"></i>
+          <input type="text" id="field-address" class="form-control"
+                 placeholder="e.g. 12 Independence Ave, Osu" required>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">City / Town</label>
+        <div class="input-group-wrap">
+          <i class="bi bi-building input-icon"></i>
+          <input type="text" id="field-city" class="form-control"
+                 placeholder="e.g. Accra" required>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Region</label>
+        <div class="input-group-wrap">
+          <i class="bi bi-map input-icon"></i>
+          <select id="field-region" class="form-control" required>
+            <option value="" disabled selected>Select region</option>
+            {% for r in ['Greater Accra','Ashanti','Western','Eastern','Central','Northern','Upper East','Upper West','Volta','Brong-Ahafo','Oti','Savannah','North East','Western North','Ahafo','Bono East'] %}
+            <option value="{{ r }}">{{ r }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Delivery Note <span style="color:#bbb;font-weight:400;text-transform:none;">(optional)</span></label>
+        <div class="input-group-wrap">
+          <i class="bi bi-chat-text input-icon"></i>
+          <input type="text" id="field-note" class="form-control"
+                 placeholder="e.g. Blue gate, call on arrival, near the church...">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
       <!-- Step 2: Delivery -->
       <div class="step-card">
         <div class="step-header">
@@ -464,14 +506,24 @@ function triggerPayment() {
   const name = document.getElementById('field-name').value.trim();
   const email = document.getElementById('field-email').value.trim();
   const phone = document.getElementById('field-phone').value.trim();
+  const address = document.getElementById('field-address').value.trim();
+  const city = document.getElementById('field-city').value.trim();
+  const region = document.getElementById('field-region').value.trim();
+  const note = document.getElementById('field-note').value.trim();
 
   if (!name || !email || !phone) {
     alert('Please fill in your name, email, and phone number.');
     window.scrollTo({top: 0, behavior: 'smooth'});
     return;
   }
+  if (!address || !city || !region) {
+    alert('Please fill in your delivery address, city, and region.');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    return;
+  }
 
   const finalAmount = baseTotal + deliveryFee;
+  const fullAddress = `${address}, ${city}, ${region}`;
 
   const handler = PaystackPop.setup({
     key: "{{ paystack_public_key }}",
@@ -482,6 +534,8 @@ function triggerPayment() {
       name: name,
       email: email,
       phone: phone,
+      address: fullAddress,        // ✅ NEW
+      delivery_note: note,          // ✅ NEW
       items: [
         {% for item in cart_items %}
         {
@@ -496,19 +550,18 @@ function triggerPayment() {
       ],
       custom_fields: [
         { display_name: "Full Name", variable_name: "full_name", value: name },
-        { display_name: "Phone", variable_name: "phone", value: phone }
+        { display_name: "Phone", variable_name: "phone", value: phone },
+        { display_name: "Delivery Address", variable_name: "address", value: fullAddress },  // ✅ NEW
+        { display_name: "Delivery Note", variable_name: "delivery_note", value: note }        // ✅ NEW
       ]
     },
     callback: function(response) {
       window.location.href = "/verify_payment?reference=" + response.reference;
     },
-    onClose: function() {
-      // Do nothing — don't alert, just let them stay on the page
-    }
+    onClose: function() {}
   });
   handler.openIframe();
 }
-
 document.getElementById('pay-btn').addEventListener('click', triggerPayment);
 document.getElementById('pay-btn-mobile')?.addEventListener('click', triggerPayment);
 </script>

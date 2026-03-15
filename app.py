@@ -127,6 +127,8 @@ class Order(db.Model):
     name = db.Column(db.String, default='')
     email = db.Column(db.String, default='')
     phone = db.Column(db.String, default='')
+    address = db.Column(db.String, default='')        # ✅ NEW
+    delivery_note = db.Column(db.String, default='')  # ✅ NEW
     amount = db.Column(db.Float, default=0)
     total = db.Column(db.Float, default=0)
     products = db.Column(db.Text, default='[]')
@@ -146,6 +148,8 @@ class Order(db.Model):
             'name': self.name,
             'email': self.email,
             'phone': self.phone,
+            'address': self.address or '',            # ✅ NEW
+            'delivery_note': self.delivery_note or '', # ✅ NEW
             'amount': self.amount,
             'total': self.total,
             'products': json.loads(self.products or '[]'),
@@ -671,8 +675,12 @@ def verify_payment():
             'vendor_id': product.vendor_id if product else None,  # ✅ NEW
         })
 
+    address = metadata.get("address", "")
+    delivery_note = metadata.get("delivery_note", "")
     new_order = Order(
         id=order_id, name=name, email=email, phone=phone,
+        address=address,           # ✅ NEW
+        delivery_note=delivery_note,  # ✅ NEW
         amount=amount, total=amount, products=json.dumps(enriched_items),
         status="Paid", payment_status="Paid",
         timestamp=datetime.now(timezone.utc).isoformat(),
@@ -2160,13 +2168,24 @@ with app.app_context():
             ("delivery_info", "VARCHAR(200) DEFAULT 'Delivery in 2-4 working days'"),
             ("new_arrival", "BOOLEAN DEFAULT 1"),
             ("vendor_id", "VARCHAR DEFAULT NULL"),
-            ("product_type", "VARCHAR DEFAULT 'standard'"),  # ✅ NEW
-            ("slot_length", "VARCHAR DEFAULT ''"),            # ✅ NEW
-            ("slot_width", "VARCHAR DEFAULT ''"),             # ✅ NEW
-            ("slot_depth", "VARCHAR DEFAULT ''"),             # ✅ NEW
+            ("product_type", "VARCHAR DEFAULT 'standard'"),
+            ("slot_length", "VARCHAR DEFAULT ''"),
+            ("slot_width", "VARCHAR DEFAULT ''"),
+            ("slot_depth", "VARCHAR DEFAULT ''"),
         ]:
             try:
                 conn.execute(db.text(f"ALTER TABLE products ADD COLUMN {col} {definition}"))
+                conn.commit()
+            except:
+                pass
+
+        # ✅ Orders table — address fields
+        for col, definition in [
+            ("address", "VARCHAR DEFAULT ''"),        # ✅ NEW
+            ("delivery_note", "VARCHAR DEFAULT ''"),   # ✅ NEW
+        ]:
+            try:
+                conn.execute(db.text(f"ALTER TABLE orders ADD COLUMN {col} {definition}"))
                 conn.commit()
             except:
                 pass
@@ -2215,8 +2234,6 @@ with app.app_context():
 
         # ✅ SQLite doesn't support DROP COLUMN in older versions, so the Review model
         # must NOT have removed columns defined — just ignore them here
-
-
 
 if __name__ == "__main__":
     app.run()

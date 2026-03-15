@@ -360,7 +360,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
             </div>
           </td>
         </tr>
-        <tr class="collapse d-row" id="od-{{ loop.index }}"><td colspan="7"><div class="d-inner"><table class="in-table"><thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Color</th><th>Size</th></tr></thead><tbody>{% for item in o.get("products",[]) %}<tr><td>{{ item.name }}</td><td>GH₵ {{ item.price }}</td><td>{{ item.quantity or 1 }}</td><td>{{ item.color or '-' }}</td><td>{{ item.size or '-' }}</td></tr>{% endfor %}</tbody></table></div></td></tr>
+        <tr class="collapse d-row" id="od-{{ loop.index }}"><td colspan="7"><div class="d-inner"><table class="in-table"><thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Color</th><th>Size</th></tr></thead><tbody>{% for item in o.get("products",[]) %}<tr><td>{{ item.name }}</td><td>GH₵ {{ item.price }}</td><td>{{ item.quantity or 1 }}</td><td>{{ item.color or '-' }}</td><td>{{ item.size or '-' }}</td></tr>{% endfor %}</tbody></table>{% if o.address %}<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:.78rem;color:var(--mid);"><i class="bi bi-geo-alt" style="color:var(--brand);"></i> <strong>Delivery Address:</strong> {{ o.address }}{% if o.delivery_note %} · <em style="color:#888;">Note: {{ o.delivery_note }}</em>{% endif %}</div>{% endif %}</div></td></tr>
         {% endfor %}
         </tbody>
       </table>
