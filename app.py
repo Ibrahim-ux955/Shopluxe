@@ -1255,29 +1255,6 @@ def profile():
 
 @app.route('/add_to_cart/<product_id>', methods=['POST'])
 def add_to_cart(product_id):
-    quantity = int(request.form.get("quantity", 1))
-    color = request.form.get("color", "-")
-    size = request.form.get("size", "-")
-    cart = get_cart()
-
-    for item in cart:
-        if item['product_id'] == product_id and item.get('color') == color and item.get('size') == size:
-            item['quantity'] += quantity
-            break
-    else:
-        cart.append({'product_id': product_id, 'quantity': quantity, 'color': color, 'size': size})
-
-    session['cart'] = cart
-
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify({'success': True, 'message': '🛒 Added to cart!', 'count': len(cart)})
-
-    flash("🛒 Product added to cart!")
-    return redirect(request.referrer or url_for('home'))
-
-
-@app.route('/add_to_cart/<product_id>', methods=['POST'])
-def add_to_cart(product_id):
     product = Product.query.get(product_id)
     if not product:
         flash("❌ Product not found.")
@@ -1285,6 +1262,8 @@ def add_to_cart(product_id):
 
     # ✅ Block out-of-stock
     if product.stock <= 0:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': '❌ This product is out of stock.'})
         flash("❌ This product is out of stock.")
         return redirect(request.referrer or url_for('home'))
 
@@ -1311,14 +1290,6 @@ def add_to_cart(product_id):
 
 @app.route('/add_to_cart_ajax/<product_id>', methods=['POST'])
 def add_to_cart_ajax(product_id):
-    product = Product.query.get(product_id)
-    if not product:
-        return jsonify({'success': False, 'message': '❌ Product not found.'})
-
-    # ✅ Block out-of-stock
-    if product.stock <= 0:
-        return jsonify({'success': False, 'message': '❌ This product is out of stock.'})
-
     color = request.form.get("color", "-")
     size = request.form.get("size", "-")
     cart = session.get('cart', [])
