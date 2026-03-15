@@ -347,9 +347,10 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
         {% set cats = [
           ('Sneakers','bi-lightning'),('Heels','bi-star'),
           ('Sandals','bi-sun'),('Boots','bi-snow'),
-          ('Loafers','bi-briefcase'),('Slippers','bi-house'),
           ('Formal','bi-suit-club'),('Sport','bi-trophy'),
-          ('Kids','bi-balloon')
+          ('Kids','bi-balloon'),('Appliances','bi-plug'),
+          ('Software','bi-laptop'),('Books','bi-book'),
+          ('Jewelry And Accessories','bi-gem')
         ] %}
         {% for name, icon in cats %}
         <li>
@@ -381,13 +382,13 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   <a href="{{ url_for('filtered', category='Heels') }}" class="cat-link">Heels</a>
   <a href="{{ url_for('filtered', category='Sandals') }}" class="cat-link">Sandals</a>
   <a href="{{ url_for('filtered', category='Boots') }}" class="cat-link">Boots</a>
-  <a href="{{ url_for('filtered', category='Appliances') }}" class="cat-link">Appliances</a>
-  <a href="{{ url_for('filtered', category='Software') }}" class="cat-link">Software</a>
   <a href="{{ url_for('filtered', category='Formal') }}" class="cat-link">Formal</a>
   <a href="{{ url_for('filtered', category='Sport') }}" class="cat-link">Sport</a>
-  <a href="{{ url_for('filtered', category='Books') }}" class="cat-link">Books</a>
-  <a href="{{ url_for('filtered', category='New') }}" class="cat-link">New</a>
   <a href="{{ url_for('filtered', category='Kids') }}" class="cat-link">Kids</a>
+  <a href="{{ url_for('filtered', category='Appliances') }}" class="cat-link">Appliances</a>
+  <a href="{{ url_for('filtered', category='Software') }}" class="cat-link">Software</a>
+  <a href="{{ url_for('filtered', category='Books') }}" class="cat-link">Books</a>
+  <a href="{{ url_for('filtered', category='Jewelry And Accessories') }}" class="cat-link">Jewelry</a>
   <a href="{{ url_for('filtered', category='Sale') }}" class="cat-link" style="color:#ff6600;font-weight:700;">🔥 Sale</a>
   <a href="{{ url_for('filtered', category='New Arrivals') }}" class="cat-link" style="color:#22c55e;font-weight:700;">✨ New</a>
 </div>

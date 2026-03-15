@@ -78,7 +78,7 @@ class Product(db.Model):
     sku = db.Column(db.String(100), default='')
     tags = db.Column(db.Text, default='[]')
     delivery_info = db.Column(db.String(200), default='Delivery in 2-4 working days')
-    new_arrival = db.Column(db.Boolean, default=True)
+    new_arrival = db.Column(db.Boolean, default=False)
     vendor_id = db.Column(db.String, db.ForeignKey('vendors.id'), nullable=True)
     product_type = db.Column(db.String, default='standard')  # ✅ NEW
     slot_length = db.Column(db.String, default='')           # ✅ NEW
@@ -113,7 +113,7 @@ class Product(db.Model):
             'sku': self.sku or '',
             'tags': json.loads(self.tags or '[]'),
             'delivery_info': self.delivery_info or 'Delivery in 2-4 working days',
-            'new_arrival': self.new_arrival if self.new_arrival is not None else True,
+            'new_arrival': self.new_arrival if self.new_arrival is not None else False,
             'vendor_id': self.vendor_id or None,
             'vendor_name': vendor_name,
             'product_type': self.product_type or 'standard',  # ✅ NEW
@@ -127,8 +127,8 @@ class Order(db.Model):
     name = db.Column(db.String, default='')
     email = db.Column(db.String, default='')
     phone = db.Column(db.String, default='')
-    address = db.Column(db.String, default='')        # ✅ NEW
-    delivery_note = db.Column(db.String, default='')  # ✅ NEW
+    address = db.Column(db.String, default='')
+    delivery_note = db.Column(db.String, default='')
     amount = db.Column(db.Float, default=0)
     total = db.Column(db.Float, default=0)
     products = db.Column(db.Text, default='[]')
@@ -148,10 +148,8 @@ class Order(db.Model):
             'name': self.name,
             'email': self.email,
             'phone': self.phone,
-            'address': self.address or '',        # ✅ NEW
-            'city': self.city or '',              # ✅ NEW
-            'region': self.region or '',          # ✅ NEW
-            'delivery_note': self.delivery_note or '',  # ✅ NEW
+            'address': self.address or '',
+            'delivery_note': self.delivery_note or '',
             'amount': self.amount,
             'total': self.total,
             'products': json.loads(self.products or '[]'),
@@ -176,10 +174,10 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     reset_token = db.Column(db.String, nullable=True)
     reset_token_expiry = db.Column(db.String, nullable=True)
-    address = db.Column(db.String, default='')        # ✅ NEW
-    city = db.Column(db.String, default='')           # ✅ NEW
-    region = db.Column(db.String, default='')         # ✅ NEW
-    delivery_note = db.Column(db.String, default='')  # ✅ NEW
+    address = db.Column(db.String, default='')
+    city = db.Column(db.String, default='')
+    region = db.Column(db.String, default='')
+    delivery_note = db.Column(db.String, default='')
 
     def to_dict(self):
         return {
@@ -187,9 +185,12 @@ class User(db.Model):
             'name': self.name,
             'email': self.email,
             'password': self.password,
-            'is_admin': self.is_admin
+            'is_admin': self.is_admin,
+            'address': self.address or '',
+            'city': self.city or '',
+            'region': self.region or '',
+            'delivery_note': self.delivery_note or '',
         }
-
 class Review(db.Model):
     __tablename__ = 'reviews'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -376,10 +377,20 @@ def todatetime_filter(s):
 def home():
     all_products = [p.to_dict() for p in Product.query.all()]
 
-    popular_products = sorted(all_products, key=lambda p: p.get('popularity', 0), reverse=True)[:10]
-    new_products = [p for p in all_products if p.get('new_arrival')][:8]
-    featured_products = [p for p in all_products if p.get('featured')][:10]
-    sale_products = [p for p in all_products if p.get('on_sale')][:8]
+    # ✅ Most Popular — only products that have been purchased at least once
+    popular_products = sorted(
+        [p for p in all_products if p.get('popularity', 0) > 0],
+        key=lambda p: p.get('popularity', 0), reverse=True
+    )[:6]
+
+    # ✅ New Arrivals — only if new_arrival is checked
+    new_products = [p for p in all_products if p.get('new_arrival')][:6]
+
+    # ✅ Featured — only if featured is checked
+    featured_products = [p for p in all_products if p.get('featured')][:6]
+
+    # ✅ Sale — only if on_sale is checked
+    sale_products = [p for p in all_products if p.get('on_sale')][:6]
 
     return render_template('index.html',
         popular_products=popular_products,
