@@ -719,6 +719,7 @@ def verify_payment():
             **item,
             'price': item.get('effective_price') or item.get('price', 0),
             'vendor_id': product.vendor_id if product else None,  # ✅ NEW
+            'product_id': product.id if product else None,  # ✅ NEW
         })
 
     address = metadata.get("address", "")

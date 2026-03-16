@@ -197,18 +197,17 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
   <div class="a-card-body">
     {% for item in order.get('products') or order.get('items',[]) %}
     <div class="order-item">
-      {% set product = none %}
+      {% set ns = namespace(img='placeholder.jpg') %}
       {% for p in all_products %}
-        {% if p.name == item.name or p.id == item.get('product_id') %}
-          {% set product = p %}
+        {% if p.id == item.get('product_id') %}
+          {% if p.images %}
+            {% set ns.img = p.images[0] %}
+          {% endif %}
         {% endif %}
       {% endfor %}
-      {% if product and product.images %}
-        <img src="{{ url_for('static', filename='shoes/' ~ product.images[0]) }}"
-             alt="{{ item.name }}" onerror="this.src='{{ url_for('static', filename='shoes/placeholder.jpg') }}'">
-      {% else %}
-        <img src="{{ url_for('static', filename='shoes/placeholder.jpg') }}" alt="{{ item.name }}">
-      {% endif %}
+      <img src="{{ url_for('static', filename='shoes/' ~ ns.img) }}"
+           alt="{{ item.name }}"
+           onerror="this.src='{{ url_for('static', filename='shoes/placeholder.jpg') }}'">
       <div style="flex:1;min-width:0;">
         <div class="item-name">{{ item.name }}</div>
         <div class="item-meta">Qty: {{ item.get('quantity',1) }}{% if item.get('color') and item.get('color')!='-' %} · {{ item.color }}{% endif %}{% if item.get('size') and item.get('size')!='-' %} · Size {{ item.size }}{% endif %}</div>
