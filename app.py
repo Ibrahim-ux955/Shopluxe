@@ -1173,7 +1173,7 @@ def logout():
     flash("👋 Logged out.")
     return redirect(url_for('home'))  # ✅ changed 'index' to 'home'
 
-git ad 
+
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
