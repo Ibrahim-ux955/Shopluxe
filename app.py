@@ -312,7 +312,7 @@ def get_products_by_category(category):
     return [p for p in load_data() if p.get('category', '').lower() == category.lower()]
 
 def get_featured_products():
-    return sorted(load_data(), key=lambda x: x.get('timestamp', ''), reverse=True)[:4]
+    return [p.to_dict() for p in Product.query.filter_by(featured=True).limit(4).all()]
 
 def get_cart():
     if 'cart' not in session:
@@ -1173,10 +1173,7 @@ def logout():
     flash("👋 Logged out.")
     return redirect(url_for('home'))  # ✅ changed 'index' to 'home'
 
-# DELETE THIS
-@app.route('/debug_session')
-def debug_session():
-    return str(dict(session))
+git ad 
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
