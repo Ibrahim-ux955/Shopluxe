@@ -29,7 +29,7 @@ load_dotenv()
 app = Flask(__name__)
 app.jinja_env.globals['session'] = session
 app.jinja_env.add_extension('jinja2.ext.do')
-app.secret_key = 'secret123'
+app.secret_key = os.getenv('SECRET_KEY', 'fallback-dev-key')
 app.config['UPLOAD_FOLDER'] = 'static/shoes'
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
@@ -48,7 +48,7 @@ mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
 resend.api_key = os.getenv("RESEND_API_KEY")
 
-ADMIN_PASSWORD = 'Mohammed_@3'
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'fallback-admin-pass')
 MAX_ATTEMPTS = 5
 LOCKOUT_DURATION = timedelta(minutes=5)
 PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
@@ -905,12 +905,12 @@ def admin():
                 filename = secure_filename(img.filename)
                 img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 image_filenames.append(filename)
-         
-         # ✅ Set new_arrival_until to 30 days from now if new_arrival is ticked       
+
+        # ✅ Set new_arrival_until to 30 days from now if new_arrival is ticked
         new_arrival_until = ''
         if new_arrival:
-            new_arrival_until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat() 
- 
+            new_arrival_until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+
         new_product = Product(
             name=name, price=price, on_sale=on_sale, sale_price=sale_price,
             featured=featured, category=category, description=description,
@@ -918,11 +918,11 @@ def admin():
             images=json.dumps(image_filenames),
             brand=brand, sku=sku, tags=tags,
             delivery_info=delivery_info, new_arrival=new_arrival,
-             new_arrival_until=new_arrival_until,  # ✅ NEW
-            product_type=product_type,        # ✅
-            slot_length=slot_length,           # ✅
-            slot_width=slot_width,             # ✅
-            slot_depth=slot_depth,             # ✅
+            new_arrival_until=new_arrival_until,  # ✅ no leading space
+            product_type=product_type,
+            slot_length=slot_length,
+            slot_width=slot_width,
+            slot_depth=slot_depth,
             timestamp=datetime.now(timezone.utc).isoformat()
         )
         db.session.add(new_product)
@@ -1063,15 +1063,12 @@ def mark_delivered(order_id):
 
     try:
         items = json.loads(order.products or '[]')
-        item_lines = "".join(
-            f"<div style='margin-bottom:10px;'><strong>{i.get('name')}</strong><br>"
-            f"Qty: {i.get('quantity', 1)} | GH₵ {i.get('price')}</div>" for i in items
-        )
         send_email(order.email, "✅ Your Order Has Been Delivered - ShopLuxe",
-                   render_template('emails/user_delivered_email.html', name=order.name,
-                                   product_name=item_lines, quantity=len(items),
-                                   total=order.total, order_time=order.local_time,
-                                   timezone=order.timezone))
+                   render_template('emails/user_delivered_email.html',
+                                   name=order.name,
+                                   items=items,           # ✅ pass as list not HTML string
+                                   total=order.total,
+                                   order_time=order.local_time))
         flash("✅ Order marked delivered and email sent to user.")
     except Exception as e:
         print("❌ Email sending failed:", e)
@@ -1369,6 +1366,14 @@ def add_to_cart(product_id):
 
 @app.route('/add_to_cart_ajax/<product_id>', methods=['POST'])
 def add_to_cart_ajax(product_id):
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify({'success': False, 'message': '❌ Product not found.'})
+
+    # ✅ Block out-of-stock
+    if product.stock <= 0:
+        return jsonify({'success': False, 'message': '❌ This product is out of stock.'})
+
     color = request.form.get("color", "-")
     size = request.form.get("size", "-")
     cart = session.get('cart', [])
@@ -2064,15 +2069,19 @@ def vendor_add_product():
                 img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 image_filenames.append(filename)
 
+        # ✅ Set new_arrival_until to 30 days from now if new_arrival is ticked
+        new_arrival_until = ''
+        if new_arrival:
+            new_arrival_until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+
         new_product = Product(
             name=name, price=price, on_sale=on_sale, sale_price=sale_price,
-            featured=featured,
-            category=category, description=description, stock=stock,
-            sizes=sizes, colors=colors, images=json.dumps(image_filenames),
-            brand=brand, sku=sku, tags=tags, delivery_info=delivery_info,
-            new_arrival=new_arrival,
-            new_arrival_until=new_arrival_until,  # ✅
-            vendor_id=vendor.id,
+            featured=featured, category=category, description=description,
+            stock=stock, sizes=sizes, colors=colors,
+            images=json.dumps(image_filenames),
+            brand=brand, sku=sku, tags=tags,
+            delivery_info=delivery_info, new_arrival=new_arrival,
+            new_arrival_until=new_arrival_until,  # ✅ no leading space
             product_type=product_type,
             slot_length=slot_length,
             slot_width=slot_width,
@@ -2279,7 +2288,7 @@ with app.app_context():
             ("sku", "VARCHAR(100) DEFAULT ''"),
             ("tags", "TEXT DEFAULT '[]'"),
             ("delivery_info", "VARCHAR(200) DEFAULT 'Delivery in 2-4 working days'"),
-            ("new_arrival", "BOOLEAN DEFAULT 1"),
+            ("new_arrival", "BOOLEAN DEFAULT 0"),
             ("vendor_id", "VARCHAR DEFAULT NULL"),
             ("product_type", "VARCHAR DEFAULT 'standard'"),
             ("slot_length", "VARCHAR DEFAULT ''"),
