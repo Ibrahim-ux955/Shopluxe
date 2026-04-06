@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Order - ShopLuxe Admin</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f0f2f5; color: #0f1111; }
+  .wrap { max-width: 620px; margin: 24px auto; background: #fff; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+
+  .hdr { background: #131921; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  .hdr-logo { font-family: Georgia, serif; font-size: 22px; font-weight: 700; color: #fff; }
+  .hdr-logo span { color: #ff9900; }
+  .hdr-badge { background: #dc3545; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-left: auto; }
+
+  .hero { background: linear-gradient(135deg, #1a1a2e 0%, #2d2d5e 100%); padding: 24px; text-align: center; }
+  .hero-icon { font-size: 40px; margin-bottom: 8px; }
+  .hero h1 { font-size: 20px; color: #fff; font-weight: 700; margin-bottom: 4px; }
+  .hero p { font-size: 12px; color: rgba(255,255,255,.65); }
+
+  .body { padding: 24px; }
+
+  .alert-box { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #856404; display: flex; gap: 10px; align-items: center; }
+
+  /* CUSTOMER CARD */
+  .customer-card { border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-bottom: 20px; }
+  .card-head { background: #f0f2f5; padding: 10px 16px; font-size: 13px; font-weight: 700; color: #0f1111; border-bottom: 1px solid #ddd; }
+  .card-body { padding: 14px 16px; }
+  .info-row { display: flex; gap: 8px; font-size: 13px; color: #555; margin-bottom: 8px; align-items: flex-start; }
+  .info-row:last-child { margin-bottom: 0; }
+  .info-row strong { color: #0f1111; min-width: 60px; flex-shrink: 0; }
+
+  /* ORDER CARD */
+  .order-card { border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-bottom: 20px; }
+  .order-head { background: #f0f2f5; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; }
+  .order-head .label { font-size: 11px; color: #767676; text-transform: uppercase; }
+  .order-head .value { font-size: 13px; font-weight: 700; color: #0f1111; }
+  .order-body { padding: 14px 16px; }
+
+  .product-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  .product-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .product-img { width: 60px; height: 60px; border-radius: 6px; object-fit: cover; border: 1px solid #ddd; flex-shrink: 0; background: #f8f8f8; }
+  .product-name { font-weight: 600; color: #0f1111; margin-bottom: 3px; }
+  .product-meta { font-size: 11px; color: #767676; }
+  .product-price { font-weight: 700; color: #b12704; white-space: nowrap; margin-left: auto; align-self: center; }
+
+  .totals { padding: 12px 16px; background: #fafafa; border-top: 1px solid #ddd; }
+  .totals-row { display: flex; justify-content: space-between; font-size: 13px; color: #555; margin-bottom: 5px; }
+  .totals-row.grand { font-size: 15px; font-weight: 700; color: #b12704; padding-top: 8px; border-top: 1px solid #ddd; margin-top: 4px; margin-bottom: 0; }
+
+  .cta-wrap { text-align: center; margin: 20px 0; }
+  .btn-admin { display: inline-block; background: #198754; color: #fff !important; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 14px; margin-right: 10px; }
+  .btn-track { display: inline-block; background: #0d6efd; color: #fff !important; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 14px; }
+
+  .ftr { background: #232f3e; padding: 20px 24px; text-align: center; }
+  .ftr p { font-size: 11px; color: rgba(255,255,255,.45); margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div>
+      <div class="hdr-logo">Shop<span>Luxe</span> <span style="font-size:13px;color:rgba(255,255,255,.5);font-weight:400;">Admin</span></div>
+    </div>
+    <div class="hdr-badge">🔔 New Order</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-icon">💳</div>
+    <h1>New Paid Order Received</h1>
+    <p>Action required — process and ship this order</p>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <div class="alert-box">
+      ⚡ <span>A new order just came in and payment has been confirmed. Please process it as soon as possible.</span>
+    </div>
+
+    <!-- CUSTOMER INFO -->
+    <div class="customer-card">
+      <div class="card-head">👤 Customer Information</div>
+      <div class="card-body">
+        <div class="info-row"><strong>Name:</strong> {{ name }}</div>
+        <div class="info-row"><strong>Email:</strong> {{ email }}</div>
+        <div class="info-row"><strong>Phone:</strong> {{ phone }}</div>
+        <div class="info-row"><strong>Time:</strong> {{ order_time }}</div>
+      </div>
+    </div>
+
+    <!-- ORDER SUMMARY -->
+    <div class="order-card">
+      <div class="order-head">
+        <div>
+          <div class="label">Order Summary</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="label">Total Paid</div>
+          <div class="value" style="color:#b12704;">GH₵ {{ total }}</div>
+        </div>
+      </div>
+      <div class="order-body">
+        {{ product_name|safe }}
+      </div>
+      <div class="totals">
+        <div class="totals-row grand">
+          <span>Total Paid</span>
+          <span>GH₵ {{ total }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA BUTTONS -->
+    <div class="cta-wrap">
+      <a href="https://www.shopluxe.online/admin" class="btn-admin">⚙️ Go to Admin Panel</a>
+      <a href="{{ track_order_url }}" class="btn-track">📦 Track Order</a>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="ftr">
+    <p>ShopLuxe Admin Notification · Accra, Ghana 🇬🇭</p>
+    <p>© 2025 ShopLuxe. All rights reserved.</p>
+  </div>
+
+</div>
+</body>
+</html>

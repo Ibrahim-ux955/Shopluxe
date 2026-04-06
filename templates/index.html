@@ -1,0 +1,649 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --brand: #198754;
+  --brand-light: #e8f5e9;
+  --accent: #ff6600;
+  --dark: #1a1a2e;
+  --mid: #555570;
+  --light: #f4f6f9;
+  --card: #ffffff;
+  --border: #eef0f5;
+  --radius: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+/* ── SEARCH RESULTS BANNER ── */
+.search-banner {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 16px 22px;
+  margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px;
+}
+.search-banner h5 { margin: 0; font-size: 1rem; color: var(--dark); }
+.search-banner a {
+  font-size: .82rem; color: var(--brand);
+  text-decoration: none; font-weight: 600;
+}
+
+/* ── HERO CAROUSEL ── */
+.hero-wrap {
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,.15);
+  margin-bottom: 32px; position: relative;
+}
+.hero-wrap .carousel-item img {
+  height: 420px; object-fit: cover;
+  transform: scale(1); transition: transform 7s ease;
+}
+.hero-wrap .carousel-item.active img { transform: scale(1.06); }
+.hero-wrap .carousel-item::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.7) 0%, rgba(0,0,0,.1) 60%, transparent 100%);
+}
+.hero-caption {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 28px 32px; z-index: 2;
+}
+.hero-label {
+  display: inline-block; background: var(--accent);
+  color: #fff; font-size: .72rem; font-weight: 800;
+  padding: 4px 12px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: .8px;
+  margin-bottom: 8px;
+}
+.hero-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem; color: #fff; margin: 0 0 6px;
+  text-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+.hero-price {
+  font-size: 1.1rem; font-weight: 700; color: #fff;
+  margin-bottom: 14px;
+}
+.hero-price .original {
+  font-size: .85rem; text-decoration: line-through;
+  opacity: .6; margin-left: 8px; font-weight: 400;
+}
+.hero-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fff; color: var(--dark);
+  border: none; border-radius: 10px;
+  padding: 10px 22px; font-size: .88rem; font-weight: 700;
+  text-decoration: none; transition: background .2s, transform .1s;
+  font-family: 'DM Sans', sans-serif;
+}
+.hero-cta:hover { background: var(--brand-light); transform: translateY(-1px); }
+
+.carousel-control-prev, .carousel-control-next {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,.2); backdrop-filter: blur(8px);
+  border-radius: 50%; top: 50%; transform: translateY(-50%);
+  margin: 0 14px; opacity: 0; transition: opacity .2s;
+}
+.hero-wrap:hover .carousel-control-prev,
+.hero-wrap:hover .carousel-control-next { opacity: 1; }
+
+.carousel-indicators {
+  bottom: 14px; right: 32px; left: auto; margin: 0;
+  gap: 6px;
+}
+.carousel-indicators button {
+  width: 8px !important; height: 8px !important;
+  border-radius: 50% !important; border: none !important;
+  background: rgba(255,255,255,.5) !important;
+  transition: background .2s, transform .2s !important;
+}
+.carousel-indicators button.active {
+  background: #fff !important; transform: scale(1.3) !important;
+}
+
+@media(max-width:576px){
+  .hero-wrap .carousel-item img { height: 240px; }
+  .hero-name { font-size: 1.1rem; }
+  .hero-caption { padding: 16px 18px; }
+}
+
+/* ── SECTION HEADER ── */
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; margin-top: 36px;
+}
+.section-head:first-of-type { margin-top: 0; }
+.section-label {
+  display: flex; align-items: center; gap: 10px;
+}
+.section-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.25rem; color: var(--dark); margin: 0;
+}
+.section-subtitle { font-size: .75rem; color: #999; margin: 0; }
+.see-all {
+  font-size: .8rem; color: var(--brand); font-weight: 600;
+  text-decoration: none; display: flex; align-items: center; gap: 4px;
+  padding: 6px 14px; border: 1.5px solid var(--border);
+  border-radius: 8px; transition: border-color .2s;
+  white-space: nowrap;
+}
+.see-all:hover { border-color: var(--brand); }
+
+/* ── HORIZONTAL SCROLL STRIP ── */
+.h-strip {
+  display: flex; gap: 14px;
+  overflow-x: auto; padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.h-strip::-webkit-scrollbar { display: none; }
+
+/* ── PRODUCT CARD ── */
+.p-card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); overflow: hidden;
+  transition: box-shadow .2s, transform .2s;
+  flex-shrink: 0; width: 200px;
+  position: relative;
+}
+.p-card:hover {
+  box-shadow: 0 10px 40px rgba(0,0,0,.12);
+  transform: translateY(-3px);
+}
+
+/* Grid cards (wider) */
+.p-card.grid { width: 100%; flex-shrink: unset; }
+
+.p-card-img {
+  width: 100%; aspect-ratio: 1;
+  object-fit: cover; background: #f0f0f5;
+  display: block; transition: transform .4s;
+}
+.p-card:hover .p-card-img { transform: scale(1.04); }
+.p-card-img-wrap { overflow: hidden; position: relative; }
+
+.p-badge {
+  position: absolute; top: 10px; left: 10px;
+  font-size: .62rem; font-weight: 800; padding: 3px 9px;
+  border-radius: 20px; text-transform: uppercase; letter-spacing: .5px;
+  z-index: 2;
+}
+.p-badge.sale { background: var(--accent); color: #fff; }
+.p-badge.new  { background: var(--brand); color: #fff; }
+.p-badge.hot  { background: #ef4444; color: #fff; }
+.p-badge.feat { background: #8b5cf6; color: #fff; }
+
+.p-wish {
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.9); border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  transition: background .15s, transform .15s;
+  text-decoration: none; color: #bbb;
+  opacity: 0; transition: opacity .2s;
+}
+.p-card:hover .p-wish { opacity: 1; }
+.p-wish:hover { background: #fff; color: #e91e8c; transform: scale(1.1); }
+
+.p-card-body { padding: 12px 14px; }
+.p-card-name {
+  font-size: .84rem; font-weight: 600; color: var(--dark);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 3px; text-decoration: none; display: block;
+}
+.p-card-name:hover { color: var(--brand); }
+.p-card-brand { font-size: .7rem; color: #bbb; margin-bottom: 6px; }
+
+.p-card-stars {
+  display: flex; align-items: center; gap: 3px;
+  margin-bottom: 6px;
+}
+.stars { color: #fbbf24; font-size: .72rem; }
+.p-card-reviews { font-size: .7rem; color: #aaa; }
+
+.p-card-price {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.p-price { font-size: 1rem; font-weight: 700; color: var(--brand); }
+.p-price-orig {
+  font-size: .75rem; color: #bbb;
+  text-decoration: line-through;
+}
+.p-discount {
+  font-size: .68rem; font-weight: 700;
+  background: #fff3cd; color: #856404;
+  padding: 2px 6px; border-radius: 6px;
+}
+
+.p-card-footer {
+  padding: 0 14px 14px;
+}
+.p-card-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--brand), #0d6efd);
+  color: #fff; border: none; border-radius: 10px;
+  padding: 9px; font-size: .78rem; font-weight: 700;
+  cursor: pointer; transition: opacity .2s;
+  font-family: 'DM Sans', sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  text-decoration: none;
+}
+.p-card-btn:hover { opacity: .9; color: #fff; }
+
+/* Out of stock */
+.p-card-btn.oos {
+  background: #eee; color: #aaa; cursor: not-allowed;
+}
+
+/* ── PROMO BANNERS ── */
+.promo-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px; margin-top: 36px;
+}
+@media(max-width:600px){ .promo-grid { grid-template-columns: 1fr; } }
+
+.promo-card {
+  border-radius: var(--radius); overflow: hidden;
+  position: relative; min-height: 140px;
+  display: flex; align-items: flex-end;
+  padding: 20px; text-decoration: none;
+  transition: transform .2s;
+}
+.promo-card:hover { transform: translateY(-3px); }
+.promo-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.65), rgba(0,0,0,.1));
+}
+.promo-card-content { position: relative; z-index: 1; }
+.promo-card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem; color: #fff; margin: 0 0 4px;
+}
+.promo-card-sub { font-size: .75rem; color: rgba(255,255,255,.8); margin: 0; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.empty-state i { font-size: 3rem; color: #ddd; display: block; margin-bottom: 16px; }
+.empty-state h5 { color: var(--dark); font-weight: 700; }
+.empty-state p { color: #999; font-size: .88rem; }
+.btn-shop {
+  background: var(--brand); color: #fff;
+  border: none; border-radius: 10px; padding: 10px 24px;
+  font-weight: 600; font-size: .88rem;
+  text-decoration: none; display: inline-block;
+  margin-top: 12px; transition: opacity .2s;
+}
+.btn-shop:hover { opacity: .88; color: #fff; }
+
+/* grid layout for sections */
+.p-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 16px;
+}
+@media(max-width:480px){
+  .p-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
+</style>
+
+<!-- ── SEARCH RESULTS BANNER ── -->
+{% if query %}
+<div class="search-banner">
+  <h5>
+    {% if products %}
+      {{ products|length }} result{{ 's' if products|length != 1 }} for "<strong>{{ query }}</strong>"
+    {% else %}
+      No results for "<strong>{{ query }}</strong>"
+    {% endif %}
+  </h5>
+  <a href="{{ url_for('home') }}">← Clear search</a>
+</div>
+{% endif %}
+
+<!-- ── HERO CAROUSEL ── -->
+{% if not query %}
+{% set raw_items = [
+  ('🔥 Most Popular', popular_products|first if popular_products else none, 'hot'),
+  ('✨ New Arrival', new_products|first if new_products else none, 'new'),
+  ('💎 Featured', featured_products|first if featured_products else none, 'feat'),
+  ('🏷️ On Sale', sale_products|first if sale_products else none, 'sale')
+] %}
+{% set carousel_items = [] %}
+{% for item in raw_items %}
+  {% if item[1] %}{% do carousel_items.append(item) %}{% endif %}
+{% endfor %}
+
+{% if carousel_items %}
+<div class="hero-wrap">
+  <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4500">
+
+    <div class="carousel-indicators">
+      {% for item in carousel_items %}
+      <button type="button" data-bs-target="#heroCarousel"
+              data-bs-slide-to="{{ loop.index0 }}"
+              class="{% if loop.first %}active{% endif %}"></button>
+      {% endfor %}
+    </div>
+
+    <div class="carousel-inner">
+      {% for label, product, badge_type in carousel_items %}
+      <div class="carousel-item {% if loop.first %}active{% endif %}">
+        <a href="{{ url_for('product_detail', product_id=product.id) }}">
+          <img src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
+               class="d-block w-100" alt="{{ product.name }}">
+        </a>
+        <div class="hero-caption">
+          <div class="hero-label">{{ label }}</div>
+          <h2 class="hero-name">{{ product.name }}</h2>
+          <div class="hero-price">
+            GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}
+            {% if product.on_sale and product.sale_price %}
+              <span class="original">GH₵ {{ product.price }}</span>
+            {% endif %}
+          </div>
+          <a href="{{ url_for('product_detail', product_id=product.id) }}" class="hero-cta">
+            Shop Now <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon"></span>
+    </button>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+<!-- ── EMPTY STATE ── -->
+{% if not (popular_products or new_products or featured_products or sale_products or products) %}
+<div class="empty-state">
+  <i class="bi bi-shop"></i>
+  <h5>No products yet</h5>
+  <p>Check back soon for new arrivals!</p>
+  <a href="{{ url_for('categories') }}" class="btn-shop">Browse Categories</a>
+</div>
+
+{% else %}
+
+{% set displayed_ids = [] %}
+
+<!-- ── SEARCH RESULTS ── -->
+{% if query and products %}
+<div class="p-grid">
+  {% for product in products %}
+  {% include 'partials/product_card_v2.html' %}
+  {% endfor %}
+</div>
+
+{% else %}
+
+<!-- ── MOST POPULAR ── -->
+{% if popular_products %}
+<div class="section-head">
+  <div class="section-label">
+    <div class="section-icon" style="background:#fff3cd;">🔥</div>
+    <div>
+      <h3 class="section-title">Most Popular</h3>
+      <p class="section-subtitle">Our best selling products</p>
+    </div>
+  </div>
+  <a href="{{ url_for('filtered', category='popular') }}" class="see-all">
+    See all <i class="bi bi-chevron-right"></i>
+  </a>
+</div>
+<div class="h-strip">
+  {% for product in popular_products %}
+  {% if product.id not in displayed_ids %}
+  {% do displayed_ids.append(product.id) %}
+  <div class="p-card">
+    <div class="p-card-img-wrap">
+      <a href="{{ url_for('product_detail', product_id=product.id) }}">
+        <img class="p-card-img"
+             src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
+             alt="{{ product.name }}">
+      </a>
+      <span class="p-badge hot">🔥 Hot</span>
+      <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
+        <i class="bi bi-heart"></i>
+      </a>
+    </div>
+    <div class="p-card-body">
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
+      {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <div class="p-card-price">
+        <span class="p-price">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
+        {% if product.on_sale and product.sale_price %}
+        <span class="p-price-orig">GH₵ {{ product.price }}</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="p-card-footer">
+      {% if product.stock > 0 %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
+        <i class="bi bi-bag-plus"></i> Add to Cart
+      </a>
+      {% else %}
+      <span class="p-card-btn oos">Out of Stock</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── PROMO BANNERS ── -->
+{% if sale_products and new_products %}
+<div class="promo-grid">
+  {% if sale_products|first %}
+  {% set sp = sale_products|first %}
+  <a href="{{ url_for('filtered', category='Sale') }}" class="promo-card"
+     style="background:url('{{ url_for('static', filename='shoes/' ~ (sp.images[0] if sp.images else 'placeholder.jpg')) }}') center/cover;">
+    <div class="promo-card-content">
+      <p class="promo-card-title">Sale Picks 🏷️</p>
+      <p class="promo-card-sub">Up to 50% off selected items</p>
+    </div>
+  </a>
+  {% endif %}
+  {% if new_products|first %}
+  {% set np = new_products|first %}
+  <a href="{{ url_for('filtered', category='new') }}" class="promo-card"
+     style="background:url('{{ url_for('static', filename='shoes/' ~ (np.images[0] if np.images else 'placeholder.jpg')) }}') center/cover;">
+    <div class="promo-card-content">
+      <p class="promo-card-title">New Arrivals ✨</p>
+      <p class="promo-card-sub">Fresh styles just dropped</p>
+    </div>
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- ── NEW ARRIVALS ── -->
+{% if new_products %}
+<div class="section-head">
+  <div class="section-label">
+    <div class="section-icon" style="background:#e0f2fe;">✨</div>
+    <div>
+      <h3 class="section-title">New Arrivals</h3>
+      <p class="section-subtitle">Just landed this week</p>
+    </div>
+  </div>
+  <a href="{{ url_for('filtered', category='new') }}" class="see-all">
+    See all <i class="bi bi-chevron-right"></i>
+  </a>
+</div>
+<div class="p-grid">
+  {% for product in new_products[:8] %}
+  {% if product.id not in displayed_ids %}
+  {% do displayed_ids.append(product.id) %}
+  <div class="p-card grid">
+    <div class="p-card-img-wrap">
+      <a href="{{ url_for('product_detail', product_id=product.id) }}">
+        <img class="p-card-img"
+             src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
+             alt="{{ product.name }}">
+      </a>
+      <span class="p-badge new">New</span>
+      <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
+        <i class="bi bi-heart"></i>
+      </a>
+    </div>
+    <div class="p-card-body">
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
+      {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <div class="p-card-price">
+        <span class="p-price">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
+        {% if product.on_sale and product.sale_price %}
+        <span class="p-price-orig">GH₵ {{ product.price }}</span>
+        {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
+        <span class="p-discount">-{{ disc }}%</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="p-card-footer">
+      {% if product.stock > 0 %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
+        <i class="bi bi-bag-plus"></i> Add to Cart
+      </a>
+      {% else %}
+      <span class="p-card-btn oos">Out of Stock</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── FEATURED ── -->
+{% if featured_products %}
+<div class="section-head">
+  <div class="section-label">
+    <div class="section-icon" style="background:#ede9fe;">💎</div>
+    <div>
+      <h3 class="section-title">Featured Products</h3>
+      <p class="section-subtitle">Handpicked for you</p>
+    </div>
+  </div>
+  <a href="{{ url_for('filtered', category='featured') }}" class="see-all">
+    See all <i class="bi bi-chevron-right"></i>
+  </a>
+</div>
+<div class="h-strip">
+  {% for product in featured_products %}
+  {% if product.id not in displayed_ids %}
+  {% do displayed_ids.append(product.id) %}
+  <div class="p-card">
+    <div class="p-card-img-wrap">
+      <a href="{{ url_for('product_detail', product_id=product.id) }}">
+        <img class="p-card-img"
+             src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
+             alt="{{ product.name }}">
+      </a>
+      <span class="p-badge feat">⭐ Pick</span>
+      <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
+        <i class="bi bi-heart"></i>
+      </a>
+    </div>
+    <div class="p-card-body">
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
+      {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <div class="p-card-price">
+        <span class="p-price">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
+        {% if product.on_sale and product.sale_price %}
+        <span class="p-price-orig">GH₵ {{ product.price }}</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="p-card-footer">
+      {% if product.stock > 0 %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
+        <i class="bi bi-bag-plus"></i> Add to Cart
+      </a>
+      {% else %}
+      <span class="p-card-btn oos">Out of Stock</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── ON SALE ── -->
+{% if sale_products %}
+<div class="section-head">
+  <div class="section-label">
+    <div class="section-icon" style="background:#fff3cd;">🏷️</div>
+    <div>
+      <h3 class="section-title">On Sale</h3>
+      <p class="section-subtitle">Limited time deals</p>
+    </div>
+  </div>
+  <a href="{{ url_for('filtered', category='Sale') }}" class="see-all">
+    See all <i class="bi bi-chevron-right"></i>
+  </a>
+</div>
+<div class="p-grid">
+  {% for product in sale_products[:8] %}
+  {% if product.id not in displayed_ids %}
+  {% do displayed_ids.append(product.id) %}
+  <div class="p-card grid">
+    <div class="p-card-img-wrap">
+      <a href="{{ url_for('product_detail', product_id=product.id) }}">
+        <img class="p-card-img"
+             src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
+             alt="{{ product.name }}">
+      </a>
+      <span class="p-badge sale">Sale</span>
+      <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
+        <i class="bi bi-heart"></i>
+      </a>
+    </div>
+    <div class="p-card-body">
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
+      {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <div class="p-card-price">
+        <span class="p-price">GH₵ {{ product.sale_price }}</span>
+        <span class="p-price-orig">GH₵ {{ product.price }}</span>
+        {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
+        <span class="p-discount">-{{ disc }}%</span>
+      </div>
+    </div>
+    <div class="p-card-footer">
+      {% if product.stock > 0 %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
+        <i class="bi bi-bag-plus"></i> Add to Cart
+      </a>
+      {% else %}
+      <span class="p-card-btn oos">Out of Stock</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endif %}{# end search/browse toggle #}
+{% endif %}{# end empty check #}
+
+{% endblock %}

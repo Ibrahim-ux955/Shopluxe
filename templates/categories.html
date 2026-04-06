@@ -1,0 +1,372 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --brand: #198754;
+  --brand-light: #e8f5e9;
+  --accent: #ff6600;
+  --dark: #1a1a2e;
+  --mid: #555570;
+  --light: #f4f6f9;
+  --card: #ffffff;
+  --border: #eef0f5;
+  --radius: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+body { font-family: 'DM Sans', sans-serif; }
+
+/* ── PAGE HEADER ── */
+.cat-page-header {
+  margin-bottom: 28px;
+}
+.cat-page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.9rem; color: var(--dark); margin: 0 0 4px;
+}
+.cat-page-sub { font-size: .85rem; color: #999; margin: 0; }
+
+/* ── FEATURED BANNER ── */
+.cat-hero {
+  border-radius: 20px; overflow: hidden;
+  position: relative; margin-bottom: 32px;
+  min-height: 180px;
+  background: linear-gradient(135deg, var(--dark) 0%, #2d2d5e 100%);
+  display: flex; align-items: center;
+  padding: 32px 36px; gap: 24px;
+}
+.cat-hero-text { flex: 1; }
+.cat-hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem; color: #fff; margin: 0 0 8px;
+}
+.cat-hero-sub { font-size: .9rem; color: rgba(255,255,255,.7); margin: 0 0 18px; }
+.cat-hero-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 10px;
+  padding: 10px 22px; font-size: .88rem; font-weight: 700;
+  text-decoration: none; transition: opacity .2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.cat-hero-btn:hover { opacity: .88; color: #fff; }
+.cat-hero-dots {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  opacity: .15; pointer-events: none;
+}
+.cat-hero-dot {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: #fff;
+}
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem; color: var(--dark);
+  margin-bottom: 16px; margin-top: 32px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label:first-of-type { margin-top: 0; }
+
+/* ── MAIN GRID ── */
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+@media(max-width:480px){
+  .cat-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+}
+
+/* ── CATEGORY CARD ── */
+.cat-card {
+  border-radius: var(--radius); overflow: hidden;
+  position: relative; display: block;
+  text-decoration: none; aspect-ratio: .85;
+  box-shadow: var(--shadow);
+  transition: transform .25s, box-shadow .25s;
+  animation: fadeUp .4s ease both;
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.cat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0,0,0,.15);
+}
+.cat-card img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform .5s ease;
+}
+.cat-card:hover img { transform: scale(1.08); }
+.cat-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.72) 0%, rgba(0,0,0,.1) 55%, transparent 100%);
+  transition: opacity .3s;
+}
+.cat-card:hover::after { opacity: .85; }
+
+.cat-card-body {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 16px 14px; z-index: 2;
+}
+.cat-card-icon {
+  font-size: 1.4rem; margin-bottom: 4px; display: block;
+}
+.cat-card-name {
+  font-size: .95rem; font-weight: 700;
+  color: #fff; margin: 0 0 3px;
+  font-family: 'DM Sans', sans-serif;
+}
+.cat-card-desc {
+  font-size: .72rem; color: rgba(255,255,255,.75);
+  margin: 0 0 10px; line-height: 1.4;
+}
+.cat-card-cta {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(255,255,255,.18); backdrop-filter: blur(6px);
+  color: #fff; border: 1px solid rgba(255,255,255,.3);
+  border-radius: 8px; padding: 5px 12px;
+  font-size: .72rem; font-weight: 600;
+  opacity: 0; transform: translateY(4px);
+  transition: opacity .25s, transform .25s;
+}
+.cat-card:hover .cat-card-cta { opacity: 1; transform: translateY(0); }
+
+/* ── SPECIAL CARDS (Sale & New) ── */
+.cat-card.special-sale::before {
+  content: '🔥 Sale'; position: absolute;
+  top: 12px; left: 12px; z-index: 3;
+  background: var(--accent); color: #fff;
+  font-size: .65rem; font-weight: 800;
+  padding: 3px 10px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.cat-card.special-new::before {
+  content: '✨ New'; position: absolute;
+  top: 12px; left: 12px; z-index: 3;
+  background: var(--brand); color: #fff;
+  font-size: .65rem; font-weight: 800;
+  padding: 3px 10px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: .5px;
+}
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 12px; margin-bottom: 28px;
+}
+@media(max-width:480px){ .stats-row { grid-template-columns: repeat(3,1fr); gap: 8px; } }
+
+.stat-card {
+  background: var(--card); border-radius: 12px;
+  box-shadow: var(--shadow); padding: 16px;
+  text-align: center;
+}
+.stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem; color: var(--brand); margin: 0 0 2px;
+}
+.stat-label { font-size: .72rem; color: #999; margin: 0; }
+</style>
+
+<!-- Page Header -->
+<div class="cat-page-header">
+  <h1 class="cat-page-title">Shop by Category</h1>
+  <p class="cat-page-sub">Find exactly what you're looking for</p>
+</div>
+
+<!-- Stats Row -->
+<div class="stats-row">
+  <div class="stat-card">
+    <p class="stat-num">9+</p>
+    <p class="stat-label">Categories</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-num">🚚</p>
+    <p class="stat-label">Free Delivery</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-num">🔒</p>
+    <p class="stat-label">Secure Pay</p>
+  </div>
+</div>
+
+<!-- Hero Banner -->
+<div class="cat-hero">
+  <div class="cat-hero-text">
+    <h2 class="cat-hero-title">New Season Styles</h2>
+    <p class="cat-hero-sub">Fresh arrivals across all categories — shop the latest looks</p>
+    <a href="{{ url_for('filtered', category='new') }}" class="cat-hero-btn">
+      Shop New Arrivals <i class="bi bi-arrow-right"></i>
+    </a>
+  </div>
+  <div class="cat-hero-dots">
+    <div class="cat-hero-dot"></div>
+    <div class="cat-hero-dot"></div>
+    <div class="cat-hero-dot"></div>
+    <div class="cat-hero-dot" style="width:40px;height:40px;"></div>
+    <div class="cat-hero-dot" style="width:80px;height:80px;"></div>
+  </div>
+</div>
+
+<!-- Main Categories -->
+<div class="section-label">🛍️ All Categories</div>
+
+<div class="cat-grid">
+
+  <a href="{{ url_for('filtered', category='Sneakers') }}" class="cat-card" style="animation-delay:.05s">
+    <img src="{{ url_for('static', filename='categories/sneakers.jpg') }}" alt="Sneakers"
+         onerror="this.style.background='linear-gradient(135deg,#667eea,#764ba2)';this.style.display='block'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">👟</span>
+      <p class="cat-card-name">Sneakers</p>
+      <p class="cat-card-desc">Street-ready styles</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <a href="{{ url_for('filtered', category='Heels') }}" class="cat-card" style="animation-delay:.08s">
+    <img src="{{ url_for('static', filename='categories/heels.jpg') }}" alt="Heels"
+         onerror="this.style.background='linear-gradient(135deg,#f093fb,#f5576c)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">👠</span>
+      <p class="cat-card-name">Heels</p>
+      <p class="cat-card-desc">Elegant & bold</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <a href="{{ url_for('filtered', category='Sandals') }}" class="cat-card" style="animation-delay:.11s">
+    <img src="{{ url_for('static', filename='categories/sandals.jpg') }}" alt="Sandals"
+         onerror="this.style.background='linear-gradient(135deg,#4facfe,#00f2fe)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">🩴</span>
+      <p class="cat-card-name">Sandals</p>
+      <p class="cat-card-desc">Light & breezy</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <a href="{{ url_for('filtered', category='Boots') }}" class="cat-card" style="animation-delay:.14s">
+    <img src="{{ url_for('static', filename='categories/boots.jpg') }}" alt="Boots"
+         onerror="this.style.background='linear-gradient(135deg,#43e97b,#38f9d7)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">🥾</span>
+      <p class="cat-card-name">Boots</p>
+      <p class="cat-card-desc">Built for adventure</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <a href="{{ url_for('filtered', category='Formal') }}" class="cat-card" style="animation-delay:.17s">
+    <img src="{{ url_for('static', filename='categories/formal.jpg') }}" alt="Formal"
+         onerror="this.style.background='linear-gradient(135deg,#1a1a2e,#16213e)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">👔</span>
+      <p class="cat-card-name">Formal</p>
+      <p class="cat-card-desc">Sharp & professional</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <a href="{{ url_for('filtered', category='Sport') }}" class="cat-card" style="animation-delay:.20s">
+    <img src="{{ url_for('static', filename='categories/sport.jpg') }}" alt="Sport"
+         onerror="this.style.background='linear-gradient(135deg,#0ba360,#3cba92)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">🏃</span>
+      <p class="cat-card-name">Sport</p>
+      <p class="cat-card-desc">Performance gear</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <a href="{{ url_for('filtered', category='Kids') }}" class="cat-card" style="animation-delay:.23s">
+    <img src="{{ url_for('static', filename='categories/kids.jpg') }}" alt="Kids"
+         onerror="this.style.background='linear-gradient(135deg,#f7971e,#ffd200)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">🎈</span>
+      <p class="cat-card-name">Kids</p>
+      <p class="cat-card-desc">Fun & comfy wear</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <!-- ✅ NEW: Appliances -->
+  <a href="{{ url_for('filtered', category='Appliances') }}" class="cat-card" style="animation-delay:.26s">
+    <img src="{{ url_for('static', filename='categories/appliances.jpg') }}" alt="Appliances"
+         onerror="this.style.background='linear-gradient(135deg,#2c3e50,#3498db)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">🏠</span>
+      <p class="cat-card-name">Appliances</p>
+      <p class="cat-card-desc">Home & kitchen</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <!-- ✅ NEW: Software -->
+  <a href="{{ url_for('filtered', category='Software') }}" class="cat-card" style="animation-delay:.29s">
+    <img src="{{ url_for('static', filename='categories/software.jpg') }}" alt="Software"
+         onerror="this.style.background='linear-gradient(135deg,#0f0c29,#302b63)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">💻</span>
+      <p class="cat-card-name">Software</p>
+      <p class="cat-card-desc">Apps & digital tools</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <!-- ✅ NEW: Books -->
+  <a href="{{ url_for('filtered', category='Books') }}" class="cat-card" style="animation-delay:.32s">
+    <img src="{{ url_for('static', filename='categories/books.jpg') }}" alt="Books"
+         onerror="this.style.background='linear-gradient(135deg,#834d9b,#d04ed6)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">📚</span>
+      <p class="cat-card-name">Books</p>
+      <p class="cat-card-desc">Read & discover</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <!-- ✅ NEW: Jewelry, Eyewear, Watches & Accessories -->
+  <a href="{{ url_for('filtered', category='Accessories') }}" class="cat-card" style="animation-delay:.35s">
+    <img src="{{ url_for('static', filename='categories/accessories.jpg') }}" alt="Accessories"
+         onerror="this.style.background='linear-gradient(135deg,#c8a96e,#a07840)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">💍</span>
+      <p class="cat-card-name">Jewelry & Accessories</p>
+      <p class="cat-card-desc">Watches, eyewear & more</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <!-- Special: Sale -->
+  <a href="{{ url_for('filtered', category='Sale') }}" class="cat-card special-sale" style="animation-delay:.38s">
+    <img src="{{ url_for('static', filename='categories/sale.jpg') }}" alt="Sale"
+         onerror="this.style.background='linear-gradient(135deg,#ff6600,#ff0000)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">🏷️</span>
+      <p class="cat-card-name">On Sale</p>
+      <p class="cat-card-desc">Big savings today</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+  <!-- Special: New Arrivals -->
+  <a href="{{ url_for('filtered', category='new') }}" class="cat-card special-new" style="animation-delay:.41s">
+    <img src="{{ url_for('static', filename='categories/new.jpg') }}" alt="New Arrivals"
+         onerror="this.style.background='linear-gradient(135deg,#198754,#0d6efd)'">
+    <div class="cat-card-body">
+      <span class="cat-card-icon">✨</span>
+      <p class="cat-card-name">New Arrivals</p>
+      <p class="cat-card-desc">Just dropped</p>
+      <span class="cat-card-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+    </div>
+  </a>
+
+</div>
+
+{% endblock %}

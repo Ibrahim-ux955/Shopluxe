@@ -1,0 +1,40 @@
+<div class="col-6 col-md-4 col-lg-3 d-flex">
+  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="flex-fill text-decoration-none">
+    <div class="card shadow-sm flex-fill text-center position-relative d-flex flex-column" style="height:100%;">
+      <div class="flex-shrink-0 position-relative">
+        <img src="{{ url_for('static', filename='shoes/' + (product.image if product.get('image') else 'placeholder.jpg')) }}"
+             alt="{{ product.name }}" class="img-fluid"
+             style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:8px 8px 0 0;">
+        {% if product.stock is defined %}
+          {% if product.stock == 0 %}
+            <span class="badge bg-danger position-absolute top-0 start-0 m-2">Out of Stock</span>
+          {% elif product.stock <= 3 %}
+            <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">Low Stock</span>
+          {% endif %}
+        {% endif %}
+        {% if product.timestamp is defined %}
+          {% set product_time = product.timestamp|todatetime %}
+          {% if product_time and (current_time - product_time).days <= 7 %}
+            <span class="badge bg-success position-absolute top-0 end-0 m-2">New</span>
+          {% endif %}
+        {% endif %}
+        {% if product.on_sale %}
+          <span class="badge bg-danger position-absolute bottom-0 end-0 m-2">Sale</span>
+        {% endif %}
+      </div>
+      <div class="card-body flex-grow-1 d-flex flex-column justify-content-between p-2 rounded-bottom" style="background-color:#f8f9fa;">
+        <div>
+          <p class="mb-1 fw-semibold text-dark" style="font-size:15px;">{{ product.name }}</p>
+          {% if product.on_sale and product.sale_price %}
+            <p class="fw-bold mb-1 text-danger">
+              GH₵ {{ product.sale_price }}
+              <span class="text-muted text-decoration-line-through ms-2" style="font-size: 14px;">GH₵ {{ product.price }}</span>
+            </p>
+          {% else %}
+            <p class="fw-bold mb-1 text-dark">GH₵ {{ product.price }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </a>
+</div>

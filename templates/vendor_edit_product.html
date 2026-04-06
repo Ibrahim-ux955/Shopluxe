@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.vep-back { display: inline-flex; align-items: center; gap: 6px; color: #999; text-decoration: none; font-size: .85rem; margin-bottom: 20px; transition: color .2s; }
+.vep-back:hover { color: var(--brand); }
+.vep-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--dark); margin-bottom: 4px; }
+.vep-sub { font-size: .85rem; color: #aaa; margin-bottom: 28px; }
+.vep-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+.vep-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.04); margin-bottom: 18px; }
+.vep-card-header { padding: 16px 22px; border-bottom: 1px solid var(--border); background: var(--light); display: flex; align-items: center; gap: 8px; }
+.vep-card-header h2 { font-size: .92rem; font-weight: 700; color: var(--dark); margin: 0; }
+.vep-card-body { padding: 22px; }
+.f-label { display: block; font-size: .78rem; font-weight: 700; color: var(--mid); margin-bottom: 7px; }
+.f-input, .f-textarea, .f-select { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 13px; font-size: .88rem; font-family: 'DM Sans', sans-serif; color: var(--dark); background: #fafbfc; outline: none; transition: border-color .2s, box-shadow .2s; }
+.f-input:focus, .f-textarea:focus, .f-select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(25,135,84,.1); background: #fff; }
+.f-textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+.f-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.f-group { margin-bottom: 16px; }
+.f-hint { font-size: .72rem; color: #bbb; margin-top: 5px; }
+.price-wrap { position: relative; }
+.price-wrap .currency { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: .85rem; pointer-events: none; }
+.price-wrap .f-input { padding-left: 38px; }
+
+/* ✅ Toggle pills - div-based to avoid nested label bug */
+.toggle-group { display: flex; gap: 10px; flex-wrap: wrap; }
+.toggle-pill { display: flex; align-items: center; gap: 7px; background: var(--light); border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 14px; cursor: pointer; transition: all .2s; }
+.toggle-pill:has(input:checked) { border-color: var(--brand); background: var(--brand-light); }
+.toggle-pill input { accent-color: var(--brand); }
+.toggle-pill label { font-size: .82rem; font-weight: 600; color: var(--mid); cursor: pointer; margin: 0; }
+.toggle-pill:has(input:checked) label { color: var(--brand); }
+
+.img-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(82px,1fr)); gap: 10px; margin-bottom: 14px; }
+.img-item { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border); }
+.img-item img { width: 100%; height: 100%; object-fit: cover; }
+.img-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s; }
+.img-item:hover .img-overlay { opacity: 1; }
+.img-remove-label { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+.img-remove-label input { display: none; }
+.img-remove-label span { font-size: 10px; color: #fff; font-weight: 700; }
+.img-item:has(input:checked) { border-color: #dc3545; opacity: .55; }
+.img-item:has(input:checked) .img-overlay { opacity: 1; background: rgba(220,53,69,.35); }
+.upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 22px 16px; text-align: center; cursor: pointer; position: relative; background: #fafbfc; transition: all .2s; }
+.upload-area:hover { border-color: var(--brand); background: var(--brand-light); }
+.upload-area input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.upload-area p { font-size: .8rem; color: #aaa; margin: 4px 0 0; }
+.upload-area strong { color: var(--brand); }
+.vep-publish { position: sticky; top: 112px; }
+.vep-publish .vep-card-body { display: flex; flex-direction: column; gap: 12px; }
+.btn-save-vep { width: 100%; background: linear-gradient(135deg, var(--brand), #0d6efd); color: #fff; font-family: 'DM Sans', sans-serif; font-size: .95rem; font-weight: 700; border: none; border-radius: 10px; padding: 13px; cursor: pointer; transition: opacity .2s; }
+.btn-save-vep:hover { opacity: .88; }
+.btn-discard { display: block; text-align: center; border: 1.5px solid var(--border); border-radius: 10px; padding: 11px; font-size: .85rem; color: #aaa; text-decoration: none; transition: all .2s; }
+.btn-discard:hover { border-color: var(--mid); color: var(--mid); }
+.danger-zone { padding: 14px; background: #fff5f5; border: 1.5px solid #fecaca; border-radius: 10px; }
+.danger-zone p { font-size: .72rem; color: #aaa; margin-bottom: 10px; }
+.btn-delete-prod { width: 100%; background: transparent; border: 1.5px solid #fecaca; color: #dc3545; border-radius: 8px; padding: 10px; font-family: 'DM Sans', sans-serif; font-size: .82rem; font-weight: 700; cursor: pointer; transition: background .2s; }
+.btn-delete-prod:hover { background: #fee2e2; }
+@media(max-width:900px){ .vep-layout { grid-template-columns: 1fr; } .f-row { grid-template-columns: 1fr; } }
+</style>
+
+<a href="{{ url_for('vendor_dashboard') }}" class="vep-back"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+<h1 class="vep-title">Edit: {{ product.name }}</h1>
+<p class="vep-sub">Update the details below and save your changes.</p>
+
+<form method="POST" enctype="multipart/form-data">
+<div class="vep-layout">
+  <!-- LEFT -->
+  <div>
+
+    <!-- Basic Info -->
+    <div class="vep-card">
+      <div class="vep-card-header"><span>📋</span><h2>Basic Information</h2></div>
+      <div class="vep-card-body">
+        <div class="f-group">
+          <label class="f-label">Product Name</label>
+          <input type="text" name="name" class="f-input" value="{{ product.name }}" required>
+        </div>
+        <div class="f-group">
+          <label class="f-label">Description</label>
+          <textarea name="description" class="f-textarea">{{ product.description }}</textarea>
+        </div>
+        <div class="f-row">
+          <div class="f-group">
+            <label class="f-label">Brand</label>
+            <input type="text" name="brand" class="f-input" value="{{ product.brand }}">
+          </div>
+          <div class="f-group">
+            <label class="f-label">SKU</label>
+            <input type="text" name="sku" class="f-input" value="{{ product.sku }}">
+          </div>
+        </div>
+        <div class="f-group">
+          <label class="f-label">Tags</label>
+          <input type="text" name="tags" class="f-input" value="{{ product.tags | join(', ') }}">
+        </div>
+      </div>
+    </div>
+
+    <!-- Images -->
+    <div class="vep-card">
+      <div class="vep-card-header"><span>🖼️</span><h2>Images</h2></div>
+      <div class="vep-card-body">
+        {% if product.images %}
+        <p class="f-hint" style="margin-bottom:10px;">Hover and click to remove an image</p>
+        <div class="img-grid">
+          {% for img in product.images %}
+          <div class="img-item">
+            <img src="{{ url_for('static', filename='shoes/' + img) }}" alt="">
+            <div class="img-overlay">
+              <label class="img-remove-label">
+                <input type="checkbox" name="remove_images" value="{{ img }}">
+                <span>🗑️ Remove</span>
+              </label>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <div class="upload-area">
+          <input type="file" name="new_images" accept="image/*" multiple>
+          <div style="font-size:1.4rem;margin-bottom:6px;">➕</div>
+          <p><strong style="color:var(--brand);">Add more images</strong></p>
+          <p>PNG, JPG supported</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing -->
+    <div class="vep-card">
+      <div class="vep-card-header"><span>💰</span><h2>Pricing</h2></div>
+      <div class="vep-card-body">
+        <div class="f-row">
+          <div class="f-group">
+            <label class="f-label">Regular Price</label>
+            <div class="price-wrap"><span class="currency">GH₵</span><input type="number" name="price" class="f-input" step="0.01" value="{{ product.price }}" required></div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Sale Price</label>
+            <div class="price-wrap"><span class="currency">GH₵</span><input type="number" name="sale_price" class="f-input" step="0.01" value="{{ product.sale_price or '' }}"></div>
+          </div>
+        </div>
+        <!-- ✅ FIXED: div wrappers not label wrappers -->
+        <div class="toggle-group">
+          <div class="toggle-pill"><input type="checkbox" id="on_sale" name="on_sale" {% if product.on_sale %}checked{% endif %}><label for="on_sale">🔥 On Sale</label></div>
+          <div class="toggle-pill"><input type="checkbox" id="featured" name="featured" {% if product.featured %}checked{% endif %}><label for="featured">⭐ Featured</label></div>
+          <div class="toggle-pill"><input type="checkbox" id="new_arrival" name="new_arrival" {% if product.new_arrival %}checked{% endif %}><label for="new_arrival">🆕 New Arrival</label></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Variants & Inventory -->
+    <div class="vep-card">
+      <div class="vep-card-header"><span>🎨</span><h2>Variants & Inventory</h2></div>
+      <div class="vep-card-body">
+
+        <!-- ✅ Size Type Selector -->
+        <div class="f-group">
+          <label class="f-label">Size Type</label>
+          <div class="f-row" style="margin-bottom:14px;">
+            <label style="border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s;" id="typeStandardLabel">
+              <input type="radio" name="product_type" value="standard"
+                     {% if product.product_type != 'slot' %}checked{% endif %}
+                     onchange="switchProductType('standard')" style="accent-color:var(--brand);">
+              <div>
+                <div style="font-size:.83rem;font-weight:700;color:var(--dark);">👟 Shoe / Clothing</div>
+                <div style="font-size:.68rem;color:#aaa;">e.g. 39, 40 or S, M, L</div>
+              </div>
+            </label>
+            <label style="border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s;" id="typeSlotLabel">
+              <input type="radio" name="product_type" value="slot"
+                     {% if product.product_type == 'slot' %}checked{% endif %}
+                     onchange="switchProductType('slot')" style="accent-color:var(--brand);">
+              <div>
+                <div style="font-size:.83rem;font-weight:700;color:var(--dark);">📦 Dimensions</div>
+                <div style="font-size:.68rem;color:#aaa;">Length × Width × Depth (cm)</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- ✅ Standard Sizes -->
+        <div id="shoeSizesGroup" class="f-group">
+          <label class="f-label">Sizes <span class="f-hint" style="display:inline;">(comma-separated)</span></label>
+          <input type="text" name="sizes" id="sizesInput" class="f-input"
+                 value="{{ product.sizes | join(', ') if product.sizes else '' }}"
+                 placeholder="e.g. 39, 40, 41, 42">
+        </div>
+
+        <!-- ✅ Slot Dimensions -->
+        <div id="slotSizesGroup" style="display:none;">
+          <div class="f-row">
+            <div class="f-group">
+              <label class="f-label">Length (cm)</label>
+              <input type="number" name="slot_length" class="f-input" step="0.1" min="0"
+                     value="{{ product.slot_length or '' }}" placeholder="e.g. 30">
+            </div>
+            <div class="f-group">
+              <label class="f-label">Width (cm)</label>
+              <input type="number" name="slot_width" class="f-input" step="0.1" min="0"
+                     value="{{ product.slot_width or '' }}" placeholder="e.g. 20">
+            </div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Depth (cm)</label>
+            <input type="number" name="slot_depth" class="f-input" step="0.1" min="0"
+                   value="{{ product.slot_depth or '' }}" placeholder="e.g. 15">
+            <p class="f-hint">Physical dimensions of the product in centimetres.</p>
+          </div>
+        </div>
+
+        <div class="f-group">
+          <label class="f-label">Colors</label>
+          <input type="text" name="colors" class="f-input"
+                 value="{{ product.colors | join(', ') if product.colors else '' }}"
+                 placeholder="e.g. Black, White, Red">
+        </div>
+
+        <div class="f-row">
+          <div class="f-group">
+            <label class="f-label">Stock</label>
+            <input type="number" name="stock" class="f-input" min="0" value="{{ product.stock }}">
+          </div>
+          <div class="f-group">
+            <label class="f-label">Category</label>
+            <select name="category" class="f-select">
+              {% for cat in ['Men','Women','Kids','Sneakers','Sandals','Boots','Formal','Sport','Appliances','Software','Books','Accessories'] %}
+              <option value="{{ cat }}" {% if product.category == cat %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+              <option value="custom" {% if product.category not in ['Men','Women','Kids','Sneakers','Sandals','Boots','Formal','Sport','Appliances','Software','Books','Accessories'] %}selected{% endif %}>+ Custom</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Delivery -->
+    <div class="vep-card">
+      <div class="vep-card-header"><span>🚚</span><h2>Delivery Info</h2></div>
+      <div class="vep-card-body">
+        <input type="text" name="delivery_info" class="f-input" value="{{ product.delivery_info }}">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="vep-publish">
+    <div class="vep-card">
+      <div class="vep-card-header"><span>💾</span><h2>Save Changes</h2></div>
+      <div class="vep-card-body">
+        <button type="submit" class="btn-save-vep">Save Changes</button>
+        <a href="{{ url_for('vendor_dashboard') }}" class="btn-discard">Discard</a>
+        <div class="danger-zone">
+          <p>Danger zone</p>
+          <form method="POST" action="{{ url_for('vendor_delete_product', product_id=product.id) }}" onsubmit="return confirm('Permanently delete this product?')">
+            <button type="submit" class="btn-delete-prod">🗑️ Delete Product</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+
+<script>
+function switchProductType(type) {
+  document.getElementById('shoeSizesGroup').style.display = type === 'standard' ? 'block' : 'none';
+  document.getElementById('slotSizesGroup').style.display = type === 'slot' ? 'block' : 'none';
+  document.getElementById('typeStandardLabel').style.borderColor = type === 'standard' ? 'var(--brand)' : 'var(--border)';
+  document.getElementById('typeStandardLabel').style.background = type === 'standard' ? 'var(--brand-light)' : '#fafbfc';
+  document.getElementById('typeSlotLabel').style.borderColor = type === 'slot' ? 'var(--brand)' : 'var(--border)';
+  document.getElementById('typeSlotLabel').style.background = type === 'slot' ? 'var(--brand-light)' : '#fafbfc';
+}
+switchProductType('{{ product.product_type or "standard" }}');
+</script>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.vap-back { display: inline-flex; align-items: center; gap: 6px; color: #999; text-decoration: none; font-size: .85rem; margin-bottom: 20px; transition: color .2s; }
+.vap-back:hover { color: var(--brand); }
+.vap-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--dark); margin-bottom: 4px; }
+.vap-sub { font-size: .85rem; color: #aaa; margin-bottom: 28px; }
+.vap-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+.vap-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.04); margin-bottom: 18px; }
+.vap-card-header { padding: 16px 22px; border-bottom: 1px solid var(--border); background: var(--light); display: flex; align-items: center; gap: 8px; }
+.vap-card-header h2 { font-size: .92rem; font-weight: 700; color: var(--dark); margin: 0; }
+.vap-card-body { padding: 22px; }
+.f-label { display: block; font-size: .78rem; font-weight: 700; color: var(--mid); margin-bottom: 7px; }
+.f-label .req { color: var(--accent); }
+.f-input, .f-textarea, .f-select { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 13px; font-size: .88rem; font-family: 'DM Sans', sans-serif; color: var(--dark); background: #fafbfc; outline: none; transition: border-color .2s, box-shadow .2s; }
+.f-input:focus, .f-textarea:focus, .f-select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(25,135,84,.1); background: #fff; }
+.f-textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+.f-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.f-group { margin-bottom: 16px; }
+.f-hint { font-size: .72rem; color: #bbb; margin-top: 5px; }
+.price-wrap { position: relative; }
+.price-wrap .currency { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: .85rem; pointer-events: none; }
+.price-wrap .f-input { padding-left: 38px; }
+.toggle-group { display: flex; gap: 10px; flex-wrap: wrap; }
+.toggle-pill { display: flex; align-items: center; gap: 7px; background: var(--light); border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 14px; cursor: pointer; transition: all .2s; }
+.toggle-pill:has(input:checked) { border-color: var(--brand); background: var(--brand-light); }
+.toggle-pill input { accent-color: var(--brand); }
+.toggle-pill label { font-size: .82rem; font-weight: 600; color: var(--mid); cursor: pointer; margin: 0; }
+.toggle-pill:has(input:checked) label { color: var(--brand); }
+.upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 28px 16px; text-align: center; cursor: pointer; transition: all .2s; position: relative; background: #fafbfc; }
+.upload-area:hover { border-color: var(--brand); background: var(--brand-light); }
+.upload-area input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.upload-area p { font-size: .8rem; color: #aaa; margin: 4px 0 0; }
+.upload-area strong { color: var(--brand); }
+.vap-publish { position: sticky; top: 112px; }
+.vap-publish .vap-card-body { display: flex; flex-direction: column; gap: 12px; }
+.btn-publish { width: 100%; background: linear-gradient(135deg, var(--brand), #0d6efd); color: #fff; font-family: 'DM Sans', sans-serif; font-size: .95rem; font-weight: 700; border: none; border-radius: 10px; padding: 13px; cursor: pointer; transition: opacity .2s; }
+.btn-publish:hover { opacity: .88; }
+.btn-cancel-vap { display: block; text-align: center; border: 1.5px solid var(--border); border-radius: 10px; padding: 11px; font-size: .85rem; color: #aaa; text-decoration: none; transition: all .2s; }
+.btn-cancel-vap:hover { border-color: var(--mid); color: var(--mid); }
+.publish-note { font-size: .72rem; color: #bbb; text-align: center; line-height: 1.5; }
+@media(max-width:900px){ .vap-layout { grid-template-columns: 1fr; } .f-row { grid-template-columns: 1fr; } }
+</style>
+
+<a href="{{ url_for('vendor_dashboard') }}" class="vap-back"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+<h1 class="vap-title">Add New Product</h1>
+<p class="vap-sub">Fill in the details below to list your product on ShopLuxe.</p>
+
+<form method="POST" enctype="multipart/form-data">
+<div class="vap-layout">
+  <div>
+
+    <div class="vap-card">
+      <div class="vap-card-header"><span>📋</span><h2>Basic Information</h2></div>
+      <div class="vap-card-body">
+        <div class="f-group">
+          <label class="f-label">Product Name <span class="req">*</span></label>
+          <input type="text" name="name" class="f-input" placeholder="e.g. Nike Air Max 270" required>
+        </div>
+        <div class="f-group">
+          <label class="f-label">Description</label>
+          <textarea name="description" class="f-textarea" placeholder="Describe your product — materials, features, sizing notes..."></textarea>
+        </div>
+        <div class="f-row">
+          <div class="f-group">
+            <label class="f-label">Brand</label>
+            <input type="text" name="brand" class="f-input" placeholder="e.g. Nike">
+          </div>
+          <div class="f-group">
+            <label class="f-label">SKU</label>
+            <input type="text" name="sku" class="f-input" placeholder="e.g. NK-AM270-BLK">
+          </div>
+        </div>
+        <div class="f-group">
+          <label class="f-label">Tags <span class="f-hint" style="display:inline;">(comma-separated)</span></label>
+          <input type="text" name="tags" class="f-input" placeholder="e.g. sneakers, running, men">
+        </div>
+      </div>
+    </div>
+
+    <div class="vap-card">
+      <div class="vap-card-header"><span>🖼️</span><h2>Product Images</h2></div>
+      <div class="vap-card-body">
+        <div class="upload-area">
+          <input type="file" name="images" accept="image/*" multiple>
+          <div style="font-size:2rem;margin-bottom:8px;">📸</div>
+          <p><strong>Click to upload</strong> or drag & drop</p>
+          <p>PNG, JPG — up to 5 images recommended</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="vap-card">
+      <div class="vap-card-header"><span>💰</span><h2>Pricing</h2></div>
+      <div class="vap-card-body">
+        <div class="f-row">
+          <div class="f-group">
+            <label class="f-label">Regular Price <span class="req">*</span></label>
+            <div class="price-wrap">
+              <span class="currency">GH₵</span>
+              <input type="number" name="price" class="f-input" step="0.01" min="0" placeholder="0.00" required>
+            </div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Sale Price</label>
+            <div class="price-wrap">
+              <span class="currency">GH₵</span>
+              <input type="number" name="sale_price" class="f-input" step="0.01" min="0" placeholder="0.00">
+            </div>
+          </div>
+        </div>
+        <div class="toggle-group">
+          <div class="toggle-pill"><input type="checkbox" id="on_sale" name="on_sale"><label for="on_sale">🔥 On Sale</label></div>
+          <div class="toggle-pill"><input type="checkbox" id="featured" name="featured"><label for="featured">⭐ Featured</label></div>
+          <div class="toggle-pill"><input type="checkbox" id="new_arrival" name="new_arrival" checked><label for="new_arrival">🆕 New Arrival</label></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="vap-card">
+      <div class="vap-card-header"><span>🎨</span><h2>Variants & Inventory</h2></div>
+      <div class="vap-card-body">
+
+        
+
+        <!-- ✅ Size Type Selector -->
+        <div class="f-group">
+          <label class="f-label">Size Type</label>
+          <div class="f-row" style="margin-bottom:14px;">
+            <label style="border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s;" id="typeStandardLabel">
+              <input type="radio" name="product_type" value="standard" checked onchange="switchProductType('standard')" style="accent-color:var(--brand);">
+              <div>
+                <div style="font-size:.83rem;font-weight:700;color:var(--dark);">👟 Shoe / Clothing</div>
+                <div style="font-size:.68rem;color:#aaa;">e.g. 39, 40 or S, M, L</div>
+              </div>
+            </label>
+            <label style="border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s;" id="typeSlotLabel">
+              <input type="radio" name="product_type" value="slot" onchange="switchProductType('slot')" style="accent-color:var(--brand);">
+              <div>
+                <div style="font-size:.83rem;font-weight:700;color:var(--dark);">📦 Dimensions</div>
+                <div style="font-size:.68rem;color:#aaa;">Length × Width × Depth (cm)</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- ✅ Standard Sizes -->
+        <div id="shoeSizesGroup" class="f-group">
+          <label class="f-label">Sizes <span class="f-hint" style="display:inline;">(comma-separated)</span></label>
+          <input type="text" name="sizes" id="sizesInput" class="f-input" placeholder="e.g. 39, 40, 41, 42">
+        </div>
+
+
+
+        <!-- ✅ Slot Dimensions -->
+        <div id="slotSizesGroup" style="display:none;">
+          <div class="f-row">
+            <div class="f-group">
+              <label class="f-label">Length (cm)</label>
+              <input type="number" name="slot_length" class="f-input" step="0.1" min="0" placeholder="e.g. 30">
+            </div>
+            <div class="f-group">
+              <label class="f-label">Width (cm)</label>
+              <input type="number" name="slot_width" class="f-input" step="0.1" min="0" placeholder="e.g. 20">
+            </div>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Depth (cm)</label>
+            <input type="number" name="slot_depth" class="f-input" step="0.1" min="0" placeholder="e.g. 15">
+            <p class="f-hint">Physical dimensions of the product in centimetres.</p>
+          </div>
+        </div>
+
+        <div class="f-group">
+          <label class="f-label">Colors</label>
+          <input type="text" name="colors" class="f-input" placeholder="e.g. Black, White, Red">
+        </div>
+
+        <div class="f-row">
+          <div class="f-group">
+            <label class="f-label">Stock Quantity <span class="req">*</span></label>
+            <input type="number" name="stock" class="f-input" min="0" value="0" required>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Category</label>
+            <select name="category" class="f-select" id="catSelect">
+              <option value="">Select category</option>
+              {% for cat in ['Men','Women','Kids','Sneakers','Sandals','Boots','Formal','Sport','Appliances','Software','Books','Accessories'] %}
+              <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+              <option value="custom">+ Custom</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="f-group" id="customCatGroup" style="display:none;">
+          <label class="f-label">Custom Category Name</label>
+          <input type="text" name="category_custom" class="f-input" placeholder="Enter custom category name">
+        </div>
+
+      </div>
+    </div>
+
+    <div class="vap-card">
+      <div class="vap-card-header"><span>🚚</span><h2>Delivery Info</h2></div>
+      <div class="vap-card-body">
+        <div class="f-group">
+          <input type="text" name="delivery_info" class="f-input" value="Delivery in 2-4 working days">
+          <p class="f-hint">Shown on your product page to buyers.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="vap-publish">
+    <div class="vap-card">
+      <div class="vap-card-header"><span>🚀</span><h2>Publish</h2></div>
+      <div class="vap-card-body">
+        <button type="submit" class="btn-publish">Publish Product</button>
+        <a href="{{ url_for('vendor_dashboard') }}" class="btn-cancel-vap">Cancel</a>
+        <p class="publish-note">Your product will be live immediately. You can edit or remove it anytime.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</form>
+
+<script>
+  function switchProductType(type) {
+    document.getElementById('shoeSizesGroup').style.display = type === 'standard' ? 'block' : 'none';
+    document.getElementById('slotSizesGroup').style.display = type === 'slot' ? 'block' : 'none';
+    document.getElementById('typeStandardLabel').style.borderColor = type === 'standard' ? 'var(--brand)' : 'var(--border)';
+    document.getElementById('typeStandardLabel').style.background = type === 'standard' ? 'var(--brand-light)' : '#fafbfc';
+    document.getElementById('typeSlotLabel').style.borderColor = type === 'slot' ? 'var(--brand)' : 'var(--border)';
+    document.getElementById('typeSlotLabel').style.background = type === 'slot' ? 'var(--brand-light)' : '#fafbfc';
+  }
+  switchProductType('standard');
+
+  document.getElementById('catSelect').addEventListener('change', function(){
+    document.getElementById('customCatGroup').style.display = this.value === 'custom' ? 'block' : 'none';
+  });
+</script>
+{% endblock %}

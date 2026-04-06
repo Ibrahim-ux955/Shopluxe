@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.vs-hero {
+  background: linear-gradient(135deg, var(--dark) 0%, #16213e 100%);
+  border-radius: 20px; padding: 44px 32px 36px; margin-bottom: 28px;
+  position: relative; overflow: hidden;
+}
+.vs-hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 20% 50%, rgba(25,135,84,.12) 0%, transparent 60%); }
+.vs-hero-inner { display: flex; align-items: center; gap: 24px; position: relative; }
+.vs-logo { width: 88px; height: 88px; border-radius: 18px; object-fit: cover; border: 2px solid rgba(255,255,255,.15); flex-shrink: 0; }
+.vs-logo-ph { width: 88px; height: 88px; border-radius: 18px; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; font-size: 2.4rem; flex-shrink: 0; }
+.vs-verified { display: inline-flex; align-items: center; gap: 5px; background: rgba(25,135,84,.2); border: 1px solid rgba(25,135,84,.35); color: #6ee7b7; padding: 3px 12px; border-radius: 50px; font-size: 11px; font-weight: 700; margin-bottom: 10px; }
+.vs-shop-name { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem,4vw,2.2rem); color: #fff; margin: 0 0 8px; }
+.vs-desc { color: rgba(255,255,255,.5); font-size: .88rem; line-height: 1.6; max-width: 420px; margin-bottom: 14px; }
+.vs-stats { display: flex; gap: 28px; }
+.vs-stat-num { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: #6ee7b7; font-weight: 700; }
+.vs-stat-label { font-size: 10px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: 1px; }
+
+.vs-filter-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+.vs-filter-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--dark); }
+.vs-count { font-size: .82rem; color: #aaa; }
+
+/* REUSE p-card styles from index.html */
+.p-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px,1fr)); gap: 16px; }
+@media(max-width:480px){ .p-grid { grid-template-columns: repeat(2,1fr); gap: 10px; } }
+
+.vs-card { background: var(--card); border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.06); overflow: hidden; transition: box-shadow .2s, transform .2s; text-decoration: none; color: var(--dark); display: block; }
+.vs-card:hover { box-shadow: 0 10px 40px rgba(0,0,0,.12); transform: translateY(-3px); }
+.vs-img-wrap { position: relative; aspect-ratio: 1; overflow: hidden; background: var(--light); }
+.vs-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+.vs-card:hover .vs-img-wrap img { transform: scale(1.05); }
+.vs-badge { position: absolute; top: 8px; left: 8px; font-size: .6rem; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; }
+.vs-badge.sale { background: var(--accent); color: #fff; }
+.vs-badge.new { background: var(--brand); color: #fff; }
+.vs-card-body { padding: 12px 14px; }
+.vs-name { font-size: .84rem; font-weight: 600; color: var(--dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+.vs-cat { font-size: .7rem; color: #bbb; margin-bottom: 8px; }
+.vs-price { display: flex; align-items: center; gap: 6px; }
+.vs-price-main { font-size: .95rem; font-weight: 700; color: var(--brand); }
+.vs-price-orig { font-size: .75rem; color: #bbb; text-decoration: line-through; }
+.vs-price-sale { color: var(--accent); }
+.vs-stock-low { font-size: 10px; color: #f59e0b; margin-top: 4px; }
+.vs-stock-out { font-size: 10px; color: #dc3545; margin-top: 4px; }
+
+.vs-empty { text-align: center; padding: 60px 20px; background: var(--card); border-radius: 16px; }
+.vs-empty i { font-size: 3rem; color: #ddd; display: block; margin-bottom: 16px; }
+.vs-empty p { color: #aaa; }
+
+@media(max-width:600px){ .vs-hero-inner { flex-direction: column; text-align: center; } .vs-stats { justify-content: center; } .vs-hero { padding: 32px 20px 28px; } }
+</style>
+
+<!-- STORE HERO -->
+<div class="vs-hero">
+  <div class="vs-hero-inner">
+    {% if vendor.logo %}
+      <img src="{{ url_for('static', filename='shoes/' + vendor.logo) }}" class="vs-logo" alt="{{ vendor.shop_name }}">
+    {% else %}
+      <div class="vs-logo-ph">🏪</div>
+    {% endif %}
+    <div>
+      <div class="vs-verified">✓ Verified Seller on ShopLuxe</div>
+      <h1 class="vs-shop-name">{{ vendor.shop_name }}</h1>
+      {% if vendor.shop_description %}
+        <p class="vs-desc">{{ vendor.shop_description }}</p>
+      {% endif %}
+      <div class="vs-stats">
+        <div>
+          <div class="vs-stat-num">{{ products|length }}</div>
+          <div class="vs-stat-label">Products</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="vs-filter-bar">
+  <div class="vs-filter-title">All Products</div>
+  <span class="vs-count">{{ products|length }} item{% if products|length != 1 %}s{% endif %} available</span>
+</div>
+
+{% if products %}
+<div class="p-grid">
+  {% for p in products %}
+  <a href="{{ url_for('product_detail', product_id=p.id) }}" class="vs-card">
+    <div class="vs-img-wrap">
+      {% if p.images %}
+        <img src="{{ url_for('static', filename='shoes/' + p.images[0]) }}" alt="{{ p.name }}" loading="lazy">
+      {% else %}
+        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:var(--light);">👟</div>
+      {% endif %}
+      {% if p.on_sale %}<span class="vs-badge sale">SALE</span>{% endif %}
+      {% if p.new_arrival and not p.on_sale %}<span class="vs-badge new">NEW</span>{% endif %}
+    </div>
+    <div class="vs-card-body">
+      <div class="vs-name">{{ p.name }}</div>
+      <div class="vs-cat">{{ p.category or 'General' }}</div>
+      <div class="vs-price">
+        {% if p.on_sale and p.sale_price %}
+          <span class="vs-price-main vs-price-sale">GH₵{{ p.sale_price }}</span>
+          <span class="vs-price-orig">GH₵{{ p.price }}</span>
+        {% else %}
+          <span class="vs-price-main">GH₵{{ p.price }}</span>
+        {% endif %}
+      </div>
+      {% if p.stock == 0 %}<div class="vs-stock-out">Out of stock</div>
+      {% elif p.stock <= 5 %}<div class="vs-stock-low">Only {{ p.stock }} left!</div>{% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="vs-empty">
+  <i class="bi bi-box-seam"></i>
+  <p>This store hasn't listed any products yet.</p>
+</div>
+{% endif %}
+{% endblock %}

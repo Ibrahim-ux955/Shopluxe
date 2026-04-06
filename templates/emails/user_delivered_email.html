@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Delivered - ShopLuxe</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f0f2f5; color: #0f1111; }
+  .wrap { max-width: 620px; margin: 24px auto; background: #fff; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+
+  .hdr { background: #131921; padding: 16px 24px; }
+  .hdr-logo { font-family: Georgia, serif; font-size: 22px; font-weight: 700; color: #fff; }
+  .hdr-logo span { color: #ff9900; }
+  .hdr-tagline { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 2px; }
+
+  .hero { background: linear-gradient(135deg, #14532d 0%, #198754 100%); padding: 28px 24px; text-align: center; }
+  .hero-icon { font-size: 48px; margin-bottom: 10px; }
+  .hero h1 { font-size: 22px; color: #fff; font-weight: 700; margin-bottom: 6px; }
+  .hero p { font-size: 13px; color: rgba(255,255,255,.8); }
+
+  .body { padding: 24px; }
+
+  .greeting { font-size: 15px; margin-bottom: 16px; line-height: 1.6; }
+
+  .status-banner { background: #dcfce7; border: 1px solid #86efac; border-radius: 6px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .status-icon { font-size: 24px; flex-shrink: 0; }
+  .status-text strong { display: block; font-size: 14px; color: #166534; }
+  .status-text span { font-size: 12px; color: #15803d; }
+
+  .order-box { border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-bottom: 20px; }
+  .order-box-head { background: #f0f2f5; padding: 12px 16px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; }
+  .order-box-head .label { font-size: 11px; color: #767676; text-transform: uppercase; letter-spacing: .5px; }
+  .order-box-head .value { font-size: 13px; font-weight: 700; color: #0f1111; }
+  .order-box-body { padding: 14px 16px; }
+
+  .product-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  .product-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .product-img { width: 64px; height: 64px; border-radius: 6px; object-fit: cover; border: 1px solid #ddd; flex-shrink: 0; background: #f8f8f8; }
+  .product-info { flex: 1; min-width: 0; }
+  .product-name { font-weight: 600; color: #0f1111; margin-bottom: 3px; font-size: 13px; }
+  .product-meta { font-size: 11px; color: #767676; margin-bottom: 3px; }
+  .product-price { font-size: 13px; font-weight: 700; color: #b12704; }
+
+  .totals { padding: 12px 16px; background: #fafafa; border-top: 1px solid #ddd; }
+  .totals-row { display: flex; justify-content: space-between; font-size: 13px; color: #555; margin-bottom: 5px; }
+  .totals-row.grand { font-size: 15px; font-weight: 700; color: #0f1111; padding-top: 8px; border-top: 1px solid #ddd; margin-top: 4px; margin-bottom: 0; }
+
+  .delivery-info { border: 1px solid #ddd; border-radius: 6px; padding: 16px; margin-bottom: 20px; }
+  .delivery-info h3 { font-size: 14px; font-weight: 700; color: #0f1111; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+  .info-row { display: flex; gap: 10px; font-size: 13px; color: #555; margin-bottom: 8px; }
+  .info-row:last-child { margin-bottom: 0; }
+
+  .review-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 16px; margin-bottom: 20px; text-align: center; }
+  .review-box h3 { font-size: 14px; font-weight: 700; color: #92400e; margin-bottom: 6px; }
+  .review-box p { font-size: 13px; color: #78350f; margin-bottom: 12px; }
+  .btn-review { display: inline-block; background: #fbbf24; color: #0f1111 !important; text-decoration: none; padding: 10px 24px; border-radius: 6px; font-weight: 700; font-size: 13px; }
+
+  .cta-wrap { text-align: center; margin: 20px 0; }
+  .btn-shop { display: inline-block; background: #ff9900; color: #0f1111 !important; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 14px; margin-right: 8px; }
+  .btn-orders { display: inline-block; background: #f0f2f5; color: #0f1111 !important; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 700; font-size: 14px; border: 1px solid #ddd; }
+
+  .help-box { background: #f7f8f9; border-radius: 6px; padding: 16px; margin-bottom: 20px; font-size: 13px; color: #555; line-height: 1.6; }
+  .help-box a { color: #0066c0; text-decoration: none; }
+
+  .ftr { background: #232f3e; padding: 20px 24px; text-align: center; }
+  .ftr-links { margin-bottom: 10px; }
+  .ftr-links a { font-size: 11px; color: rgba(255,255,255,.55); margin: 0 8px; text-decoration: none; }
+  .ftr p { font-size: 11px; color: rgba(255,255,255,.45); margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <div class="hdr-logo">Shop<span>Luxe</span></div>
+    <div class="hdr-tagline">Ghana's Premium Online Store</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-icon">🎉</div>
+    <h1>Your Order Has Been Delivered!</h1>
+    <p>We hope you love your purchase.</p>
+  </div>
+
+  <div class="body">
+
+    <p class="greeting">Hi <strong>{{ name }}</strong>,<br><br>
+    Great news! Your ShopLuxe order has been successfully delivered.
+    We hope everything arrived in perfect condition and you love your purchase!</p>
+
+    <div class="status-banner">
+      <div class="status-icon">✅</div>
+      <div class="status-text">
+        <strong>Delivered Successfully</strong>
+        <span>Delivered on {{ order_time }}</span>
+      </div>
+    </div>
+
+    <!-- ORDER SUMMARY -->
+    <div class="order-box">
+      <div class="order-box-head">
+        <div>
+          <div class="label">Order Items</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="label">Total Paid</div>
+          <div class="value" style="color:#b12704;">GH₵ {{ total }}</div>
+        </div>
+      </div>
+      <div class="order-box-body">
+        {% for item in items %}
+        <div class="product-item">
+          <div class="product-info">
+            <div class="product-name">{{ item.get('name', '') }}</div>
+            <div class="product-meta">Qty: {{ item.get('quantity', 1) }}{% if item.get('color') and item.get('color') != '-' %} · {{ item.get('color') }}{% endif %}{% if item.get('size') and item.get('size') != '-' %} · Size {{ item.get('size') }}{% endif %}</div>
+            <div class="product-price">GH₵ {{ item.get('price', 0) }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="totals">
+        <div class="totals-row grand">
+          <span>Total Paid</span>
+          <span>GH₵ {{ total }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DELIVERY DETAILS -->
+    <div class="delivery-info">
+      <h3>📦 Delivery Details</h3>
+      <div class="info-row">
+        <span>✅</span>
+        <span><strong>Status:</strong> Delivered</span>
+      </div>
+      <div class="info-row">
+        <span>🕒</span>
+        <span><strong>Delivered at:</strong> {{ order_time }}</span>
+      </div>
+      <div class="info-row">
+        <span>↩️</span>
+        <span><strong>Returns:</strong> Easy returns within 7 days if not satisfied</span>
+      </div>
+    </div>
+
+    <!-- REVIEW REQUEST -->
+    <div class="review-box">
+      <h3>⭐ How was your experience?</h3>
+      <p>Your feedback helps other shoppers and helps us improve. Leave a review for your items!</p>
+      <a href="https://www.shopluxe.online" class="btn-review">⭐ Leave a Review</a>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-wrap">
+      <a href="https://www.shopluxe.online" class="btn-shop">🛍️ Shop Again</a>
+      <a href="https://www.shopluxe.online/orders" class="btn-orders">📋 My Orders</a>
+    </div>
+
+    <div class="help-box">
+      <strong>Something wrong with your order?</strong><br>
+      If your items arrived damaged or incomplete, contact us immediately at
+      <a href="mailto:orders@shopluxe.online">orders@shopluxe.online</a>
+      or visit our <a href="https://www.shopluxe.online/support">Support Center</a>.
+    </div>
+
+    <p style="font-size:13px;color:#555;">Thank you for shopping with ShopLuxe! 🛍️<br>
+    <strong>The ShopLuxe Team</strong></p>
+
+  </div>
+
+  <div class="ftr">
+    <div class="ftr-links">
+      <a href="https://www.shopluxe.online">Home</a>
+      <a href="https://www.shopluxe.online/orders">My Orders</a>
+      <a href="https://www.shopluxe.online/support">Support</a>
+    </div>
+    <p>ShopLuxe · Accra, Ghana 🇬🇭</p>
+    <p>© 2025 ShopLuxe. All rights reserved.</p>
+  </div>
+
+</div>
+</body>
+</html>

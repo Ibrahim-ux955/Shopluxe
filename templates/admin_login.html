@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 400px;">
+  <div class="card shadow-lg border-0">
+    <div class="card-body">
+
+      <!-- ✅ Page title -->
+      <h3 class="card-title text-center mb-4">🔐 Admin Login</h3>
+
+      <!-- ✅ Flash messages -->
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-warning text-center">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- ✅ Admin Login Form -->
+      <form method="POST">
+        <div class="mb-3">
+          <label class="form-label" for="password">Enter Admin Password</label>
+          <input type="password" name="password" id="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

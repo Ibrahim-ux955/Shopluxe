@@ -1,0 +1,421 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --brand: #198754;
+  --brand-light: #e8f5e9;
+  --accent: #ff6600;
+  --dark: #1a1a2e;
+  --mid: #555570;
+  --light: #f4f6f9;
+  --card: #ffffff;
+  --border: #eef0f5;
+  --radius: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+body { font-family: 'DM Sans', sans-serif; background: var(--light); }
+
+.cart-page { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 5rem; }
+
+/* ── PAGE TITLE ── */
+.cart-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.9rem; color: var(--dark);
+  margin-bottom: 6px;
+}
+.cart-subtitle { font-size: .85rem; color: #999; margin-bottom: 2rem; }
+
+/* ── LAYOUT ── */
+.cart-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+@media(max-width:900px){ .cart-layout { grid-template-columns: 1fr; } }
+
+/* ── CART ITEM CARD ── */
+.cart-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 14px;
+  display: flex; gap: 16px;
+  align-items: flex-start;
+  transition: box-shadow .2s;
+  animation: fadeUp .4s ease both;
+}
+.cart-card:hover { box-shadow: 0 8px 40px rgba(0,0,0,.1); }
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.cart-img {
+  width: 100px; height: 100px;
+  border-radius: 12px; object-fit: cover;
+  flex-shrink: 0; background: #f0f0f5;
+}
+@media(max-width:480px){ .cart-img { width:72px; height:72px; } }
+
+.cart-info { flex: 1; min-width: 0; }
+
+.cart-name {
+  font-weight: 600; font-size: .95rem;
+  color: var(--dark); margin-bottom: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cart-meta { font-size: .78rem; color: #999; margin-bottom: 8px; }
+
+.cart-price {
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--brand); margin-bottom: 10px;
+}
+.cart-price-original {
+  font-size: .8rem; color: #bbb;
+  text-decoration: line-through; margin-left: 6px;
+  font-weight: 400;
+}
+.sale-tag {
+  background: #fff3cd; color: #856404;
+  font-size: .68rem; font-weight: 700;
+  padding: 2px 7px; border-radius: 20px;
+  margin-left: 6px; vertical-align: middle;
+}
+
+/* ── QTY CONTROLS ── */
+.qty-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.qty-controls {
+  display: inline-flex; align-items: center;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  overflow: hidden;
+}
+.qty-btn {
+  width: 34px; height: 34px;
+  background: none; border: none;
+  font-size: 1rem; cursor: pointer; color: var(--dark);
+  transition: background .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.qty-btn:hover { background: #f0f0f8; }
+.qty-num {
+  width: 36px; text-align: center;
+  font-weight: 600; font-size: .9rem; color: var(--dark);
+}
+
+.btn-remove {
+  background: none; border: none;
+  color: #dc3545; font-size: .78rem;
+  cursor: pointer; padding: 4px 8px;
+  border-radius: 8px;
+  transition: background .15s;
+  display: flex; align-items: center; gap: 4px;
+}
+.btn-remove:hover { background: #fce4e4; }
+
+.btn-wishlist {
+  background: none; border: none;
+  color: #999; font-size: .78rem;
+  cursor: pointer; padding: 4px 8px;
+  border-radius: 8px;
+  transition: background .15s, color .15s;
+  display: flex; align-items: center; gap: 4px;
+}
+.btn-wishlist:hover { background: #fce4f0; color: #e91e8c; }
+
+/* ── DELIVERY BADGE ── */
+.delivery-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: .73rem; color: var(--brand);
+  background: var(--brand-light);
+  padding: 3px 10px; border-radius: 20px;
+  margin-top: 6px;
+}
+
+/* ── SECTION HEADER ── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-header h6 { font-weight: 700; color: var(--dark); margin: 0; font-size: .9rem; }
+.clear-btn {
+  font-size: .78rem; color: #dc3545;
+  text-decoration: none; font-weight: 600;
+}
+.clear-btn:hover { color: #b02a37; }
+
+/* ── ORDER SUMMARY ── */
+.summary-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  position: sticky; top: 80px;
+}
+.summary-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem; color: var(--dark);
+  margin-bottom: 20px;
+}
+
+.summary-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; font-size: .88rem; color: var(--mid);
+}
+.summary-row.total {
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--dark); margin-top: 4px;
+}
+.summary-divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+.summary-saving {
+  background: var(--brand-light);
+  border-radius: 10px; padding: 10px 14px;
+  font-size: .82rem; color: var(--brand);
+  font-weight: 600; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.btn-checkout {
+  width: 100%;
+  background: linear-gradient(135deg, #198754, #0d6efd);
+  color: #fff; border: none;
+  border-radius: 12px; padding: 14px;
+  font-size: 1rem; font-weight: 700;
+  cursor: pointer; transition: opacity .2s, transform .1s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-checkout:hover { opacity: .92; transform: translateY(-1px); }
+
+.btn-continue {
+  width: 100%; margin-top: 10px;
+  background: none; border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 11px;
+  font-size: .88rem; font-weight: 600; color: var(--mid);
+  cursor: pointer; transition: border-color .2s, color .2s;
+  text-align: center; text-decoration: none; display: block;
+}
+.btn-continue:hover { border-color: var(--brand); color: var(--brand); }
+
+.trust-row {
+  display: flex; flex-direction: column; gap: 7px;
+  margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.trust-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .75rem; color: #999;
+}
+.trust-item i { color: var(--brand); }
+
+/* ── COUPON ── */
+.coupon-row {
+  display: flex; gap: 8px; margin-bottom: 16px;
+}
+.coupon-input {
+  flex: 1; border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 9px 12px;
+  font-size: .85rem; outline: none;
+  transition: border-color .2s;
+}
+.coupon-input:focus { border-color: var(--brand); }
+.coupon-btn {
+  background: var(--dark); color: #fff;
+  border: none; border-radius: 10px;
+  padding: 9px 16px; font-size: .82rem;
+  font-weight: 600; cursor: pointer;
+  transition: background .2s;
+}
+.coupon-btn:hover { background: #333; }
+
+/* ── EMPTY STATE ── */
+.empty-cart {
+  text-align: center; padding: 60px 20px;
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.empty-cart i { font-size: 3.5rem; color: #ddd; margin-bottom: 16px; display: block; }
+.empty-cart h5 { color: var(--dark); font-weight: 700; margin-bottom: 8px; }
+.empty-cart p { color: #999; font-size: .88rem; margin-bottom: 20px; }
+.btn-shop {
+  background: var(--brand); color: #fff;
+  border: none; border-radius: 12px;
+  padding: 12px 28px; font-weight: 600;
+  font-size: .9rem; text-decoration: none;
+  display: inline-block; transition: opacity .2s;
+}
+.btn-shop:hover { opacity: .88; color: #fff; }
+
+/* ── MOBILE STICKY CHECKOUT ── */
+.mobile-checkout-bar {
+  position: fixed; bottom: 56px; left: 0; right: 0;
+  background: #fff; border-top: 1px solid var(--border);
+  padding: 12px 16px; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.07);
+}
+.mobile-total { font-size: .8rem; color: #999; }
+.mobile-total strong { display: block; font-size: 1.1rem; color: var(--dark); }
+</style>
+
+<div class="cart-page">
+  <h1 class="cart-title">Shopping Cart</h1>
+  <p class="cart-subtitle">
+    {% if cart_items %}
+      {{ cart_items|length }} item{{ 's' if cart_items|length != 1 }} in your cart
+    {% else %}
+      Your cart is empty
+    {% endif %}
+  </p>
+
+  {% if cart_items %}
+  <div class="cart-layout">
+
+    <!-- ═══ LEFT: ITEMS ═══ -->
+    <div>
+      <div class="section-header">
+        <h6>Your Items</h6>
+        <a href="{{ url_for('clear_cart') }}" class="clear-btn">🗑 Clear All</a>
+      </div>
+
+      {% for item in cart_items %}
+      <div class="cart-card" style="animation-delay: {{ loop.index0 * 0.07 }}s;">
+
+        <a href="{{ url_for('product_detail', product_id=item.id) }}">
+          <img class="cart-img"
+               src="{{ url_for('static', filename='shoes/' ~ (item.images[0] if item.images else item.image or 'placeholder.jpg')) }}"
+               alt="{{ item.name }}">
+        </a>
+
+        <div class="cart-info">
+          <a href="{{ url_for('product_detail', product_id=item.id) }}" style="text-decoration:none;">
+            <div class="cart-name">{{ item.name }}</div>
+          </a>
+          <div class="cart-meta">
+            {% if item.color and item.color != '-' %}Color: <strong>{{ item.color }}</strong>{% endif %}
+            {% if item.size and item.size != '-' %} &nbsp;|&nbsp; Size: <strong>{{ item.size }}</strong>{% endif %}
+            {% if item.brand %} &nbsp;|&nbsp; {{ item.brand }}{% endif %}
+          </div>
+
+          <div class="cart-price">
+            GH₵ {{ item.effective_price }}
+            {% if item.on_sale and item.sale_price %}
+              <span class="cart-price-original">GH₵ {{ item.price }}</span>
+              <span class="sale-tag">SALE</span>
+            {% endif %}
+          </div>
+
+          <div class="qty-row">
+            <div class="qty-controls">
+              <a href="{{ url_for('decrease_quantity', product_id=item.id) }}" class="qty-btn">−</a>
+              <span class="qty-num">{{ item.quantity }}</span>
+              <a href="{{ url_for('increase_quantity', product_id=item.id) }}" class="qty-btn">+</a>
+            </div>
+
+            <a href="{{ url_for('remove_from_cart', product_id=item.id) }}" class="btn-remove">
+              <i class="bi bi-trash3"></i> Remove
+            </a>
+
+            <a href="{{ url_for('add_to_wishlist', product_id=item.id) }}" class="btn-wishlist">
+              <i class="bi bi-heart"></i> Save
+            </a>
+          </div>
+
+          <div class="delivery-badge">
+            <i class="bi bi-truck"></i> Free delivery · 2–4 days
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- ═══ RIGHT: SUMMARY ═══ -->
+    <div>
+      <div class="summary-card">
+        <div class="summary-title">Order Summary</div>
+
+        <!-- Coupon -->
+        <div class="coupon-row">
+          <input type="text" class="coupon-input" placeholder="Promo code">
+          <button class="coupon-btn">Apply</button>
+        </div>
+
+        <!-- Saving banner -->
+        {% set total_saving = namespace(value=0) %}
+        {% for item in cart_items %}
+          {% if item.on_sale and item.sale_price %}
+            {% set total_saving.value = total_saving.value + ((item.price | float - item.sale_price | float) * item.quantity) %}
+          {% endif %}
+        {% endfor %}
+        {% if total_saving.value > 0 %}
+        <div class="summary-saving">
+          🎉 You're saving GH₵ {{ "%.2f" | format(total_saving.value) }} on this order!
+        </div>
+        {% endif %}
+
+        <div class="summary-row">
+          <span>Subtotal ({{ cart_items|length }} items)</span>
+          <span>GH₵ {{ "%.2f" | format(subtotal) }}</span>
+        </div>
+        <div class="summary-row">
+          <span>Processing Fee</span>
+          <span>GH₵ {{ "%.2f" | format(payout_fee) }}</span>
+        </div>
+        <div class="summary-row">
+          <span>Shipping</span>
+          <span style="color:var(--brand); font-weight:600;">FREE</span>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-row total">
+          <span>Total</span>
+          <span>GH₵ {{ "%.2f" | format(total) }}</span>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <a href="{{ url_for('checkout') }}" class="btn-checkout">
+          🔒 Proceed to Checkout
+        </a>
+        <a href="{{ url_for('home') }}" class="btn-continue">
+          ← Continue Shopping
+        </a>
+
+        <div class="trust-row">
+          <div class="trust-item"><i class="bi bi-shield-lock"></i> Secure & encrypted checkout</div>
+          <div class="trust-item"><i class="bi bi-arrow-counterclockwise"></i> Easy returns & refunds</div>
+          <div class="trust-item"><i class="bi bi-truck"></i> Free shipping on all orders</div>
+          <div class="trust-item"><i class="bi bi-patch-check"></i> 100% genuine products</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Mobile sticky checkout bar -->
+  <div class="mobile-checkout-bar d-md-none">
+    <div class="mobile-total">
+      <span>Total</span>
+      <strong>GH₵ {{ "%.2f" | format(total) }}</strong>
+    </div>
+    <a href="{{ url_for('checkout') }}" class="btn-checkout" style="width:auto; padding: 12px 24px;">
+      🔒 Checkout
+    </a>
+  </div>
+
+  {% else %}
+
+  <!-- Empty cart -->
+  <div class="empty-cart">
+    <i class="bi bi-cart-x"></i>
+    <h5>Your cart is empty</h5>
+    <p>Looks like you haven't added anything yet.<br>Browse our products and find something you love!</p>
+    <a href="{{ url_for('home') }}" class="btn-shop">Start Shopping</a>
+  </div>
+
+  {% endif %}
+</div>
+
+{% endblock %}

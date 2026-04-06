@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root {
+  --brand:#198754;--brand-light:#e8f5e9;--dark:#1a1a2e;
+  --mid:#555570;--light:#f4f6f9;--card:#fff;--border:#eef0f5;
+  --radius:16px;--shadow:0 4px 24px rgba(0,0,0,.06);
+}
+body { font-family:'DM Sans',sans-serif; background:var(--light); }
+.track-page { max-width:660px; margin:0 auto; padding:2rem 1rem 5rem; }
+
+.track-header {
+  background:linear-gradient(135deg,var(--dark),#2d2d5e);
+  border-radius:var(--radius); padding:28px; margin-bottom:20px; text-align:center;
+}
+.track-header h1 { font-family:'Playfair Display',serif; font-size:1.5rem; color:#fff; margin:0 0 6px; }
+.track-header p { font-size:.82rem; color:rgba(255,255,255,.7); margin:0; }
+.order-ref { display:inline-block; margin-top:10px; background:rgba(255,255,255,.15); color:#fff; border-radius:8px; padding:4px 14px; font-size:.72rem; font-weight:600; font-family:monospace; }
+
+.a-card { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:16px; overflow:hidden; }
+.a-card-head { display:flex; align-items:center; gap:10px; padding:13px 18px; border-bottom:1px solid var(--border); background:#fafbfc; }
+.a-card-head i { color:var(--brand); }
+.a-card-title { font-weight:700; font-size:.9rem; color:var(--dark); margin:0; }
+.a-card-body { padding:18px 20px; }
+
+/* ── TIMELINE ── */
+.timeline { position:relative; padding-left:32px; }
+.timeline::before { content:''; position:absolute; left:11px; top:0; bottom:0; width:2px; background:var(--border); }
+.tl-item { position:relative; margin-bottom:24px; }
+.tl-item:last-child { margin-bottom:0; }
+.tl-dot {
+  position:absolute; left:-32px; top:2px;
+  width:22px; height:22px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.65rem; font-weight:800; flex-shrink:0;
+  border:2px solid #fff;
+}
+.tl-dot.done { background:var(--brand); color:#fff; }
+.tl-dot.active { background:#f59e0b; color:#fff; box-shadow:0 0 0 4px #fef3c7; }
+.tl-dot.todo { background:#e5e7eb; color:#9ca3af; }
+.tl-title { font-size:.88rem; font-weight:700; color:var(--dark); margin-bottom:2px; }
+.tl-title.todo { color:#aaa; }
+.tl-sub { font-size:.74rem; color:#aaa; }
+.tl-time { font-size:.7rem; color:var(--brand); font-weight:600; margin-top:2px; }
+
+/* ── INFO GRID ── */
+.info-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media(max-width:480px){ .info-grid { grid-template-columns:1fr; } }
+.info-label { font-size:.68rem; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px; }
+.info-value { font-size:.86rem; font-weight:600; color:var(--dark); }
+
+/* ── ITEMS ── */
+.order-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+.order-item:last-child { border-bottom:none; }
+.order-item img { width:52px; height:52px; border-radius:9px; object-fit:cover; flex-shrink:0; background:#f0f0f5; }
+.item-name { font-size:.84rem; font-weight:700; color:var(--dark); margin-bottom:2px; }
+.item-meta { font-size:.72rem; color:#aaa; }
+.item-price { font-size:.88rem; font-weight:700; color:var(--brand); white-space:nowrap; }
+
+.status-pill {
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:.78rem; font-weight:700; padding:5px 14px;
+  border-radius:20px;
+}
+.s-paid { background:#d1fae5; color:#065f46; }
+.s-pending { background:#fff3cd; color:#856404; }
+.s-delivered { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+.s-cancelled { background:#fee2e2; color:#991b1b; }
+.s-processing { background:#dbeafe; color:#1e40af; }
+
+.btn-home { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; background:linear-gradient(135deg,#198754,#0d6efd); color:#fff; border:none; border-radius:12px; padding:13px; font-size:.9rem; font-weight:700; text-decoration:none; margin-top:4px; transition:opacity .2s; font-family:'DM Sans',sans-serif; }
+.btn-home:hover { opacity:.92; color:#fff; }
+</style>
+
+<div class="track-page">
+
+  <div class="track-header">
+    <h1>📦 Track Your Order</h1>
+    <p>Real-time status for your ShopLuxe order</p>
+    <div class="order-ref">Order # {{ order.get('id','')[:18].upper() }}</div>
+  </div>
+
+  <!-- Status + Timeline -->
+  <div class="a-card">
+    <div class="a-card-head">
+      <i class="bi bi-geo-alt-fill"></i>
+      <h6 class="a-card-title">Order Status</h6>
+      <div style="margin-left:auto;">
+        <!-- Replace the status pill block -->
+       {% if order.status == 'Paid' or order.status == 'Processing' %}
+         <span class="status-pill s-processing">🔄 Processing</span>
+       {% elif order.status == 'Shipped' %}
+         <span class="status-pill s-processing">📦 Shipped</span>
+       {% elif order.status == 'Delivered' %}
+         <span class="status-pill s-delivered">✅ Delivered</span>
+       {% elif order.status == 'Cancelled' %}
+         <span class="status-pill s-cancelled">❌ Cancelled</span>
+       {% elif order.status == 'Pending' %}
+         <span class="status-pill s-pending">⏳ Pending</span>
+       {% else %}
+         <span class="status-pill s-paid">{{ order.status }}</span>
+       {% endif %}
+      </div>
+    </div>
+    <div class="a-card-body">
+      <div class="timeline">
+
+  <div class="tl-item">
+    <div class="tl-dot done"><i class="bi bi-check"></i></div>
+    <div class="tl-title">Order Placed</div>
+    <div class="tl-sub">Your order was received and payment confirmed.</div>
+    <div class="tl-time">{{ order.get('order_time','') }}</div>
+  </div>
+
+  <div class="tl-item">
+    {% if order.status in ['Paid','Processing','Shipped','Delivered'] %}
+    <div class="tl-dot {% if order.status in ['Shipped','Delivered'] %}done{% else %}active{% endif %}">
+      <i class="bi bi-{% if order.status in ['Shipped','Delivered'] %}check{% else %}gear{% endif %}"></i>
+    </div>
+    <div class="tl-title">Processing</div>
+    <div class="tl-sub">Your order is being prepared for shipment.</div>
+    {% else %}
+    <div class="tl-dot todo">2</div>
+    <div class="tl-title todo">Processing</div>
+    <div class="tl-sub">Waiting to start processing.</div>
+    {% endif %}
+  </div>
+
+  <!-- ✅ NEW: Shipped step -->
+  <div class="tl-item">
+    {% if order.status in ['Shipped','Delivered'] %}
+    <div class="tl-dot {% if order.status == 'Delivered' %}done{% else %}active{% endif %}">
+      <i class="bi bi-{% if order.status == 'Delivered' %}check{% else %}truck{% endif %}"></i>
+    </div>
+    <div class="tl-title">{% if order.status == 'Shipped' %}On the Way 🚚{% else %}Shipped{% endif %}</div>
+    <div class="tl-sub">Your order has been dispatched for delivery.</div>
+    {% else %}
+    <div class="tl-dot todo">3</div>
+    <div class="tl-title todo">Shipped</div>
+    <div class="tl-sub">Your order will be dispatched soon.</div>
+    {% endif %}
+  </div>
+
+  <div class="tl-item">
+    {% if order.status == 'Delivered' %}
+    <div class="tl-dot done"><i class="bi bi-check"></i></div>
+    <div class="tl-title">Delivered 🎉</div>
+    <div class="tl-sub">Your order was successfully delivered.</div>
+    <div class="tl-time">{{ order.get('completed_time','') }}</div>
+    {% else %}
+    <div class="tl-dot todo">4</div>
+    <div class="tl-title todo">Delivered</div>
+    <div class="tl-sub">Expected within 2–4 working days.</div>
+    {% endif %}
+  </div>
+
+</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Info -->
+  <div class="a-card">
+    <div class="a-card-head"><i class="bi bi-person-circle"></i><h6 class="a-card-title">Customer Details</h6></div>
+    <div class="a-card-body">
+      <div class="info-grid">
+        <div><div class="info-label">Name</div><div class="info-value">{{ order['name'] }}</div></div>
+        <div><div class="info-label">Email</div><div class="info-value">{{ order['email'] }}</div></div>
+        <div><div class="info-label">Phone</div><div class="info-value">{{ order.get('phone','-') }}</div></div>
+        <div><div class="info-label">Order Date</div><div class="info-value">{{ order.get('order_time','') }}</div></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Delivery Address -->
+  {% if order.get('address') %}
+  <div class="a-card">
+    <div class="a-card-head"><i class="bi bi-geo-alt-fill"></i><h6 class="a-card-title">Delivery Address</h6></div>
+    <div class="a-card-body">
+      <div style="font-size:.88rem;font-weight:600;color:var(--dark);margin-bottom:4px;">
+        <i class="bi bi-geo-alt" style="color:var(--brand);"></i> {{ order['address'] }}
+      </div>
+      {% if order.get('delivery_note') %}
+      <div style="font-size:.78rem;color:#888;margin-top:6px;">
+        <i class="bi bi-chat-text"></i> <em>Note: {{ order['delivery_note'] }}</em>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  
+  <!-- Items -->
+<div class="a-card">
+  <div class="a-card-head"><i class="bi bi-bag-check"></i><h6 class="a-card-title">Order Items</h6></div>
+  <div class="a-card-body">
+    {% for item in order.get('products') or order.get('items',[]) %}
+    <div class="order-item">
+      {% set ns = namespace(img='placeholder.jpg') %}
+      {% for p in all_products %}
+        {% if p.id == item.get('product_id') %}
+          {% if p.images %}
+            {% set ns.img = p.images[0] %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      <img src="{{ url_for('static', filename='shoes/' ~ ns.img) }}"
+           alt="{{ item.name }}"
+           onerror="this.src='{{ url_for('static', filename='shoes/placeholder.jpg') }}'">
+      <div style="flex:1;min-width:0;">
+        <div class="item-name">{{ item.name }}</div>
+        <div class="item-meta">Qty: {{ item.get('quantity',1) }}{% if item.get('color') and item.get('color')!='-' %} · {{ item.color }}{% endif %}{% if item.get('size') and item.get('size')!='-' %} · Size {{ item.size }}{% endif %}</div>
+      </div>
+      <div class="item-price">GH₵ {{ "%.2f"|format((item.get('effective_price') or item.get('price',0))|float) }}</div>
+    </div>
+    {% endfor %}
+    <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:2px solid var(--border);margin-top:4px;font-weight:800;font-size:1rem;">
+      <span>Total Paid</span>
+      <span style="color:var(--brand);">GH₵ {{ "%.2f"|format((order.get('total') or order.get('amount',0))|float) }}</span>
+    </div>
+  </div>
+</div>
+
+  <!-- CTA -->
+  <a href="{{ url_for('home') }}" class="btn-home">
+    <i class="bi bi-bag"></i> Continue Shopping
+  </a>
+
+</div>
+{% endblock %}

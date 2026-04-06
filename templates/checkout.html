@@ -1,0 +1,571 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --brand: #198754;
+  --brand-light: #e8f5e9;
+  --accent: #ff6600;
+  --dark: #1a1a2e;
+  --mid: #555570;
+  --light: #f4f6f9;
+  --card: #ffffff;
+  --border: #eef0f5;
+  --radius: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+body { font-family: 'DM Sans', sans-serif; background: var(--light); }
+
+.checkout-page { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 6rem; }
+
+.page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.9rem; color: var(--dark); margin-bottom: 6px;
+}
+.page-subtitle { font-size: .85rem; color: #999; margin-bottom: 2rem; }
+
+/* ── LAYOUT ── */
+.checkout-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px; align-items: start;
+}
+@media(max-width:900px){ .checkout-layout { grid-template-columns: 1fr; } }
+
+/* ── STEP CARD ── */
+.step-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.step-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--brand); color: #fff;
+  font-size: .8rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step-title { font-weight: 700; font-size: .95rem; color: var(--dark); margin: 0; }
+.step-body { padding: 22px; }
+
+/* ── FORM ── */
+.form-label {
+  font-size: .8rem; font-weight: 600;
+  color: var(--mid); margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.form-control {
+  border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 11px 14px;
+  font-size: .9rem; font-family: 'DM Sans', sans-serif;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none; width: 100%;
+}
+.form-control:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(25,135,84,.1);
+}
+.input-group-wrap {
+  position: relative;
+}
+.input-icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: #aaa; font-size: .9rem; pointer-events: none;
+}
+.input-icon + .form-control { padding-left: 36px; }
+
+/* ── DELIVERY OPTIONS ── */
+.delivery-option {
+  border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 14px 16px;
+  margin-bottom: 10px; cursor: pointer;
+  transition: border-color .2s, background .2s;
+  display: flex; align-items: center; gap: 14px;
+}
+.delivery-option:hover { border-color: var(--brand); background: var(--brand-light); }
+.delivery-option.selected { border-color: var(--brand); background: var(--brand-light); }
+.delivery-option input[type=radio] { accent-color: var(--brand); width: 16px; height: 16px; }
+.delivery-label { flex: 1; }
+.delivery-label strong { font-size: .88rem; color: var(--dark); display: block; }
+.delivery-label small { color: #888; font-size: .78rem; }
+.delivery-price { font-weight: 700; color: var(--brand); font-size: .88rem; }
+
+/* ── PAYMENT METHOD ── */
+.payment-option {
+  border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 14px 16px;
+  margin-bottom: 10px; cursor: pointer;
+  transition: border-color .2s, background .2s;
+  display: flex; align-items: center; gap: 14px;
+}
+.payment-option:hover { border-color: var(--brand); }
+.payment-option.selected { border-color: var(--brand); background: var(--brand-light); }
+.payment-logo {
+  width: 44px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .65rem; font-weight: 800; color: #fff;
+  flex-shrink: 0;
+}
+
+/* ── ORDER SUMMARY ── */
+.summary-card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 24px;
+  position: sticky; top: 80px;
+}
+.summary-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem; color: var(--dark); margin-bottom: 18px;
+}
+
+.order-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  margin-bottom: 14px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.order-item:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+.order-item-img {
+  width: 54px; height: 54px; border-radius: 10px;
+  object-fit: cover; flex-shrink: 0; background: #f0f0f5;
+}
+.order-item-info { flex: 1; min-width: 0; }
+.order-item-name {
+  font-size: .82rem; font-weight: 600; color: var(--dark);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.order-item-meta { font-size: .72rem; color: #999; margin-top: 2px; }
+.order-item-price {
+  font-size: .88rem; font-weight: 700; color: var(--brand);
+  white-space: nowrap;
+}
+.qty-badge {
+  background: var(--brand); color: #fff;
+  font-size: .6rem; font-weight: 700;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  position: absolute; top: -5px; right: -5px;
+}
+
+.summary-divider { height: 1px; background: var(--border); margin: 14px 0; }
+.summary-row {
+  display: flex; justify-content: space-between;
+  font-size: .85rem; color: var(--mid); margin-bottom: 8px;
+}
+.summary-row.total {
+  font-size: 1.05rem; font-weight: 700; color: var(--dark);
+  margin-top: 4px;
+}
+
+.saving-badge {
+  background: var(--brand-light); border-radius: 10px;
+  padding: 8px 12px; font-size: .78rem;
+  color: var(--brand); font-weight: 600;
+  margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+}
+
+/* ── PAY BUTTON ── */
+.btn-pay {
+  width: 100%;
+  background: linear-gradient(135deg, #198754, #0d6efd);
+  color: #fff; border: none; border-radius: 12px;
+  padding: 15px; font-size: 1rem; font-weight: 700;
+  cursor: pointer; transition: opacity .2s, transform .1s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 16px;
+}
+.btn-pay:hover { opacity: .92; transform: translateY(-1px); }
+.btn-pay:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+.secure-note {
+  text-align: center; font-size: .72rem; color: #aaa;
+  margin-top: 10px; display: flex; align-items: center;
+  justify-content: center; gap: 4px;
+}
+
+.trust-row {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: 14px; padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.trust-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .72rem; color: #999;
+}
+.trust-item i { color: var(--brand); }
+
+/* ── MOBILE STICKY ── */
+.mobile-pay-bar {
+  position: fixed; bottom: 56px; left: 0; right: 0;
+  background: #fff; border-top: 1px solid var(--border);
+  padding: 12px 16px; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.07);
+}
+.mobile-total { font-size: .75rem; color: #999; }
+.mobile-total strong { display: block; font-size: 1.1rem; color: var(--dark); }
+.btn-pay-mobile {
+  background: linear-gradient(135deg, #198754, #0d6efd);
+  color: #fff; border: none; border-radius: 10px;
+  padding: 11px 22px; font-weight: 700; font-size: .88rem;
+  cursor: pointer;
+}
+</style>
+
+<div class="checkout-page">
+  <h1 class="page-title">Checkout</h1>
+  <p class="page-subtitle">Complete your order securely</p>
+
+  <div class="checkout-layout">
+
+    <!-- ═══ LEFT: FORM ═══ -->
+    <div>
+
+      <!-- Step 1: Contact Info -->
+<div class="step-card">
+  <div class="step-header">
+    <div class="step-num">1</div>
+    <h6 class="step-title">Contact & Delivery Information</h6>
+  </div>
+  <div class="step-body">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Full Name</label>
+        <div class="input-group-wrap">
+          <i class="bi bi-person input-icon"></i>
+          <input type="text" id="field-name" class="form-control"
+                 placeholder="John Mensah"
+                 value="{{ session.get('user_name', '') }}" required>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Phone Number</label>
+        <div class="input-group-wrap">
+          <i class="bi bi-telephone input-icon"></i>
+          <input type="tel" id="field-phone" class="form-control"
+                 placeholder="024 000 0000" required>
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Email Address</label>
+        <div class="input-group-wrap">
+          <i class="bi bi-envelope input-icon"></i>
+          <input type="email" id="field-email" class="form-control"
+                 placeholder="you@email.com"
+                 value="{{ session.get('user_email', '') }}" required>
+        </div>
+      </div>
+
+      <!-- ✅ NEW: Delivery Address Fields -->
+      <div class="col-12">
+        <div style="height:1px;background:var(--border);margin:6px 0 12px;"></div>
+        <div style="font-size:.78rem;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">📍 Delivery Address</div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Street Address</label>
+        <div class="input-group-wrap">
+          <i class="bi bi-geo-alt input-icon"></i>
+          <input type="text" id="field-address" class="form-control"
+       placeholder="e.g. 12 Independence Ave, Osu"
+       value="{{ saved_address.get('address', '') }}" required>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">City / Town</label>
+        <div class="input-group-wrap">
+          <i class="bi bi-building input-icon"></i>
+          <input type="text" id="field-city" class="form-control"
+       placeholder="e.g. Accra"
+       value="{{ saved_address.get('city', '') }}" required>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Region</label>
+        <div class="input-group-wrap">
+          <i class="bi bi-map input-icon"></i>
+          <select id="field-region" class="form-control" required>
+            <option value="" disabled {% if not saved_address.get('region') %}selected{% endif %}>Select region</option>
+            {% for r in ['Greater Accra','Ashanti','Western','Eastern','Central','Northern','Upper East','Upper West','Volta','Brong-Ahafo','Oti','Savannah','North East','Western North','Ahafo','Bono East'] %}
+            <option value="{{ r }}" {% if saved_address.get('region') == r %}selected{% endif %}>{{ r }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Delivery Note <span style="color:#bbb;font-weight:400;text-transform:none;">(optional)</span></label>
+        <div class="input-group-wrap">
+          <i class="bi bi-chat-text input-icon"></i>
+          <input type="text" id="field-note" class="form-control"
+       placeholder="e.g. Blue gate, call on arrival, near the church..."
+       value="{{ saved_address.get('delivery_note', '') }}">
+      </div>
+
+    </div>
+  </div>
+</div>
+      <!-- Step 2: Delivery -->
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-num">2</div>
+          <h6 class="step-title">Delivery Method</h6>
+        </div>
+        <div class="step-body">
+
+          <label class="delivery-option selected" id="delivery-standard">
+            <input type="radio" name="delivery" value="standard" checked>
+            <div class="delivery-label">
+              <strong>🚚 Standard Delivery</strong>
+              <small>Arrives in 2–4 working days</small>
+            </div>
+            <span class="delivery-price">FREE</span>
+          </label>
+
+          <label class="delivery-option" id="delivery-express">
+            <input type="radio" name="delivery" value="express">
+            <div class="delivery-label">
+              <strong>⚡ Express Delivery</strong>
+              <small>Arrives tomorrow by 6pm</small>
+            </div>
+            <span class="delivery-price">GH₵ 15.00</span>
+          </label>
+
+          <label class="delivery-option" id="delivery-pickup">
+            <input type="radio" name="delivery" value="pickup">
+            <div class="delivery-label">
+              <strong>🏪 Pickup In Store</strong>
+              <small>Ready in 1–2 hours</small>
+            </div>
+            <span class="delivery-price">FREE</span>
+          </label>
+
+        </div>
+      </div>
+
+      <!-- Step 3: Payment -->
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-num">3</div>
+          <h6 class="step-title">Payment Method</h6>
+        </div>
+        <div class="step-body">
+
+          <div class="payment-option selected">
+            <input type="radio" name="payment" checked>
+            <div class="payment-logo" style="background:linear-gradient(135deg,#00c9a7,#845ec2);">PS</div>
+            <div>
+              <strong style="font-size:.88rem; color:var(--dark);">Paystack</strong>
+              <div style="font-size:.75rem; color:#999;">Card, Mobile Money, Bank Transfer</div>
+            </div>
+          </div>
+
+          <div style="background:#f8f9fc; border-radius:12px; padding:12px 16px; font-size:.78rem; color:#888; margin-top:8px;">
+            <i class="bi bi-shield-lock text-success me-1"></i>
+            Your payment is secured with 256-bit SSL encryption. We never store your card details.
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══ RIGHT: ORDER SUMMARY ═══ -->
+    <div>
+      <div class="summary-card">
+        <div class="summary-title">Order Summary</div>
+
+        <!-- Items -->
+        {% for item in cart_items %}
+        <div class="order-item">
+          <div style="position:relative; flex-shrink:0;">
+            <img class="order-item-img"
+                 src="{{ url_for('static', filename='shoes/' ~ (item.images[0] if item.images else item.image or 'placeholder.jpg')) }}"
+                 alt="{{ item.name }}">
+            <div class="qty-badge">{{ item.quantity }}</div>
+          </div>
+          <div class="order-item-info">
+            <div class="order-item-name">{{ item.name }}</div>
+            <div class="order-item-meta">
+              {% if item.color and item.color != '-' %}{{ item.color }}{% endif %}
+              {% if item.size and item.size != '-' %} · {{ item.size }}{% endif %}
+            </div>
+          </div>
+          <div class="order-item-price">GH₵ {{ "%.2f"|format(item.effective_price * item.quantity) }}</div>
+        </div>
+        {% endfor %}
+
+        <div class="summary-divider"></div>
+
+        <!-- Totals -->
+        {% set total_saving = namespace(value=0) %}
+        {% for item in cart_items %}
+          {% if item.on_sale and item.sale_price %}
+            {% set total_saving.value = total_saving.value + ((item.price|float - item.sale_price|float) * item.quantity) %}
+          {% endif %}
+        {% endfor %}
+
+        {% if total_saving.value > 0 %}
+        <div class="saving-badge">
+          🎉 You save GH₵ {{ "%.2f"|format(total_saving.value) }} on this order!
+        </div>
+        {% endif %}
+
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span>GH₵ {{ "%.2f"|format(subtotal) }}</span>
+        </div>
+        <div class="summary-row">
+          <span>Processing Fee <small style="color:#bbb;">(1.95% + 0.50)</small></span>
+          <span>GH₵ {{ "%.2f"|format(payout_fee) }}</span>
+        </div>
+        <div class="summary-row" id="delivery-fee-row">
+          <span>Delivery</span>
+          <span style="color:var(--brand); font-weight:600;">FREE</span>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-row total">
+          <span>Total</span>
+          <span id="grand-total">GH₵ {{ "%.2f"|format(total) }}</span>
+        </div>
+
+        <button class="btn-pay" id="pay-btn" type="button">
+          <i class="bi bi-lock"></i>
+          Pay GH₵ <span id="pay-amount">{{ "%.2f"|format(total) }}</span>
+        </button>
+
+        <div class="secure-note">
+          <i class="bi bi-shield-check text-success"></i>
+          Secured by Paystack · SSL Encrypted
+        </div>
+
+        <div class="trust-row">
+          <div class="trust-item"><i class="bi bi-arrow-counterclockwise"></i> Easy returns within 7 days</div>
+          <div class="trust-item"><i class="bi bi-patch-check"></i> 100% genuine products</div>
+          <div class="trust-item"><i class="bi bi-headset"></i> 24/7 customer support</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Mobile sticky pay bar -->
+<div class="mobile-pay-bar d-md-none">
+  <div class="mobile-total">
+    <span>Total</span>
+    <strong>GH₵ {{ "%.2f"|format(total) }}</strong>
+  </div>
+  <button class="btn-pay-mobile" id="pay-btn-mobile">
+    🔒 Pay Now
+  </button>
+</div>
+
+<input type="hidden" id="timezone">
+
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script>
+// Auto timezone
+document.getElementById("timezone").value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+// Delivery option toggle
+const deliveryOptions = document.querySelectorAll('.delivery-option');
+let deliveryFee = 0;
+const baseTotal = {{ total }};
+
+deliveryOptions.forEach(opt => {
+  opt.addEventListener('click', () => {
+    deliveryOptions.forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+    opt.querySelector('input[type=radio]').checked = true;
+
+    const val = opt.querySelector('input').value;
+    deliveryFee = val === 'express' ? 15 : 0;
+
+    const newTotal = baseTotal + deliveryFee;
+    document.getElementById('grand-total').textContent = 'GH₵ ' + newTotal.toFixed(2);
+    document.getElementById('pay-amount').textContent = newTotal.toFixed(2);
+
+    const feeRow = document.getElementById('delivery-fee-row').querySelector('span:last-child');
+    feeRow.textContent = deliveryFee > 0 ? 'GH₵ 15.00' : 'FREE';
+    feeRow.style.color = deliveryFee > 0 ? '#333' : 'var(--brand)';
+    feeRow.style.fontWeight = '600';
+  });
+});
+
+// Pay function
+function triggerPayment() {
+  const name = document.getElementById('field-name').value.trim();
+  const email = document.getElementById('field-email').value.trim();
+  const phone = document.getElementById('field-phone').value.trim();
+  const address = document.getElementById('field-address').value.trim();
+  const city = document.getElementById('field-city').value.trim();
+  const region = document.getElementById('field-region').value.trim();
+  const note = document.getElementById('field-note').value.trim();
+
+  if (!name || !email || !phone) {
+    alert('Please fill in your name, email, and phone number.');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    return;
+  }
+  if (!address || !city || !region) {
+    alert('Please fill in your delivery address, city, and region.');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    return;
+  }
+
+  const finalAmount = baseTotal + deliveryFee;
+  const fullAddress = `${address}, ${city}, ${region}`;
+
+  const handler = PaystackPop.setup({
+    key: "{{ paystack_public_key }}",
+    email: email,
+    amount: Math.round(finalAmount * 100),
+    currency: "GHS",
+    metadata: {
+      name: name,
+      email: email,
+      phone: phone,
+      address: fullAddress,        // ✅ NEW
+      delivery_note: note,          // ✅ NEW
+      items: [
+        {% for item in cart_items %}
+        {
+          name: "{{ item.name }}",
+          price: {{ item.effective_price }},
+          effective_price: {{ item.effective_price }},
+          quantity: {{ item.quantity }},
+          color: "{{ item.color or '' }}",
+          size: "{{ item.size or '' }}"
+        },
+        {% endfor %}
+      ],
+      custom_fields: [
+        { display_name: "Full Name", variable_name: "full_name", value: name },
+        { display_name: "Phone", variable_name: "phone", value: phone },
+        { display_name: "Delivery Address", variable_name: "address", value: fullAddress },  // ✅ NEW
+        { display_name: "Delivery Note", variable_name: "delivery_note", value: note }        // ✅ NEW
+      ]
+    },
+    callback: function(response) {
+      window.location.href = "/verify_payment?reference=" + response.reference;
+    },
+    onClose: function() {}
+  });
+  handler.openIframe();
+}
+document.getElementById('pay-btn').addEventListener('click', triggerPayment);
+document.getElementById('pay-btn-mobile')?.addEventListener('click', triggerPayment);
+</script>
+
+{% endblock %}

@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% block content %}
+<!-- UPDATED -->
+<style>
+.vd-header {
+  background: linear-gradient(135deg, var(--dark), #16213e);
+  border-radius: 20px; padding: 28px 32px; margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.vd-header-left { display: flex; align-items: center; gap: 16px; }
+.vd-logo { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; border: 2px solid rgba(255,255,255,.15); flex-shrink: 0; }
+.vd-logo-ph { width: 56px; height: 56px; border-radius: 14px; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; }
+.vd-shop-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #fff; margin: 0 0 4px; }
+.vd-shop-sub { font-size: .78rem; color: rgba(255,255,255,.45); }
+.vd-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-vd-add { background: var(--brand); color: #fff; border: none; border-radius: 10px; padding: 10px 20px; font-family: 'DM Sans', sans-serif; font-size: .85rem; font-weight: 700; text-decoration: none; transition: opacity .2s; display: flex; align-items: center; gap: 6px; }
+.btn-vd-add:hover { opacity: .88; color: #fff; }
+.btn-vd-store { background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.15); border-radius: 10px; padding: 10px 18px; font-family: 'DM Sans', sans-serif; font-size: .85rem; text-decoration: none; transition: all .2s; }
+.btn-vd-store:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+/* STATS */
+.vd-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
+.vd-stat {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 16px; padding: 20px 22px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.04);
+  border-bottom: 3px solid var(--stat-color);
+}
+.vd-stat-label { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #aaa; margin-bottom: 10px; }
+.vd-stat-value { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; color: var(--stat-color); }
+.vd-stat-sub { font-size: .72rem; color: #bbb; margin-top: 4px; }
+
+/* SECTION */
+.vd-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; margin-top: 32px; }
+.vd-section-head:first-of-type { margin-top: 0; }
+.vd-section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--dark); }
+.vd-section-link { font-size: .8rem; color: var(--brand); text-decoration: none; font-weight: 600; }
+
+/* TABLE */
+.vd-table-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.04); }
+.vd-table-card table { width: 100%; border-collapse: collapse; }
+.vd-table-card thead { background: var(--light); }
+.vd-table-card th { padding: 12px 18px; text-align: left; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #aaa; }
+.vd-table-card td { padding: 14px 18px; border-top: 1px solid var(--border); vertical-align: middle; font-size: .85rem; }
+.vd-table-card tr:hover td { background: var(--light); }
+
+.vd-prod-cell { display: flex; align-items: center; gap: 12px; }
+.vd-prod-img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; background: var(--light); border: 1px solid var(--border); flex-shrink: 0; }
+.vd-prod-img-ph { width: 44px; height: 44px; border-radius: 10px; background: var(--light); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.vd-prod-name { font-weight: 600; font-size: .85rem; color: var(--dark); }
+.vd-prod-cat { font-size: .72rem; color: #bbb; margin-top: 2px; }
+
+.vd-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.vd-badge-green { background: #d1fae5; color: #065f46; }
+.vd-badge-red { background: #fee2e2; color: #991b1b; }
+.vd-badge-orange { background: #fff3cd; color: #856404; }
+.vd-badge-blue { background: #dbeafe; color: #1e40af; }
+.vd-badge-purple { background: #ede9fe; color: #5b21b6; }
+.vd-badge-gray { background: var(--light); color: #aaa; }
+
+.vd-action-btns { display: flex; gap: 6px; }
+.vd-btn-sm { padding: 6px 13px; border-radius: 7px; font-size: 11px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity .2s; }
+.vd-btn-edit { background: #dbeafe; color: #1e40af; }
+.vd-btn-delete { background: #fee2e2; color: #991b1b; }
+.vd-btn-sm:hover { opacity: .75; }
+
+.vd-empty { text-align: center; padding: 48px 20px; }
+.vd-empty .emoji { font-size: 2.5rem; margin-bottom: 12px; }
+.vd-empty p { color: #bbb; font-size: .88rem; margin-bottom: 16px; }
+
+@media(max-width:900px){ .vd-stats { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:600px){
+  .vd-stats { grid-template-columns: 1fr 1fr; }
+  .vd-header { padding: 20px; }
+  .vd-table-card { overflow-x: auto; }
+}
+</style>
+
+<!-- HEADER -->
+<div class="vd-header">
+  <div class="vd-header-left">
+    {% if vendor.logo %}
+      <img src="{{ url_for('static', filename='shoes/' + vendor.logo) }}" class="vd-logo" alt="">
+    {% else %}
+      <div class="vd-logo-ph">🏪</div>
+    {% endif %}
+    <div>
+      <h1 class="vd-shop-name">{{ vendor.shop_name }}</h1>
+      <div class="vd-shop-sub">Vendor Dashboard</div>
+    </div>
+  </div>
+  <div class="vd-header-actions">
+    <a href="{{ url_for('vendor_storefront', vendor_id=vendor.id) }}" class="btn-vd-store" target="_blank">🏪 View Store</a>
+    <a href="{{ url_for('vendor_add_product') }}" class="btn-vd-add"><i class="bi bi-plus-lg"></i> Add Product</a>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="vd-stats">
+  <div class="vd-stat" style="--stat-color:#198754;">
+    <div class="vd-stat-label">Total Earnings</div>
+    <div class="vd-stat-value">GH₵{{ "%.0f"|format(stats.total_earnings) }}</div>
+    <div class="vd-stat-sub">After 10% platform fee</div>
+  </div>
+  <div class="vd-stat" style="--stat-color:#f59e0b;">
+    <div class="vd-stat-label">Pending Payout</div>
+    <div class="vd-stat-value">GH₵{{ "%.0f"|format(stats.pending_payout) }}</div>
+    <div class="vd-stat-sub">Awaiting transfer</div>
+  </div>
+  <div class="vd-stat" style="--stat-color:#3b82f6;">
+    <div class="vd-stat-label">Total Orders</div>
+    <div class="vd-stat-value">{{ stats.total_orders }}</div>
+    <div class="vd-stat-sub">All time</div>
+  </div>
+  <div class="vd-stat" style="--stat-color:#8b5cf6;">
+    <div class="vd-stat-label">Products</div>
+    <div class="vd-stat-value">{{ stats.total_products }}</div>
+    <div class="vd-stat-sub">Active listings</div>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="vd-section-head">
+  <div class="vd-section-title">My Products</div>
+  <a href="{{ url_for('vendor_add_product') }}" class="vd-section-link">+ Add new →</a>
+</div>
+
+{% if products %}
+<div class="vd-table-card" style="margin-bottom:32px;">
+  <table>
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Price</th>
+        <th>Stock</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in products %}
+      <tr>
+        <td>
+          <div class="vd-prod-cell">
+            {% if p.images %}
+              <img src="{{ url_for('static', filename='shoes/' + p.images[0]) }}" class="vd-prod-img" alt="">
+            {% else %}
+              <div class="vd-prod-img-ph">👟</div>
+            {% endif %}
+            <div>
+              <div class="vd-prod-name">{{ p.name }}</div>
+              <div class="vd-prod-cat">{{ p.category or 'Uncategorized' }}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          {% if p.on_sale and p.sale_price %}
+            <strong style="color:#dc3545;">GH₵{{ p.sale_price }}</strong>
+            <span style="color:#bbb;text-decoration:line-through;font-size:.78rem;margin-left:5px;">GH₵{{ p.price }}</span>
+          {% else %}
+            <strong>GH₵{{ p.price }}</strong>
+          {% endif %}
+        </td>
+        <td>
+          {% if p.stock == 0 %}
+            <span class="vd-badge vd-badge-red">Out of stock</span>
+          {% elif p.stock <= 5 %}
+            <span class="vd-badge vd-badge-orange">Low — {{ p.stock }}</span>
+          {% else %}
+            <span class="vd-badge vd-badge-green">{{ p.stock }} in stock</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if p.on_sale %}<span class="vd-badge vd-badge-red">Sale</span> {% endif %}
+          {% if p.featured %}<span class="vd-badge vd-badge-purple">Featured</span> {% endif %}
+          {% if p.new_arrival %}<span class="vd-badge vd-badge-blue">New</span> {% endif %}
+          {% if not p.on_sale and not p.featured and not p.new_arrival %}
+            <span class="vd-badge vd-badge-gray">Active</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="vd-action-btns">
+            <a href="{{ url_for('vendor_edit_product', product_id=p.id) }}" class="vd-btn-sm vd-btn-edit">Edit</a>
+            <form method="POST" action="{{ url_for('vendor_delete_product', product_id=p.id) }}" style="display:inline;" onsubmit="return confirm('Delete this product?')">
+              <button type="submit" class="vd-btn-sm vd-btn-delete">Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="vd-table-card" style="margin-bottom:32px;">
+  <div class="vd-empty">
+    <div class="emoji">📦</div>
+    <p>No products yet. Start listing to make sales!</p>
+    <a href="{{ url_for('vendor_add_product') }}" class="btn-vd-add" style="display:inline-flex;">+ Add First Product</a>
+  </div>
+</div>
+{% endif %}
+
+<!-- ORDERS -->
+<div class="vd-section-head">
+  <div class="vd-section-title">Recent Orders</div>
+</div>
+
+{% if orders %}
+<div class="vd-table-card">
+  <table>
+    <thead>
+      <tr>
+        <th>Order</th>
+        <th>Customer</th>
+        <th>Items</th>
+        <th>Your Earnings</th>
+        <th>Payout</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td style="font-family:monospace;font-size:.78rem;color:#aaa;">#{{ order.id[:10] }}</td>
+        <td>
+          <div style="font-weight:600;font-size:.85rem;">{{ order.name }}</div>
+          <div style="font-size:.75rem;color:#aaa;">{{ order.email }}</div>
+        </td>
+        <td>
+          {% for item in order.vendor_items %}
+            <div style="font-size:.8rem;">{{ item.name }} × {{ item.get('quantity',1) }}</div>
+          {% endfor %}
+        </td>
+        <td><strong style="color:var(--brand);">GH₵{{ "%.2f"|format(order.vendor_earnings) }}</strong></td>
+        <td>
+          {% if order.payout_status == 'Paid' %}
+            <span class="vd-badge vd-badge-green">Paid</span>
+          {% else %}
+            <span class="vd-badge vd-badge-orange">Pending</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if order.status == 'Delivered' %}<span class="vd-badge vd-badge-green">Delivered</span>
+          {% elif order.status == 'Cancelled' %}<span class="vd-badge vd-badge-red">Cancelled</span>
+          {% elif order.status == 'Paid' %}<span class="vd-badge vd-badge-blue">Processing</span>
+          {% else %}<span class="vd-badge vd-badge-gray">{{ order.status }}</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="vd-table-card">
+  <div class="vd-empty">
+    <div class="emoji">🛒</div>
+    <p>No orders yet. Orders will appear here once customers purchase your products.</p>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
