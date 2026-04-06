@@ -1,150 +1,348 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>{{ selected_category }} - ShopLuxe</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background-color: #f9fafb;
-      padding-bottom: 80px;
-    }
+{% extends 'base.html' %}
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root {
+  --brand:#198754;--brand-light:#e8f5e9;--dark:#1a1a2e;
+  --mid:#555570;--light:#f4f6f9;--card:#fff;--border:#eef0f5;
+  --radius:14px;--shadow:0 4px 24px rgba(0,0,0,.06);--accent:#ff6600;
+}
+body { font-family:'DM Sans',sans-serif; background:var(--light); }
 
-    .category-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 20px;
-      background: #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
+/* ── PAGE HEADER ── */
+.cat-page-header {
+  background: linear-gradient(135deg, var(--dark) 0%, #2d2d5e 100%);
+  border-radius: var(--radius);
+  padding: 22px 28px;
+  margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+}
+.cat-page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem; color: #fff; margin: 0 0 4px;
+}
+.cat-page-sub { font-size: .8rem; color: rgba(255,255,255,.6); margin: 0; }
+.cat-breadcrumb { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: rgba(255,255,255,.5); }
+.cat-breadcrumb a { color: rgba(255,255,255,.6); text-decoration: none; }
+.cat-breadcrumb a:hover { color: #fff; }
 
-    .category-header h1 {
-      margin: 0;
-      color: #333;
-      font-size: 1.5rem;
-    }
+/* ── FILTER BAR ── */
+.filter-bar {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 12px 18px;
+  margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px;
+}
+.filter-count { font-size: .85rem; color: var(--mid); }
+.filter-count strong { color: var(--dark); }
+.filter-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sort-select {
+  border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 7px 12px; font-size: .8rem; font-family: 'DM Sans', sans-serif;
+  color: var(--dark); background: #fff; outline: none; cursor: pointer;
+  transition: border-color .2s;
+}
+.sort-select:focus { border-color: var(--brand); }
+.view-btn {
+  width: 34px; height: 34px; border-radius: 8px;
+  border: 1.5px solid var(--border); background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--mid); cursor: pointer; transition: all .15s;
+  font-size: .9rem;
+}
+.view-btn.active, .view-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
 
-    .home-btn {
-      background-color: transparent;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 6px 12px;
-      color: #333;
-      text-decoration: none;
-      transition: all 0.3s;
-    }
+/* ── PRODUCT GRID ── */
+.p-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.p-grid.list-view {
+  grid-template-columns: 1fr;
+}
+@media(max-width:480px){
+  .p-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+}
 
-    .home-btn:hover {
-      background-color: #f8f9fa;
-      color: #000;
-    }
+/* ── PRODUCT CARD ── */
+.p-card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); overflow: hidden;
+  transition: box-shadow .2s, transform .2s;
+  position: relative;
+}
+.p-card:hover { box-shadow: 0 10px 40px rgba(0,0,0,.12); transform: translateY(-3px); }
 
-    .product-card {
-      background: #fff;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      text-align: center;
-      transition: transform 0.2s ease;
-    }
+.p-card-img-wrap { overflow: hidden; position: relative; }
+.p-card-img {
+  width: 100%; aspect-ratio: 1;
+  object-fit: cover; background: #f0f0f5;
+  display: block; transition: transform .4s;
+}
+.p-card:hover .p-card-img { transform: scale(1.04); }
 
-    .product-card:hover {
-      transform: scale(1.03);
-    }
+/* List view image */
+.p-grid.list-view .p-card { display: flex; gap: 0; }
+.p-grid.list-view .p-card-img-wrap { width: 160px; flex-shrink: 0; }
+.p-grid.list-view .p-card-img { aspect-ratio: unset; height: 100%; }
+.p-grid.list-view .p-card-body { flex: 1; padding: 16px; }
+.p-grid.list-view .p-card-footer { padding: 0 16px 16px; }
 
-    .product-card img {
-      width: 100%;
-      height: 220px;
-      object-fit: cover;
-    }
+.p-badge {
+  position: absolute; top: 10px; left: 10px;
+  font-size: .62rem; font-weight: 800; padding: 3px 9px;
+  border-radius: 20px; text-transform: uppercase; letter-spacing: .5px; z-index: 2;
+}
+.p-badge.sale { background: var(--accent); color: #fff; }
+.p-badge.new  { background: var(--brand); color: #fff; }
+.p-badge.feat { background: #8b5cf6; color: #fff; }
 
-    .product-card h3 {
-      margin: 10px 0 5px;
-      font-size: 1rem;
-    }
+.p-wish {
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.9); border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  text-decoration: none; color: #bbb;
+  opacity: 0; transition: opacity .2s;
+}
+.p-card:hover .p-wish { opacity: 1; }
+.p-wish:hover { background: #fff; color: #e91e8c; }
 
-    .product-card p {
-      margin: 0 0 10px;
-      font-weight: 500;
-    }
+.p-card-body { padding: 12px 14px; }
+.p-card-name {
+  font-size: .86rem; font-weight: 600; color: var(--dark);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 3px; text-decoration: none; display: block;
+}
+.p-card-name:hover { color: var(--brand); }
+.p-card-brand { font-size: .7rem; color: #bbb; margin-bottom: 6px; }
 
-    .price-old {
-      color: #999;
-      text-decoration: line-through;
-      font-size: 0.9rem;
-      margin-right: 4px;
-    }
+.p-card-price { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.p-price { font-size: 1rem; font-weight: 700; color: var(--brand); }
+.p-price-orig { font-size: .75rem; color: #bbb; text-decoration: line-through; }
+.p-discount {
+  font-size: .68rem; font-weight: 700;
+  background: #fff3cd; color: #856404;
+  padding: 2px 6px; border-radius: 6px;
+}
 
-    .price-new {
-      color: #dc3545;
-      font-weight: 600;
-    }
+.p-card-stock { font-size: .7rem; margin-top: 3px; }
+.stock-ok { color: var(--brand); }
+.stock-low { color: #f97316; font-weight: 600; }
+.stock-out { color: #ef4444; font-weight: 600; }
 
-    .price-normal {
-      color: #198754;
-      font-weight: 600;
-    }
+.p-card-footer { padding: 0 14px 14px; }
+.p-card-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--brand), #0d6efd);
+  color: #fff; border: none; border-radius: 10px;
+  padding: 9px; font-size: .78rem; font-weight: 700;
+  cursor: pointer; transition: opacity .2s;
+  font-family: 'DM Sans', sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  text-decoration: none;
+}
+.p-card-btn:hover { opacity: .9; color: #fff; }
+.p-card-btn.oos { background: #eee; color: #aaa; cursor: not-allowed; }
 
-    .no-products {
-      text-align: center;
-      color: #888;
-      font-size: 1.2rem;
-      margin-top: 40px;
-    }
-  </style>
-</head>
-<body>
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.empty-state i { font-size: 3rem; color: #ddd; display: block; margin-bottom: 16px; }
+.empty-state h5 { color: var(--dark); font-weight: 700; margin-bottom: 8px; }
+.empty-state p { color: #999; font-size: .88rem; margin-bottom: 20px; }
+.btn-browse {
+  background: var(--brand); color: #fff; border: none;
+  border-radius: 10px; padding: 11px 26px;
+  font-weight: 600; font-size: .88rem;
+  text-decoration: none; display: inline-block;
+  transition: opacity .2s;
+}
+.btn-browse:hover { opacity: .88; color: #fff; }
 
-  <!-- Category Header -->
-  <div class="category-header">
-    <h1>{{ selected_category }}</h1>
-    <a href="{{ url_for('home') }}" class="home-btn">
-      <i class="bi bi-house-door-fill"></i> Home
-    </a>
+/* ── CATEGORY CHIPS ── */
+.cat-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.cat-chip {
+  padding: 6px 14px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: var(--card);
+  font-size: .78rem; font-weight: 600; color: var(--mid);
+  text-decoration: none; transition: all .15s; white-space: nowrap;
+}
+.cat-chip:hover, .cat-chip.active { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
+</style>
+
+{% set cat_icons = {
+  'Sneakers': '👟', 'Heels': '👠', 'Sandals': '🩴', 'Boots': '🥾',
+  'Formal': '👔', 'Sport': '🏃', 'Kids': '🧒', 'Appliances': '🔌',
+  'Software': '💻', 'Books': '📚', 'Jewelry And Accessories': '💍',
+  'Sale': '🏷️', 'New Arrivals': '✨', 'new': '✨', 'popular': '🔥', 'featured': '⭐'
+} %}
+{% set icon = cat_icons.get(category, '🛍️') %}
+
+<!-- PAGE HEADER -->
+<div class="cat-page-header">
+  <div>
+    <div class="cat-breadcrumb">
+      <a href="{{ url_for('home') }}">Home</a>
+      <i class="bi bi-chevron-right" style="font-size:.65rem;"></i>
+      <span>{{ category }}</span>
+    </div>
+    <h1 class="cat-page-title">{{ icon }} {{ category }}</h1>
+    <p class="cat-page-sub">{{ products|length }} product{{ 's' if products|length != 1 }} found</p>
   </div>
+</div>
 
-  <!-- Product Section -->
-  <div class="container mt-4">
-    {% if products %}
-      <div class="row g-3">
-        {% for product in products %}
-          <div class="col-6 col-md-4 col-lg-3">
-            <div class="product-card h-100">
-              <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none text-dark">
-                {% if product.images %}
-                  <img src="{{ url_for('static', filename='shoes/' + product.images[0]) }}" alt="{{ product.name }}">
-                {% else %}
-                  <img src="{{ url_for('static', filename='placeholder.jpg') }}" alt="No image available">
-                {% endif %}
-                <div class="p-2">
-                  <h3 class="fw-semibold">{{ product.name }}</h3>
+<!-- CATEGORY CHIPS -->
+<div class="cat-chips">
+  {% for cat in ['Sneakers','Heels','Sandals','Boots','Formal','Sport','Kids','Appliances','Software','Books','Jewelry And Accessories'] %}
+  <a href="{{ url_for('filtered', category=cat) }}"
+     class="cat-chip {% if cat == category %}active{% endif %}">{{ cat }}</a>
+  {% endfor %}
+  <a href="{{ url_for('filtered', category='Sale') }}"
+     class="cat-chip {% if category == 'Sale' %}active{% endif %}" style="color:#ff6600;border-color:#ff6600;">🔥 Sale</a>
+  <a href="{{ url_for('filtered', category='New Arrivals') }}"
+     class="cat-chip {% if category == 'New Arrivals' %}active{% endif %}" style="color:var(--brand);border-color:var(--brand);">✨ New</a>
+</div>
 
-                  {% if product.on_sale and product.sale_price %}
-                    <p>
-                      <span class="price-old">GH₵ {{ product.price }}</span>
-                      <span class="price-new">GH₵ {{ product.sale_price }}</span>
-                    </p>
-                  {% else %}
-                    <p class="price-normal">GH₵ {{ product.price }}</p>
-                  {% endif %}
-                </div>
-              </a>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="no-products">
-        <i class="bi bi-emoji-frown fs-1 d-block mb-2"></i>
-        No products found in this category.
-      </div>
-    {% endif %}
+{% if products %}
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="filter-count">
+    Showing <strong>{{ products|length }}</strong> product{{ 's' if products|length != 1 }}
+    {% if category %} in <strong>{{ category }}</strong>{% endif %}
   </div>
+  <div class="filter-right">
+    <select class="sort-select" id="sortSelect" onchange="sortProducts(this.value)">
+      <option value="default">Sort: Default</option>
+      <option value="price-low">Price: Low to High</option>
+      <option value="price-high">Price: High to Low</option>
+      <option value="name-az">Name: A–Z</option>
+      <option value="popular">Most Popular</option>
+    </select>
+    <button class="view-btn active" id="gridBtn" onclick="setView('grid')" title="Grid view">
+      <i class="bi bi-grid-3x3-gap"></i>
+    </button>
+    <button class="view-btn" id="listBtn" onclick="setView('list')" title="List view">
+      <i class="bi bi-list-ul"></i>
+    </button>
+  </div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<!-- PRODUCT GRID -->
+<div class="p-grid" id="productGrid">
+  {% for product in products %}
+  <div class="p-card"
+       data-name="{{ product.name|lower }}"
+       data-price="{{ product.sale_price if product.on_sale and product.sale_price else product.price }}"
+       data-popularity="{{ product.popularity or 0 }}">
+
+    <div class="p-card-img-wrap">
+      <a href="{{ url_for('product_detail', product_id=product.id) }}">
+        <img class="p-card-img"
+             src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
+             alt="{{ product.name }}"
+             onerror="this.src='{{ url_for('static', filename='shoes/placeholder.jpg') }}'">
+      </a>
+
+      {% if product.on_sale and product.sale_price %}
+        <span class="p-badge sale">Sale</span>
+      {% elif product.new_arrival %}
+        <span class="p-badge new">New</span>
+      {% elif product.featured %}
+        <span class="p-badge feat">⭐ Pick</span>
+      {% endif %}
+
+      <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish" title="Add to wishlist">
+        <i class="bi bi-heart"></i>
+      </a>
+    </div>
+
+    <div class="p-card-body">
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
+      {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+
+      <div class="p-card-price">
+        <span class="p-price">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
+        {% if product.on_sale and product.sale_price %}
+          <span class="p-price-orig">GH₵ {{ product.price }}</span>
+          {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
+          <span class="p-discount">-{{ disc }}%</span>
+        {% endif %}
+      </div>
+
+      <div class="p-card-stock">
+        {% if product.stock == 0 %}
+          <span class="stock-out">⚠️ Out of stock</span>
+        {% elif product.stock < 5 %}
+          <span class="stock-low">⚠️ Only {{ product.stock }} left</span>
+        {% else %}
+          <span class="stock-ok">✅ In stock</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="p-card-footer">
+      {% if product.stock > 0 %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
+        <i class="bi bi-bag-plus"></i> Add to Cart
+      </a>
+      {% else %}
+      <span class="p-card-btn oos">Out of Stock</span>
+      {% endif %}
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+
+<!-- EMPTY STATE -->
+<div class="empty-state">
+  <i class="bi bi-search"></i>
+  <h5>No products found</h5>
+  <p>There are no products in the <strong>{{ category }}</strong> category yet.<br>Check back soon or browse other categories.</p>
+  <a href="{{ url_for('home') }}" class="btn-browse">🛍️ Browse All Products</a>
+</div>
+
+{% endif %}
+
+<script>
+function setView(type) {
+  const grid = document.getElementById('productGrid');
+  const gridBtn = document.getElementById('gridBtn');
+  const listBtn = document.getElementById('listBtn');
+  if (type === 'list') {
+    grid.classList.add('list-view');
+    listBtn.classList.add('active');
+    gridBtn.classList.remove('active');
+  } else {
+    grid.classList.remove('list-view');
+    gridBtn.classList.add('active');
+    listBtn.classList.remove('active');
+  }
+}
+
+function sortProducts(val) {
+  const grid = document.getElementById('productGrid');
+  const cards = [...grid.querySelectorAll('.p-card')];
+  cards.sort((a, b) => {
+    if (val === 'price-low') return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+    if (val === 'price-high') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+    if (val === 'name-az') return a.dataset.name.localeCompare(b.dataset.name);
+    if (val === 'popular') return parseInt(b.dataset.popularity) - parseInt(a.dataset.popularity);
+    return 0;
+  });
+  cards.forEach(c => grid.appendChild(c));
+}
+</script>
+{% endblock %}
