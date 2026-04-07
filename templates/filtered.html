@@ -1,4 +1,8 @@
 {% extends 'base.html' %}
+{% block seo_title %}{{ category }} — Shop Online | ShopLuxe Ghana{% endblock %}
+{% block seo_description %}Browse {{ products|length }} {{ category }} products on ShopLuxe. Fast delivery across Ghana with secure Paystack payment.{% endblock %}
+{% block og_title %}{{ category }} — ShopLuxe Ghana{% endblock %}
+{% block og_description %}Shop {{ category }} online at ShopLuxe. {{ products|length }} products available with free delivery across Ghana.{% endblock %}
 {% block content %}
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -177,6 +181,42 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
   text-decoration: none; transition: all .15s; white-space: nowrap;
 }
 .cat-chip:hover, .cat-chip.active { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
+
+/* Price filter inputs */
+.price-filter { display:flex; align-items:center; gap:4px; }
+.price-label { font-size:.75rem; color:var(--mid); }
+.price-input {
+  width:70px; border:1.5px solid var(--border); border-radius:8px;
+  padding:6px 8px; font-size:.78rem; font-family:'DM Sans',sans-serif;
+  color:var(--dark); outline:none; transition:border-color .2s;
+}
+.price-input:focus { border-color:var(--brand); }
+
+/* Toggle filter buttons */
+.filter-toggle {
+  padding:6px 12px; border-radius:20px;
+  border:1.5px solid var(--border); background:var(--card);
+  font-size:.76rem; font-weight:600; color:var(--mid);
+  cursor:pointer; transition:all .15s; white-space:nowrap;
+  font-family:'DM Sans',sans-serif;
+}
+.filter-toggle.active {
+  border-color:var(--brand); color:var(--brand);
+  background:var(--brand-light);
+}
+
+/* Active filter tags */
+.active-filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.filter-tag {
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--brand-light); border:1.5px solid var(--brand);
+  color:var(--brand); border-radius:20px;
+  padding:4px 12px; font-size:.76rem; font-weight:600;
+}
+.filter-tag button {
+  background:none; border:none; color:var(--brand);
+  cursor:pointer; font-size:.9rem; padding:0; line-height:1;
+}
 </style>
 
 {% set cat_icons = {
@@ -215,16 +255,31 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
 {% if products %}
 
 <!-- FILTER BAR -->
+<!-- FILTER BAR -->
 <div class="filter-bar">
   <div class="filter-count">
-    Showing <strong>{{ products|length }}</strong> product{{ 's' if products|length != 1 }}
+    Showing <strong id="visibleCount">{{ products|length }}</strong> product{{ 's' if products|length != 1 }}
     {% if category %} in <strong>{{ category }}</strong>{% endif %}
   </div>
   <div class="filter-right">
+
+    <!-- Price Range -->
+    <div class="price-filter">
+      <span class="price-label">GH₵</span>
+      <input type="number" id="priceMin" placeholder="Min" class="price-input" oninput="applyFilters()">
+      <span class="price-label">–</span>
+      <input type="number" id="priceMax" placeholder="Max" class="price-input" oninput="applyFilters()">
+    </div>
+
+    <!-- Toggle Filters -->
+    <button class="filter-toggle" id="toggleSale" onclick="toggleFilter('sale')">🏷️ Sale</button>
+    <button class="filter-toggle" id="toggleNew" onclick="toggleFilter('new')">✨ New</button>
+    <button class="filter-toggle" id="toggleStock" onclick="toggleFilter('stock')">✅ In Stock</button>
+
     <select class="sort-select" id="sortSelect" onchange="sortProducts(this.value)">
       <option value="default">Sort: Default</option>
-      <option value="price-low">Price: Low to High</option>
-      <option value="price-high">Price: High to Low</option>
+      <option value="price-low">Price: Low → High</option>
+      <option value="price-high">Price: High → Low</option>
       <option value="name-az">Name: A–Z</option>
       <option value="popular">Most Popular</option>
     </select>
@@ -237,13 +292,18 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
   </div>
 </div>
 
+<!-- ACTIVE FILTER TAGS -->
+<div id="activeFilters" class="active-filters" style="display:none;"></div>
 <!-- PRODUCT GRID -->
 <div class="p-grid" id="productGrid">
   {% for product in products %}
-  <div class="p-card"
-       data-name="{{ product.name|lower }}"
-       data-price="{{ product.sale_price if product.on_sale and product.sale_price else product.price }}"
-       data-popularity="{{ product.popularity or 0 }}">
+ <div class="p-card"
+      data-name="{{ product.name|lower }}"
+      data-price="{{ product.sale_price if product.on_sale and product.sale_price else product.price }}"
+      data-popularity="{{ product.popularity or 0 }}"
+      data-sale="{{ 'true' if product.on_sale and product.sale_price else 'false' }}"
+      data-new="{{ 'true' if product.new_arrival else 'false' }}"
+      data-stock="{{ product.stock }}">
 
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
@@ -317,19 +377,70 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
 {% endif %}
 
 <script>
+const activeToggles = { sale: false, new: false, stock: false };
+
 function setView(type) {
   const grid = document.getElementById('productGrid');
-  const gridBtn = document.getElementById('gridBtn');
-  const listBtn = document.getElementById('listBtn');
-  if (type === 'list') {
-    grid.classList.add('list-view');
-    listBtn.classList.add('active');
-    gridBtn.classList.remove('active');
-  } else {
-    grid.classList.remove('list-view');
-    gridBtn.classList.add('active');
-    listBtn.classList.remove('active');
+  document.getElementById('listBtn').classList.toggle('active', type === 'list');
+  document.getElementById('gridBtn').classList.toggle('active', type !== 'list');
+  grid.classList.toggle('list-view', type === 'list');
+}
+
+function toggleFilter(type) {
+  activeToggles[type] = !activeToggles[type];
+  document.getElementById('toggle' + type.charAt(0).toUpperCase() + type.slice(1))
+    .classList.toggle('active', activeToggles[type]);
+  applyFilters();
+}
+
+function applyFilters() {
+  const min = parseFloat(document.getElementById('priceMin').value) || 0;
+  const max = parseFloat(document.getElementById('priceMax').value) || Infinity;
+  const cards = document.querySelectorAll('.p-card');
+  let visible = 0;
+
+  cards.forEach(card => {
+    const price = parseFloat(card.dataset.price);
+    const isSale = card.dataset.sale === 'true';
+    const isNew = card.dataset.new === 'true';
+    const inStock = card.dataset.stock !== '0';
+
+    const passPrice = price >= min && price <= max;
+    const passSale = !activeToggles.sale || isSale;
+    const passNew = !activeToggles.new || isNew;
+    const passStock = !activeToggles.stock || inStock;
+
+    const show = passPrice && passSale && passNew && passStock;
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  document.getElementById('visibleCount').textContent = visible;
+  updateFilterTags(min, max);
+}
+
+function updateFilterTags(min, max) {
+  const container = document.getElementById('activeFilters');
+  const tags = [];
+
+  if (min > 0 || max < Infinity) {
+    const label = min > 0 && max < Infinity ? `GH₵${min} – GH₵${max}`
+                : min > 0 ? `Min GH₵${min}` : `Max GH₵${max}`;
+    tags.push(`<span class="filter-tag">${label}
+      <button onclick="clearPrice()">×</button></span>`);
   }
+  if (activeToggles.sale) tags.push(`<span class="filter-tag">🏷️ Sale <button onclick="toggleFilter('sale')">×</button></span>`);
+  if (activeToggles.new) tags.push(`<span class="filter-tag">✨ New <button onclick="toggleFilter('new')">×</button></span>`);
+  if (activeToggles.stock) tags.push(`<span class="filter-tag">✅ In Stock <button onclick="toggleFilter('stock')">×</button></span>`);
+
+  container.innerHTML = tags.join('');
+  container.style.display = tags.length ? 'flex' : 'none';
+}
+
+function clearPrice() {
+  document.getElementById('priceMin').value = '';
+  document.getElementById('priceMax').value = '';
+  applyFilters();
 }
 
 function sortProducts(val) {
@@ -345,4 +456,5 @@ function sortProducts(val) {
   cards.forEach(c => grid.appendChild(c));
 }
 </script>
+
 {% endblock %}

@@ -1,5 +1,25 @@
 {% extends 'base.html' %}
 
+{% block seo_title %}{{ product.name }} — Buy for GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }} | ShopLuxe Ghana{% endblock %}
+
+{% block seo_description %}Buy {{ product.name }} for GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }} on ShopLuxe. {{ product.description[:120] if product.description else 'Fast delivery across Ghana. Secure payment with Paystack.' }}{% endblock %}
+
+{% block seo_keywords %}{{ product.name }}, {{ product.brand or '' }}, {{ product.category or '' }}, buy online Ghana, ShopLuxe{% endblock %}
+
+{% block og_title %}{{ product.name }} — GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }} | ShopLuxe{% endblock %}
+
+{% block og_description %}{{ product.description[:150] if product.description else 'Shop ' ~ product.name ~ ' on ShopLuxe. Fast delivery across Ghana.' }}{% endblock %}
+
+{% block og_image %}{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg'), _external=True) }}{% endblock %}
+
+{% block og_type %}product{% endblock %}
+
+{% block twitter_title %}{{ product.name }} — GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }} | ShopLuxe{% endblock %}
+
+{% block twitter_description %}{{ product.description[:150] if product.description else 'Shop ' ~ product.name ~ ' on ShopLuxe Ghana.' }}{% endblock %}
+
+{% block twitter_image %}{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg'), _external=True) }}{% endblock %}
+
 {% block content %}
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -493,9 +513,15 @@ select.form-select { display: none; } /* hide original select */
 
         <!-- Stock -->
         {% if product.stock %}
-          <div class="stock-status in-stock">
-            <i class="bi bi-check-circle-fill"></i> In Stock
-          </div>
+  {% if product.stock < 5 %}
+    <div class="stock-status" style="background:#fff3e0; color:#f97316;">
+      <i class="bi bi-exclamation-triangle-fill"></i> Only {{ product.stock }} left — order soon!
+    </div>
+  {% else %}
+    <div class="stock-status in-stock">
+      <i class="bi bi-check-circle-fill"></i> In Stock
+    </div>
+  {% endif %}
           <div class="stock-bar-wrap">
             <div class="stock-label">Stock Level</div>
             <div class="stock-bar">
@@ -593,6 +619,58 @@ select.form-select { display: none; } /* hide original select */
           <div class="trust-item"><i class="bi bi-truck"></i> Free Shipping</div>
           <div class="trust-item"><i class="bi bi-patch-check"></i> Genuine Product</div>
         </div>
+
+        <!-- ── SHARE PRODUCT ── -->
+<div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+  <div style="font-size:.78rem; font-weight:700; color:var(--mid); text-transform:uppercase; letter-spacing:.8px; margin-bottom:10px;">
+    Share this product
+  </div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+
+    <!-- WhatsApp -->
+    <a id="share-whatsapp" href="#" target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#25d366;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;transition:opacity .2s;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.534 5.858L.057 23.998l6.305-1.654A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.002-1.368l-.359-.214-3.722.976.993-3.622-.234-.373A9.818 9.818 0 1112 21.818z"/></svg>
+      WhatsApp
+    </a>
+
+    <!-- Facebook -->
+    <a id="share-facebook" href="#" target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#1877f2;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;transition:opacity .2s;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.931-1.956 1.887v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+      Facebook
+    </a>
+
+    <!-- Twitter/X -->
+    <a id="share-twitter" href="#" target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#000;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;transition:opacity .2s;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      X (Twitter)
+    </a>
+
+    <!-- Instagram -->
+    <a id="share-instagram" href="https://www.instagram.com/shopluxe" target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;transition:opacity .2s;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+      Instagram
+    </a>
+
+    <!-- TikTok -->
+    <a href="https://www.tiktok.com/@shopluxe" target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#010101;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;transition:opacity .2s;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
+      TikTok
+    </a>
+
+    <!-- Copy Link -->
+    <button id="copy-link-btn" onclick="copyLink()"
+       style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:var(--light);border:1.5px solid var(--border);color:var(--dark);font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;">
+      <i class="bi bi-link-45deg"></i>
+      <span id="copy-link-label">Copy Link</span>
+    </button>
+
+  </div>
+</div>
 
         <!-- Delivery Estimate -->
         <div style="background:#f8f9fc; border-radius:12px; padding:12px 16px; font-size:.82rem; color:#666;">
@@ -726,6 +804,72 @@ select.form-select { display: none; } /* hide original select */
   </button>
 </div>
 
+<!-- ── RECENTLY VIEWED ── -->
+{% if session.get('recently_viewed') %}
+{% set viewed_ids = session.get('recently_viewed', []) %}
+{% set viewed_products = [] %}
+{% for pid in viewed_ids %}
+  {% for p in (popular_products + new_products + featured_products + sale_products) %}
+    {% if p.id == pid and p not in viewed_products %}
+      {% do viewed_products.append(p) %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
+{% if viewed_products %}
+<div class="section-head" style="margin-top:36px;">
+  <div class="section-label">
+    <div class="section-icon" style="background:#fce7f3;">👁️</div>
+    <div>
+      <h3 class="section-title">Recently Viewed</h3>
+      <p class="section-subtitle">Pick up where you left off</p>
+    </div>
+  </div>
+</div>
+<div class="h-strip">
+  {% for product in viewed_products %}
+  <div class="p-card">
+    <div class="p-card-img-wrap">
+      <a href="{{ url_for('product_detail', product_id=product.id) }}">
+        <img class="p-card-img"
+             src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
+             alt="{{ product.name }}">
+      </a>
+      <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
+        <i class="bi bi-heart"></i>
+      </a>
+    </div>
+    <div class="p-card-body">
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
+      {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <div class="p-card-price">
+        <span class="p-price">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
+        {% if product.on_sale and product.sale_price %}
+        <span class="p-price-orig">GH₵ {{ product.price }}</span>
+        {% endif %}
+      </div>
+      <div style="font-size:.7rem; margin-top:4px;">
+        {% if product.stock == 0 %}
+          <span style="color:#ef4444; font-weight:600;">⚠️ Out of stock</span>
+        {% elif product.stock < 5 %}
+          <span style="color:#f97316; font-weight:600;">🔥 Only {{ product.stock }} left!</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="p-card-footer">
+      {% if product.stock > 0 %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
+        <i class="bi bi-bag-plus"></i> Add to Cart
+      </a>
+      {% else %}
+      <span class="p-card-btn oos">Out of Stock</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endif %}
 <script>
 // ── Delivery date ──
 const deliveryEl = document.getElementById('deliveryDate');
@@ -834,6 +978,35 @@ if (starsBox) {
       .then(d => { if (d.success) location.reload(); else alert(d.message || "Rating failed"); })
       .catch(() => alert("Network error"));
     });
+  });
+}
+
+// ── SHARE BUTTONS ──
+(function() {
+  const url = encodeURIComponent(window.location.href);
+  const title = encodeURIComponent("{{ product.name }} — ShopLuxe");
+  const price = "GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}";
+  const msg = encodeURIComponent(`Check out ${decodeURIComponent(title)} for ${price} on ShopLuxe! 👟🛍️\n${window.location.href}`);
+
+  document.getElementById('share-whatsapp').href = `https://wa.me/?text=${msg}`;
+  document.getElementById('share-facebook').href = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+  document.getElementById('share-twitter').href = `https://twitter.com/intent/tweet?text=${msg}&url=${url}`;
+})();
+
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    const label = document.getElementById('copy-link-label');
+    const btn = document.getElementById('copy-link-btn');
+    label.textContent = 'Copied!';
+    btn.style.background = 'var(--brand-light)';
+    btn.style.borderColor = 'var(--brand)';
+    btn.style.color = 'var(--brand)';
+    setTimeout(() => {
+      label.textContent = 'Copy Link';
+      btn.style.background = 'var(--light)';
+      btn.style.borderColor = 'var(--border)';
+      btn.style.color = 'var(--dark)';
+    }, 2000);
   });
 }
 

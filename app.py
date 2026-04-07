@@ -536,6 +536,14 @@ def product_detail(product_id):
     # ✅ Stock percentage (max 100)
     product_dict['stock_percentage'] = min(int((product_dict['stock'] / 100) * 100), 100)
 
+    # ✅ RECENTLY VIEWED
+    viewed = session.get('recently_viewed', [])
+    if product_id in viewed:
+        viewed.remove(product_id)
+    viewed.insert(0, product_id)
+    session['recently_viewed'] = viewed[:10]
+    session.modified = True
+
     return render_template(
         'product_detail.html',
         product=product_dict,
@@ -1325,6 +1333,30 @@ def profile():
     return render_template('profile.html', user=user.to_dict(), stats=user_stats)
 
 
+# ── PROMO CODES ──
+PROMO_CODES = {
+    'SAVE10':   {'type': 'percent', 'value': 10,  'label': '10% off'},
+    'SAVE20':   {'type': 'percent', 'value': 20,  'label': '20% off'},
+    'FLAT5':    {'type': 'fixed',   'value': 5,   'label': 'GH₵5 off'},
+    'WELCOME':  {'type': 'percent', 'value': 15,  'label': '15% off'},
+    'SHOPLUXE': {'type': 'fixed',   'value': 10,  'label': 'GH₵10 off'},
+}
+
+@app.route('/apply_promo', methods=['POST'])
+def apply_promo():
+    code = request.json.get('code', '').strip().upper()
+    promo = PROMO_CODES.get(code)
+    if promo:
+        session['promo'] = {'code': code, **promo}
+        session.modified = True
+        return jsonify({'success': True, 'label': promo['label'], 'code': code})
+    return jsonify({'success': False, 'message': 'Invalid promo code'})
+
+@app.route('/remove_promo', methods=['POST'])
+def remove_promo():
+    session.pop('promo', None)
+    session.modified = True
+    return jsonify({'success': True})
 # ============================================================
 # CART ROUTES
 # ============================================================
@@ -1402,16 +1434,33 @@ def cart():
         p['quantity'] = item.get('quantity', 1)
         p['color'] = item.get('color', '-')
         p['size'] = item.get('size', '-')
-        # ✅ Use sale price if on sale
         p['effective_price'] = float(p['sale_price']) if p.get('on_sale') and p.get('sale_price') else float(p['price'])
         cart_items.append(p)
 
     subtotal = sum(p['effective_price'] * p['quantity'] for p in cart_items)
-    # ✅ Paystack Ghana: 1.95% + GH₵ 0.50, capped at GH₵ 500
     payout_fee = round(min((subtotal * 0.0195) + 0.50, 500), 2)
-    return render_template('cart.html', cart_items=cart_items, subtotal=subtotal,
-                           payout_fee=payout_fee, total=round(subtotal + payout_fee, 2),
-                           active_page='cart')
+    total = round(subtotal + payout_fee, 2)
+
+    # ── PROMO DISCOUNT ──
+    promo = session.get('promo')
+    discount = 0
+    if promo:
+        if promo['type'] == 'percent':
+            discount = round(subtotal * promo['value'] / 100, 2)
+        elif promo['type'] == 'fixed':
+            discount = min(promo['value'], subtotal)
+    discounted_total = round(total - discount, 2)
+
+    return render_template('cart.html',
+        cart_items=cart_items,
+        subtotal=subtotal,
+        payout_fee=payout_fee,
+        total=total,
+        discount=discount,
+        discounted_total=discounted_total,
+        promo=promo,
+        active_page='cart'
+    )
 
 
 @app.route('/clear-cart')

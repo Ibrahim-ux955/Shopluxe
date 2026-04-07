@@ -3,9 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="google-site-verification" content="6-q4p5ou0N7gjjUczzPcIw6UT_-zwYvjyHRX19ScmCU">
-  <title>ShopLuxe — Online Shopping in Ghana</title>
-  <meta name="description" content="Buy quality products online at ShopLuxe. Fast delivery, secure payment and trusted shopping experience in Ghana.">
-  <meta name="keywords" content="ShopLuxe, online shop Ghana, ecommerce Ghana, buy products online">
+  <title>{% block seo_title %}ShopLuxe — Online Shopping in Ghana{% endblock %}</title>
+<meta name="description" content="{% block seo_description %}Buy quality products online at ShopLuxe. Fast delivery, secure payment and trusted shopping experience in Ghana.{% endblock %}">
+<meta name="keywords" content="{% block seo_keywords %}ShopLuxe, online shop Ghana, ecommerce Ghana, buy products online{% endblock %}">
+
+<!-- Open Graph -->
+<meta property="og:title" content="{% block og_title %}ShopLuxe — Online Shopping in Ghana{% endblock %}">
+<meta property="og:description" content="{% block og_description %}Buy quality products online with fast delivery and secure payment.{% endblock %}">
+<meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='logo/shopluxe.png', _external=True) }}{% endblock %}">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:type" content="{% block og_type %}website{% endblock %}">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{% block twitter_title %}ShopLuxe — Online Shopping in Ghana{% endblock %}">
+<meta name="twitter:description" content="{% block twitter_description %}Buy quality products online with fast delivery and secure payment.{% endblock %}">
+<meta name="twitter:image" content="{% block twitter_image %}{{ url_for('static', filename='logo/shopluxe.png', _external=True) }}{% endblock %}">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
   <meta property="og:title" content="ShopLuxe — Online Shopping in Ghana">
@@ -402,6 +415,22 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     <button class="nav-search-btn" onclick="performSearch(true)"><i class="bi bi-search"></i></button>
   </div>
 </div>
+
+<!-- Floating WhatsApp Chat Button -->
+<a href="https://wa.me/233XXXXXXXXX?text=Hi%20ShopLuxe!%20I%20need%20help%20with%20my%20order%20🛍️"
+   target="_blank"
+   title="Chat with us on WhatsApp"
+   style="position:fixed;bottom:80px;right:16px;z-index:999;
+          background:#25D366;color:#fff;border-radius:50%;
+          width:52px;height:52px;display:flex;align-items:center;
+          justify-content:center;font-size:1.5rem;
+          box-shadow:0 4px 16px rgba(0,0,0,.2);
+          transition:transform .2s,box-shadow .2s;
+          text-decoration:none;"
+   onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 6px 24px rgba(0,0,0,.3)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 16px rgba(0,0,0,.2)'">
+  <i class="bi bi-whatsapp"></i>
+</a>
 
 <!-- SEARCH DROPDOWN -->
 <div class="search-dropdown" id="searchDropdown"></div>

@@ -336,10 +336,20 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
         <div class="summary-title">Order Summary</div>
 
         <!-- Coupon -->
-        <div class="coupon-row">
-          <input type="text" class="coupon-input" placeholder="Promo code">
-          <button class="coupon-btn">Apply</button>
-        </div>
+<div class="coupon-row">
+  <input type="text" class="coupon-input" id="promoInput"
+         placeholder="Promo code" style="text-transform:uppercase;">
+  <button class="coupon-btn" id="promoBtn" onclick="applyPromo()">Apply</button>
+</div>
+<div id="promoMsg" style="font-size:.78rem; margin:-8px 0 12px; display:none;"></div>
+{% if session.get('promo') %}
+<div id="promoApplied" class="summary-saving" style="background:#e0f2fe; color:#0369a1;">
+  🏷️ <strong>{{ session['promo']['code'] }}</strong> applied — {{ session['promo']['label'] }}
+  <button onclick="removePromo()" style="margin-left:auto;background:none;border:none;color:#0369a1;cursor:pointer;font-size:.85rem;">✕</button>
+</div>
+{% else %}
+<div id="promoApplied" style="display:none;" class="summary-saving" style="background:#e0f2fe; color:#0369a1;"></div>
+{% endif %}
 
         <!-- Saving banner -->
         {% set total_saving = namespace(value=0) %}
@@ -367,11 +377,18 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
           <span style="color:var(--brand); font-weight:600;">FREE</span>
         </div>
 
+        {% if discount and discount > 0 %}
+<div class="summary-row" style="color:#198754; font-weight:600;">
+  <span>🏷️ Promo Discount</span>
+  <span>− GH₵ {{ "%.2f"|format(discount) }}</span>
+</div>
+{% endif %}
+
         <div class="summary-divider"></div>
 
         <div class="summary-row total">
           <span>Total</span>
-          <span>GH₵ {{ "%.2f" | format(total) }}</span>
+          <span id="cartTotal">GH₵ {{ "%.2f" | format(discounted_total if discounted_total is defined else total) }}</span>
         </div>
 
         <div class="summary-divider"></div>
@@ -418,4 +435,42 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
   {% endif %}
 </div>
 
+
+<script>
+function applyPromo() {
+  const code = document.getElementById('promoInput').value.trim();
+  if (!code) return;
+  fetch('/apply_promo', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({code})
+  })
+  .then(r => r.json())
+  .then(d => {
+    const msg = document.getElementById('promoMsg');
+    const applied = document.getElementById('promoApplied');
+    msg.style.display = 'block';
+    if (d.success) {
+      msg.style.color = 'var(--brand)';
+      msg.textContent = '✅ Promo code applied!';
+      applied.style.display = 'flex';
+      applied.innerHTML = `🏷️ <strong>${d.code}</strong> — ${d.label}
+        <button onclick="removePromo()" style="margin-left:auto;background:none;border:none;color:#0369a1;cursor:pointer;">✕</button>`;
+      setTimeout(() => location.reload(), 800);
+    } else {
+      msg.style.color = '#dc3545';
+      msg.textContent = '❌ ' + d.message;
+    }
+  });
+}
+
+function removePromo() {
+  fetch('/remove_promo', {method: 'POST'})
+    .then(() => location.reload());
+}
+
+document.getElementById('promoInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') applyPromo();
+});
+</script>
 {% endblock %}

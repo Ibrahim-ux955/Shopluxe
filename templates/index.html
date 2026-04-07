@@ -426,14 +426,23 @@
       </a>
     </div>
     <div class="p-card-body">
-      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
-      {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
-      <div class="p-card-price">
-        <span class="p-price">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
-        {% if product.on_sale and product.sale_price %}
-        <span class="p-price-orig">GH₵ {{ product.price }}</span>
-        {% endif %}
-      </div>
+  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
+  {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+  <div class="p-card-price">
+    <span class="p-price">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
+    {% if product.on_sale and product.sale_price %}
+    <span class="p-price-orig">GH₵ {{ product.price }}</span>
+    {% endif %}
+  </div>
+  <div style="font-size:.7rem; margin-top:4px;">
+    {% if product.stock == 0 %}
+      <span style="color:#ef4444; font-weight:600;">⚠️ Out of stock</span>
+    {% elif product.stock < 5 %}
+      <span style="color:#f97316; font-weight:600;">🔥 Only {{ product.stock }} left!</span>
+    {% endif %}
+  </div>
+</div>
+    
     </div>
     <div class="p-card-footer">
       {% if product.stock > 0 %}
