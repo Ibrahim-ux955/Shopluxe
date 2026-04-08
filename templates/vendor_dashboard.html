@@ -80,7 +80,12 @@
 <div class="vd-header">
   <div class="vd-header-left">
     {% if vendor.logo %}
-      <img src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
+      {% set img = product.images[0] if product.images else '' %}
+{% if img.startswith('http') %}
+  <img src="{{ img }}" alt="{{ product.name }}">
+{% else %}
+  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
+{% endif %}
     {% else %}
       <div class="vd-logo-ph">🏪</div>
     {% endif %}
@@ -143,7 +148,12 @@
         <td>
           <div class="vd-prod-cell">
             {% if p.images %}
-              <img src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
+              {% set img = product.images[0] if product.images else '' %}
+{% if img.startswith('http') %}
+  <img src="{{ img }}" alt="{{ product.name }}">
+{% else %}
+  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
+{% endif %}
             {% else %}
               <div class="vd-prod-img-ph">👟</div>
             {% endif %}

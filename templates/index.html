@@ -341,7 +341,12 @@
       {% for label, product, badge_type in carousel_items %}
       <div class="carousel-item {% if loop.first %}active{% endif %}">
         <a href="{{ url_for('product_detail', product_id=product.id) }}">
-          <img src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
+          {% set img = product.images[0] if product.images else '' %}
+{% if img.startswith('http') %}
+  <img src="{{ img }}" alt="{{ product.name }}">
+{% else %}
+  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
+{% endif %}
         </a>
         <div class="hero-caption">
           <div class="hero-label">{{ label }}</div>
@@ -415,8 +420,12 @@
   <div class="p-card">
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
-        <img class="p-card-img"
-             src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
+        {% set img = product.images[0] if product.images else '' %}
+{% if img.startswith('http') %}
+  <img src="{{ img }}" alt="{{ product.name }}">
+{% else %}
+  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
+{% endif %}
       </a>
       <span class="p-badge hot">🔥 Hot</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
@@ -504,8 +513,12 @@
   <div class="p-card grid">
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
-        <img class="p-card-img"
-             src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
+        {% set img = product.images[0] if product.images else '' %}
+{% if img.startswith('http') %}
+  <img src="{{ img }}" alt="{{ product.name }}">
+{% else %}
+  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
+{% endif %}
       </a>
       <span class="p-badge new">New</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
@@ -614,8 +627,12 @@
   <div class="p-card grid">
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
-        <img class="p-card-img"
-             src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
+        {% set img = product.images[0] if product.images else '' %}
+{% if img.startswith('http') %}
+  <img src="{{ img }}" alt="{{ product.name }}">
+{% else %}
+  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
+{% endif %}
       </a>
       <span class="p-badge sale">Sale</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
@@ -673,8 +690,12 @@
   <div class="p-card">
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
-        <img class="p-card-img"
-             src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
+        {% set img = product.images[0] if product.images else '' %}
+{% if img.startswith('http') %}
+  <img src="{{ img }}" alt="{{ product.name }}">
+{% else %}
+  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
+{% endif %}
       </a>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
         <i class="bi bi-heart"></i>

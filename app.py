@@ -29,7 +29,11 @@ cloudinary.config(
     api_secret=os.getenv('CLOUDINARY_API_SECRET')
 )
 
-
+@app.template_filter('imgurl')
+def imgurl_filter(filename):
+    if not filename:
+        return url_for('static', filename='shoes/placeholder.jpg')
+    return url_for('static', filename='shoes/' + filename)
 
 load_dotenv()
 

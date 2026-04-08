@@ -464,7 +464,12 @@ select.form-select { display: none; } /* hide original select */
         <div class="thumbs-row">
           {% for img in product.images %}
             <div class="thumb-item {% if loop.first %}active{% endif %}">
-              <img src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
+              {% set img = product.images[0] if product.images else '' %}
+{% if img.startswith('http') %}
+  <img src="{{ img }}" alt="{{ product.name }}">
+{% else %}
+  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
+{% endif %}
             </div>
           {% endfor %}
         </div>
@@ -773,7 +778,12 @@ select.form-select { display: none; } /* hide original select */
       {% for p in related %}
         <div class="col-6 col-md-3">
           <a href="{{ url_for('product_detail', product_id=p.id) }}" class="related-card">
-            <img src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
+            {% set img = product.images[0] if product.images else '' %}
+{% if img.startswith('http') %}
+  <img src="{{ img }}" alt="{{ product.name }}">
+{% else %}
+  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
+{% endif %}
             <div class="related-card-body">
               <div class="related-card-name">{{ p.name }}</div>
               <div class="related-card-price">
