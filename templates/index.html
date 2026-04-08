@@ -341,8 +341,7 @@
       {% for label, product, badge_type in carousel_items %}
       <div class="carousel-item {% if loop.first %}active{% endif %}">
         <a href="{{ url_for('product_detail', product_id=product.id) }}">
-          <img src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
-               class="d-block w-100" alt="{{ product.name }}">
+          <img src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
         </a>
         <div class="hero-caption">
           <div class="hero-label">{{ label }}</div>
@@ -417,8 +416,7 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         <img class="p-card-img"
-             src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
-             alt="{{ product.name }}">
+             src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
       </a>
       <span class="p-badge hot">🔥 Hot</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
@@ -507,8 +505,7 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         <img class="p-card-img"
-             src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
-             alt="{{ product.name }}">
+             src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
       </a>
       <span class="p-badge new">New</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
@@ -564,8 +561,7 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         <img class="p-card-img"
-             src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
-             alt="{{ product.name }}">
+             src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
       </a>
       <span class="p-badge feat">⭐ Pick</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
@@ -619,8 +615,7 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         <img class="p-card-img"
-             src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
-             alt="{{ product.name }}">
+             src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
       </a>
       <span class="p-badge sale">Sale</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
@@ -679,8 +674,7 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         <img class="p-card-img"
-             src="{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg')) }}"
-             alt="{{ product.name }}">
+             src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
       </a>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
         <i class="bi bi-heart"></i>

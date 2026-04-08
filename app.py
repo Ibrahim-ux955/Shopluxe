@@ -20,6 +20,23 @@ from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from itsdangerous import URLSafeTimedSerializer
 
+import cloudinary
+import cloudinary.uploader
+
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET')
+)
+
+@app.template_filter('imgurl')
+def imgurl_filter(img):
+    if not img:
+        return url_for('static', filename='shoes/placeholder.jpg')
+    if img.startswith('http'):
+        return img
+    return url_for('static', filename='shoes/' + img)
+
 load_dotenv()
 
 # ============================================================
@@ -913,10 +930,8 @@ def admin():
         image_filenames = []
         for img in images:
             if img and img.filename:
-                filename = secure_filename(img.filename)
-                img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                image_filenames.append(filename)
-
+               upload_result = cloudinary.uploader.upload(img)
+               image_filenames.append(upload_result['secure_url'])
         # ✅ Set new_arrival_until to 30 days from now if new_arrival is ticked
         new_arrival_until = ''
         if new_arrival:
@@ -1030,10 +1045,8 @@ def edit_product(product_id):
         new_images = request.files.getlist('new_images')
         for file in new_images:
             if file and file.filename:
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                kept_images.append(filename)
-
+                upload_result = cloudinary.uploader.upload(img)
+                image_filenames.append(upload_result['secure_url'])
         product.images = json.dumps(kept_images)
         product.timestamp = datetime.now(timezone.utc).isoformat()
         db.session.commit()
@@ -2114,9 +2127,8 @@ def vendor_add_product():
         image_filenames = []
         for img in images:
             if img and img.filename:
-                filename = secure_filename(img.filename)
-                img.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                image_filenames.append(filename)
+                upload_result = cloudinary.uploader.upload(img)
+                image_filenames.append(upload_result['secure_url'])
 
         # ✅ Set new_arrival_until to 30 days from now if new_arrival is ticked
         new_arrival_until = ''
@@ -2197,9 +2209,8 @@ def vendor_edit_product(product_id):
         new_images = request.files.getlist('new_images')
         for file in new_images:
             if file and file.filename:
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                kept_images.append(filename)
+                upload_result = cloudinary.uploader.upload(img)
+                image_filenames.append(upload_result['secure_url'])
         product.images = json.dumps(kept_images)
         product.timestamp = datetime.now(timezone.utc).isoformat()
 

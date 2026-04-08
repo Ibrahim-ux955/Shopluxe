@@ -305,7 +305,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
     {% for p in products %}
     <div class="prod-card" data-name="{{ p.name|lower }}">
       {% set img = p.images[0] if p.images else (p.image or 'placeholder.jpg') %}
-      <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ p.name }}" onerror="this.src='{{ url_for('static', filename='shoes/placeholder.jpg') }}'">
+      <img src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
       <div class="prod-card-body">
         <div class="prod-name">{{ p.name }}</div>
         <div class="prod-price">{% if p.on_sale and p.sale_price %}<span style="text-decoration:line-through;color:#bbb;font-size:.7rem;">GH₵ {{ p.price }}</span> GH₵ {{ p.sale_price }}{% else %}GH₵ {{ p.price }}{% endif %}</div>

@@ -80,7 +80,7 @@
 <div class="vd-header">
   <div class="vd-header-left">
     {% if vendor.logo %}
-      <img src="{{ url_for('static', filename='shoes/' + vendor.logo) }}" class="vd-logo" alt="">
+      <img src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
     {% else %}
       <div class="vd-logo-ph">🏪</div>
     {% endif %}
@@ -143,7 +143,7 @@
         <td>
           <div class="vd-prod-cell">
             {% if p.images %}
-              <img src="{{ url_for('static', filename='shoes/' + p.images[0]) }}" class="vd-prod-img" alt="">
+              <img src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
             {% else %}
               <div class="vd-prod-img-ph">👟</div>
             {% endif %}

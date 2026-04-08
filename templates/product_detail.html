@@ -454,8 +454,7 @@ select.form-select { display: none; } /* hide original select */
         <div class="main-img-wrap">
          <span class="badge-delivery">🚚 {{ product.delivery_info or 'Delivery in 2-4 working days' }}</span>
          <img id="mainImage"
-             src="{{ url_for('static', filename='shoes/' + product.images[0]) }}"
-            alt="{{ product.name }}">
+             src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
         <button class="wishlist-btn" id="wishlistBtn" data-product-id="{{ product.id }}">
         <i id="wishlistIcon"
            class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == product.id %}-fill text-danger{% endif %}{% endfor %}"></i>
@@ -465,7 +464,7 @@ select.form-select { display: none; } /* hide original select */
         <div class="thumbs-row">
           {% for img in product.images %}
             <div class="thumb-item {% if loop.first %}active{% endif %}">
-              <img src="{{ url_for('static', filename='shoes/' + img) }}" alt="">
+              <img src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
             </div>
           {% endfor %}
         </div>
@@ -774,7 +773,7 @@ select.form-select { display: none; } /* hide original select */
       {% for p in related %}
         <div class="col-6 col-md-3">
           <a href="{{ url_for('product_detail', product_id=p.id) }}" class="related-card">
-            <img src="{{ url_for('static', filename='shoes/' + p.images[0]) }}" alt="{{ p.name }}">
+            <img src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
             <div class="related-card-body">
               <div class="related-card-name">{{ p.name }}</div>
               <div class="related-card-price">
