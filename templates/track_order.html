@@ -206,10 +206,10 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
         {% endif %}
       {% endfor %}
       {% set img = product.images[0] if product.images else '' %}
-{% if img.startswith('http') %}
-  <img src="{{ img }}" alt="{{ product.name }}">
+{% if ns.img.startswith('http') %}
+  <img src="{{ ns.img }}" alt="{{ item.name }}" style="width:52px;height:52px;border-radius:9px;object-fit:cover;">
 {% else %}
-  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
+  <img src="{{ url_for('static', filename='shoes/' ~ ns.img) }}" alt="{{ item.name }}" style="width:52px;height:52px;border-radius:9px;object-fit:cover;">
 {% endif %}
       <div style="flex:1;min-width:0;">
         <div class="item-name">{{ item.name }}</div>

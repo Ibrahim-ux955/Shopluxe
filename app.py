@@ -30,10 +30,12 @@ cloudinary.config(
 )
 
 @app.template_filter('imgurl')
-def imgurl_filter(filename):
-    if not filename:
+def imgurl_filter(img):
+    if not img:
         return url_for('static', filename='shoes/placeholder.jpg')
-    return url_for('static', filename='shoes/' + filename)
+    if img.startswith('http'):
+        return img
+    return url_for('static', filename='shoes/' + img)
 
 load_dotenv()
 
