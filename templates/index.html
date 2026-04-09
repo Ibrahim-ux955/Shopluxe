@@ -296,6 +296,22 @@
 @media(max-width:480px){
   .p-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
 }
+
+.p-delivery {
+  font-size: .7rem; color: var(--mid);
+  display: flex; align-items: center; gap: 4px;
+  margin: 5px 0 6px;
+}
+.p-stock-warn { font-size: .7rem; font-weight: 600; margin-top: 2px; }
+.p-stock-bar {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: rgba(255,255,255,0.3);
+}
+.p-stock-fill { height: 3px; background: #639922; }
+.p-card-brand {
+  font-size: .68rem; color: #bbb;
+  text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px;
+}
 </style>
 
 <!-- ── SEARCH RESULTS BANNER ── -->
@@ -518,22 +534,23 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         {% set img = product.images[0] if product.images else '' %}
-        {% if img.startswith('http') %}
+        {% if img and img.startswith('http') %}
           <img class="p-card-img" src="{{ img }}" alt="{{ product.name }}">
         {% else %}
-          <img class="p-card-img"
-               src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
-               alt="{{ product.name }}">
-         {% endif %}
+          <img class="p-card-img" src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ product.name }}">
+        {% endif %}
       </a>
-      <span class="p-badge new">New</span>
+      <span class="p-badge new">New in</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
         <i class="bi bi-heart"></i>
       </a>
+      {% if product.stock > 0 and product.stock < 10 %}
+      <div class="p-stock-bar"><div class="p-stock-fill" style="width:{{ (product.stock / 15 * 100)|int }}%;"></div></div>
+      {% endif %}
     </div>
     <div class="p-card-body">
-      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
       {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
       <div class="p-card-price">
         <span class="p-price">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
         {% if product.on_sale and product.sale_price %}
@@ -542,6 +559,12 @@
         <span class="p-discount">-{{ disc }}%</span>
         {% endif %}
       </div>
+      <div class="p-delivery"><i class="bi bi-truck"></i> Free delivery · 2–4 days</div>
+      {% if product.stock == 0 %}
+        <div class="p-stock-warn" style="color:#a32d2d;">Out of stock</div>
+      {% elif product.stock < 5 %}
+        <div class="p-stock-warn" style="color:#854f0b;">Only {{ product.stock }} left</div>
+      {% endif %}
     </div>
     <div class="p-card-footer">
       {% if product.stock > 0 %}
@@ -579,23 +602,38 @@
   <div class="p-card">
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
-        <img class="p-card-img"
-             src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
+        {% set img = product.images[0] if product.images else '' %}
+        {% if img and img.startswith('http') %}
+          <img class="p-card-img" src="{{ img }}" alt="{{ product.name }}">
+        {% else %}
+          <img class="p-card-img" src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ product.name }}">
+        {% endif %}
       </a>
-      <span class="p-badge feat">⭐ Pick</span>
+      <span class="p-badge feat">Best choice</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
         <i class="bi bi-heart"></i>
       </a>
+      {% if product.stock > 0 and product.stock < 10 %}
+      <div class="p-stock-bar"><div class="p-stock-fill" style="width:{{ (product.stock / 15 * 100)|int }}%;"></div></div>
+      {% endif %}
     </div>
     <div class="p-card-body">
-      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
       {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
       <div class="p-card-price">
         <span class="p-price">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
         {% if product.on_sale and product.sale_price %}
         <span class="p-price-orig">GH₵ {{ product.price }}</span>
+        {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
+        <span class="p-discount">-{{ disc }}%</span>
         {% endif %}
       </div>
+      <div class="p-delivery"><i class="bi bi-truck"></i> Free delivery · 2–4 days</div>
+      {% if product.stock == 0 %}
+        <div class="p-stock-warn" style="color:#a32d2d;">Out of stock</div>
+      {% elif product.stock < 5 %}
+        <div class="p-stock-warn" style="color:#854f0b;">Only {{ product.stock }} left</div>
+      {% endif %}
     </div>
     <div class="p-card-footer">
       {% if product.stock > 0 %}
@@ -634,28 +672,35 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         {% set img = product.images[0] if product.images else '' %}
-        {% if img.startswith('http') %}
+        {% if img and img.startswith('http') %}
           <img class="p-card-img" src="{{ img }}" alt="{{ product.name }}">
         {% else %}
-          <img class="p-card-img"
-               src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
-               alt="{{ product.name }}">
-         {% endif %}
+          <img class="p-card-img" src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ product.name }}">
+        {% endif %}
       </a>
-      <span class="p-badge sale">Sale</span>
+      <span class="p-badge sale">On sale</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
         <i class="bi bi-heart"></i>
       </a>
+      {% if product.stock > 0 and product.stock < 10 %}
+      <div class="p-stock-bar"><div class="p-stock-fill" style="width:{{ (product.stock / 15 * 100)|int }}%;background:#EF9F27;"></div></div>
+      {% endif %}
     </div>
     <div class="p-card-body">
-      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
       {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
       <div class="p-card-price">
         <span class="p-price">GH₵ {{ product.sale_price }}</span>
         <span class="p-price-orig">GH₵ {{ product.price }}</span>
         {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
         <span class="p-discount">-{{ disc }}%</span>
       </div>
+      <div class="p-delivery"><i class="bi bi-truck"></i> Free delivery · 2–4 days</div>
+      {% if product.stock == 0 %}
+        <div class="p-stock-warn" style="color:#a32d2d;">Out of stock</div>
+      {% elif product.stock < 5 %}
+        <div class="p-stock-warn" style="color:#854f0b;">Only {{ product.stock }} left</div>
+      {% endif %}
     </div>
     <div class="p-card-footer">
       {% if product.stock > 0 %}
@@ -699,34 +744,34 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         {% set img = product.images[0] if product.images else '' %}
-        {% if img.startswith('http') %}
+        {% if img and img.startswith('http') %}
           <img class="p-card-img" src="{{ img }}" alt="{{ product.name }}">
         {% else %}
-          <img class="p-card-img"
-               src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
-               alt="{{ product.name }}">
-         {% endif %}
+          <img class="p-card-img" src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ product.name }}">
+        {% endif %}
       </a>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
         <i class="bi bi-heart"></i>
       </a>
+      {% if product.stock > 0 and product.stock < 10 %}
+      <div class="p-stock-bar"><div class="p-stock-fill" style="width:{{ (product.stock / 15 * 100)|int }}%;"></div></div>
+      {% endif %}
     </div>
     <div class="p-card-body">
-      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
       {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
       <div class="p-card-price">
         <span class="p-price">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
         {% if product.on_sale and product.sale_price %}
         <span class="p-price-orig">GH₵ {{ product.price }}</span>
         {% endif %}
       </div>
-      <div style="font-size:.7rem; margin-top:4px;">
-        {% if product.stock == 0 %}
-          <span style="color:#ef4444; font-weight:600;">⚠️ Out of stock</span>
-        {% elif product.stock < 5 %}
-          <span style="color:#f97316; font-weight:600;">🔥 Only {{ product.stock }} left!</span>
-        {% endif %}
-      </div>
+      <div class="p-delivery"><i class="bi bi-truck"></i> Free delivery · 2–4 days</div>
+      {% if product.stock == 0 %}
+        <div class="p-stock-warn" style="color:#a32d2d;">Out of stock</div>
+      {% elif product.stock < 5 %}
+        <div class="p-stock-warn" style="color:#854f0b;">Only {{ product.stock }} left</div>
+      {% endif %}
     </div>
     <div class="p-card-footer">
       {% if product.stock > 0 %}
