@@ -282,18 +282,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
       <div class="cart-card" style="animation-delay: {{ loop.index0 * 0.07 }}s;">
 
         <a href="{{ url_for('product_detail', product_id=item.id) }}">
-         {% set img = item.images[0] if item.get('images') else (item.image if item.get('image') else '') %}
-         {% if img and img.startswith('http') %}
-           <img src="{{ img }}" alt="{{ item.name }}" class="cart-img">
-         {% else %}
-           <img src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ item.name }}" class="cart-img">
-         {% endif %}
+         {% set img = product.images[0] if product.images else '' %}
          {% if img.startswith('http') %}
-           <img src="{{ img }}" alt="{{ product.name }}">
+           <img class="p-card-img" src="{{ img }}" alt="{{ product.name }}">
          {% else %}
-           <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
+           <img class="p-card-img"
+               src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
+               alt="{{ product.name }}">
          {% endif %}
-        </a>
+         
 
         <div class="cart-info">
           <a href="{{ url_for('product_detail', product_id=item.id) }}" style="text-decoration:none;">
