@@ -464,12 +464,13 @@ select.form-select { display: none; } /* hide original select */
         <div class="thumbs-row">
           {% for img in product.images %}
             <div class="thumb-item {% if loop.first %}active{% endif %}">
-              {% set img = p.images[0] if p.images else '' %}
-{% if img.startswith('http') %}
-  <img src="{{ img }}" alt="{{ p.name }}">
-{% else %}
-  <img src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ p.name }}">
-{% endif %}
+              {% set timg = img %}
+              {% if timg.startswith('http') %}
+                <img src="{{ timg }}" alt="{{ product.name }}">
+              {% else %}
+                <img src="{{ url_for('static', filename='shoes/' ~ (timg or 'placeholder.jpg')) }}"
+                     alt="{{ product.name }}">
+               {% endif %}
             </div>
           {% endfor %}
         </div>
@@ -778,12 +779,14 @@ select.form-select { display: none; } /* hide original select */
       {% for p in related %}
         <div class="col-6 col-md-3">
           <a href="{{ url_for('product_detail', product_id=p.id) }}" class="related-card">
-            {% set img = p.images[0] if p.images else '' %}
-{% if img.startswith('http') %}
-  <img src="{{ img }}" alt="{{ p.name }}">
-{% else %}
-  <img src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ p.name }}">
-{% endif %}
+            {% set img = product.images[0] if product.images else '' %}
+            {% if img.startswith('http') %}
+              <img id="mainImage" src="{{ img }}" alt="{{ product.name }}">
+            {% else %}
+              <img id="mainImage"
+                   src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
+                   alt="{{ product.name }}">
+             {% endif %}
             <div class="related-card-body">
               <div class="related-card-name">{{ p.name }}</div>
               <div class="related-card-price">

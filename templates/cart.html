@@ -283,16 +283,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 
         <a href="{{ url_for('product_detail', product_id=item.id) }}">
          {% set img = item.images[0] if item.get('images') else (item.image if item.get('image') else '') %}
-{% if img and img.startswith('http') %}
-  <img src="{{ img }}" alt="{{ item.name }}" class="cart-img">
-{% else %}
-  <img src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ item.name }}" class="cart-img">
-{% endif %}
-{% if img.startswith('http') %}
-  <img src="{{ img }}" alt="{{ product.name }}">
-{% else %}
-  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
-{% endif %}
+         {% if img and img.startswith('http') %}
+           <img src="{{ img }}" alt="{{ item.name }}" class="cart-img">
+         {% else %}
+           <img src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ item.name }}" class="cart-img">
+         {% endif %}
+         {% if img.startswith('http') %}
+           <img src="{{ img }}" alt="{{ product.name }}">
+         {% else %}
+           <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
+         {% endif %}
         </a>
 
         <div class="cart-info">

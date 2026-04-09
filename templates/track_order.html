@@ -206,11 +206,11 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
         {% endif %}
       {% endfor %}
       {% set img = product.images[0] if product.images else '' %}
-{% if ns.img.startswith('http') %}
-  <img src="{{ ns.img }}" alt="{{ item.name }}" style="width:52px;height:52px;border-radius:9px;object-fit:cover;">
-{% else %}
-  <img src="{{ url_for('static', filename='shoes/' ~ ns.img) }}" alt="{{ item.name }}" style="width:52px;height:52px;border-radius:9px;object-fit:cover;">
-{% endif %}
+      {% if ns.img.startswith('http') %}
+        <img src="{{ ns.img }}" alt="{{ item.name }}" style="width:52px;height:52px;border-radius:9px;object-fit:cover;">
+      {% else %}
+        <img src="{{ url_for('static', filename='shoes/' ~ ns.img) }}" alt="{{ item.name }}" style="width:52px;height:52px;border-radius:9px;object-fit:cover;">
+      {% endif %}
       <div style="flex:1;min-width:0;">
         <div class="item-name">{{ item.name }}</div>
         <div class="item-meta">Qty: {{ item.get('quantity',1) }}{% if item.get('color') and item.get('color')!='-' %} · {{ item.color }}{% endif %}{% if item.get('size') and item.get('size')!='-' %} · Size {{ item.size }}{% endif %}</div>

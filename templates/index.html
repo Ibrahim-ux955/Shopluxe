@@ -342,11 +342,13 @@
       <div class="carousel-item {% if loop.first %}active{% endif %}">
         <a href="{{ url_for('product_detail', product_id=product.id) }}">
           {% set img = product.images[0] if product.images else '' %}
-{% if img.startswith('http') %}
-  <img src="{{ img }}" alt="{{ product.name }}">
-{% else %}
-  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
-{% endif %}
+          {% if img.startswith('http') %}
+            <img class="p-card-img" src="{{ img }}" alt="{{ product.name }}">
+          {% else %}
+            <img class="p-card-img"
+                 src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
+                 alt="{{ product.name }}">
+          {% endif %}
         </a>
         <div class="hero-caption">
           <div class="hero-label">{{ label }}</div>
@@ -421,11 +423,13 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         {% set img = product.images[0] if product.images else '' %}
-{% if img.startswith('http') %}
-  <img src="{{ img }}" alt="{{ product.name }}">
-{% else %}
-  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
-{% endif %}
+        {% if img.startswith('http') %}
+          <img class="p-card-img" src="{{ img }}" alt="{{ product.name }}">
+        {% else %}
+          <img class="p-card-img"
+               src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
+               alt="{{ product.name }}">
+        {% endif %}
       </a>
       <span class="p-badge hot">🔥 Hot</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
@@ -514,11 +518,13 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         {% set img = product.images[0] if product.images else '' %}
-{% if img.startswith('http') %}
-  <img src="{{ img }}" alt="{{ product.name }}">
-{% else %}
-  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
-{% endif %}
+        {% if img.startswith('http') %}
+          <img class="p-card-img" src="{{ img }}" alt="{{ product.name }}">
+        {% else %}
+          <img class="p-card-img"
+               src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
+               alt="{{ product.name }}">
+         {% endif %}
       </a>
       <span class="p-badge new">New</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
@@ -628,11 +634,13 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         {% set img = product.images[0] if product.images else '' %}
-{% if img.startswith('http') %}
-  <img src="{{ img }}" alt="{{ product.name }}">
-{% else %}
-  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
-{% endif %}
+        {% if img.startswith('http') %}
+          <img class="p-card-img" src="{{ img }}" alt="{{ product.name }}">
+        {% else %}
+          <img class="p-card-img"
+               src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
+               alt="{{ product.name }}">
+         {% endif %}
       </a>
       <span class="p-badge sale">Sale</span>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
@@ -691,11 +699,13 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         {% set img = product.images[0] if product.images else '' %}
-{% if img.startswith('http') %}
-  <img src="{{ img }}" alt="{{ product.name }}">
-{% else %}
-  <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ product.name }}">
-{% endif %}
+        {% if img.startswith('http') %}
+          <img class="p-card-img" src="{{ img }}" alt="{{ product.name }}">
+        {% else %}
+          <img class="p-card-img"
+               src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
+               alt="{{ product.name }}">
+         {% endif %}
       </a>
       <a href="{{ url_for('add_to_wishlist', product_id=product.id) }}" class="p-wish">
         <i class="bi bi-heart"></i>
