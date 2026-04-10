@@ -286,6 +286,16 @@ class Payout(db.Model):
             'status': self.status,
             'timestamp': self.timestamp,
         }
+        
+class Promo(db.Model):
+    __tablename__ = 'promos'
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    label = db.Column(db.String(200), nullable=False)
+    discount = db.Column(db.Float, default=0)   # e.g. 0.10 for 10%
+    flat = db.Column(db.Float, default=0)        # e.g. 50 for GH₵50
+    active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.String(50), default=lambda: datetime.now(timezone.utc).isoformat())        
 
 # ============================================================
 # HELPER FUNCTIONS
@@ -362,6 +372,8 @@ def send_email(to, subject, html):
         "subject": subject,
         "html": html
     })
+    
+    
 
 
 # ============================================================
@@ -955,7 +967,8 @@ def admin():
 
     products = [p.to_dict() for p in Product.query.order_by(Product.timestamp.desc()).all()]
     orders = [o.to_dict() for o in Order.query.order_by(Order.timestamp.desc()).all()]
-    promos = load_promos()
+    promos = {p.code: {'label': p.label, 'discount': p.discount, 'flat': p.flat, 'active': p.active}
+              for p in Promo.query.order_by(Promo.created_at.desc()).all()}
     return render_template('admin.html', products=products, orders=orders, promos=promos, active_page='admin')
   
 @app.route('/delete/<product_id>', methods=['POST'])
@@ -1430,11 +1443,12 @@ def cart():
     promo = session.get('promo')
     discount = 0
     if promo:
-        if promo['type'] == 'percent':
-            discount = round(subtotal * promo['value'] / 100, 2)
-        elif promo['type'] == 'fixed':
-            discount = min(promo['value'], subtotal)
-    discounted_total = round(total - discount, 2)
+        if promo.get('flat') and promo['flat'] > 0:
+            discount = promo['flat']
+        elif promo.get('discount') and promo['discount'] > 0:
+            discount = subtotal * promo['discount']
+        else:
+            discount = 0
 
     return render_template('cart.html',
         cart_items=cart_items,
@@ -2406,17 +2420,22 @@ def save_promos(promos):
     with open(PROMO_FILE, 'w') as f:
         json.dump(promos, f, indent=2)
 
+# DELETE the old load_promos() and save_promos() functions entirely
+# Then update all 4 routes:
+
 @app.route('/apply_promo', methods=['POST'])
 def apply_promo():
     code = request.json.get('code', '').upper().strip()
-    promos = load_promos()
-    if code in promos:
-        p = promos[code]
-        if not p.get('active', True):
-            return jsonify(success=False, message='This code is no longer active')
-        session['promo'] = {'code': code, 'discount': p.get('discount', 0), 'flat': p.get('flat', 0), 'label': p['label']}
-        return jsonify(success=True, code=code, label=p['label'])
-    return jsonify(success=False, message='Invalid promo code')
+    promo = Promo.query.filter_by(code=code, active=True).first()
+    if promo:
+        session['promo'] = {
+            'code': promo.code,
+            'discount': promo.discount,
+            'flat': promo.flat,
+            'label': promo.label
+        }
+        return jsonify(success=True, code=promo.code, label=promo.label)
+    return jsonify(success=False, message='Invalid or inactive promo code')
 
 @app.route('/remove_promo', methods=['POST'])
 def remove_promo():
@@ -2427,40 +2446,52 @@ def remove_promo():
 def admin_add_promo():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-    data = request.form
-    code = data.get('code', '').upper().strip()
-    label = data.get('label', '').strip()
-    discount_type = data.get('discount_type')
-    value = float(data.get('value', 0))
-    promos = load_promos()
-    promos[code] = {
-        'label': label,
-        'discount': value / 100 if discount_type == 'percent' else 0,
-        'flat': value if discount_type == 'flat' else 0,
-        'active': True
-    }
-    save_promos(promos)
-    flash(f'✅ Promo code {code} added!')
+    code = request.form.get('code', '').upper().strip()
+    label = request.form.get('label', '').strip()
+    discount_type = request.form.get('discount_type')
+    value = float(request.form.get('value', 0))
+
+    existing = Promo.query.filter_by(code=code).first()
+    if existing:
+        existing.label = label
+        existing.discount = value / 100 if discount_type == 'percent' else 0
+        existing.flat = value if discount_type == 'flat' else 0
+        existing.active = True
+    else:
+        new_promo = Promo(
+            code=code,
+            label=label,
+            discount=value / 100 if discount_type == 'percent' else 0,
+            flat=value if discount_type == 'flat' else 0
+        )
+        db.session.add(new_promo)
+
+    db.session.commit()
+    flash(f'✅ Promo code {code} saved!')
     return redirect(url_for('admin') + '#promos')
 
 @app.route('/admin/promo/toggle/<code>', methods=['POST'])
 def admin_toggle_promo(code):
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-    promos = load_promos()
-    if code in promos:
-        promos[code]['active'] = not promos[code].get('active', True)
-        save_promos(promos)
+    promo = Promo.query.filter_by(code=code).first()
+    if promo:
+        promo.active = not promo.active
+        db.session.commit()
     return redirect(url_for('admin') + '#promos')
 
 @app.route('/admin/promo/delete/<code>', methods=['POST'])
 def admin_delete_promo(code):
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-    promos = load_promos()
-    promos.pop(code, None)
-    save_promos(promos)
+    promo = Promo.query.filter_by(code=code).first()
+    if promo:
+        db.session.delete(promo)
+        db.session.commit()
     return redirect(url_for('admin') + '#promos')
+  
+with app.app_context():
+    db.create_all()  
 
 if __name__ == "__main__":
     app.run()
