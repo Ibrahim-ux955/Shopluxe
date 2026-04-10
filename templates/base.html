@@ -567,7 +567,13 @@ function closeBanner() {
   const msb = document.getElementById('mobileSearchBar');
   if(msb) msb.style.top = 'var(--nav-h)';
 }
-
+let mobileSearchOpen = false;
+function toggleMobileSearch() {
+  mobileSearchOpen = !mobileSearchOpen;
+  const bar = document.getElementById('mobileSearchBar');
+  bar.style.display = mobileSearchOpen ? 'block' : 'none';
+  if (mobileSearchOpen) document.getElementById('mobileSearchInput').focus();
+}
 function toggleMobileSearch() {
   mobileSearchOpen = !mobileSearchOpen;
   const bar = document.getElementById('mobileSearchBar');
