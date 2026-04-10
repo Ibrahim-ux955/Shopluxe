@@ -1343,24 +1343,6 @@ def profile():
     return render_template('profile.html', user=user.to_dict(), stats=user_stats)
 
 
-# ── PROMO CODES ──
-PROMO_CODES = {
-    'SAVE10':   {'type': 'percent', 'value': 10,  'label': '10% off'},
-    'SAVE20':   {'type': 'percent', 'value': 20,  'label': '20% off'},
-    'FLAT5':    {'type': 'fixed',   'value': 5,   'label': 'GH₵5 off'},
-    'WELCOME':  {'type': 'percent', 'value': 15,  'label': '15% off'},
-    'SHOPLUXE': {'type': 'fixed',   'value': 10,  'label': 'GH₵10 off'},
-}
-
-@app.route('/apply_promo', methods=['POST'])
-def apply_promo():
-    code = request.json.get('code', '').strip().upper()
-    promo = PROMO_CODES.get(code)
-    if promo:
-        session['promo'] = {'code': code, **promo}
-        session.modified = True
-        return jsonify({'success': True, 'label': promo['label'], 'code': code})
-    return jsonify({'success': False, 'message': 'Invalid promo code'})
 
 @app.route('/remove_promo', methods=['POST'])
 def remove_promo():
