@@ -843,11 +843,9 @@ def track_order(order_id):
         flash("⚠️ Order not found.")
         return redirect(url_for('home'))
 
-    # ✅ Pass all products so we can look up images by name
-    all_products = [p.to_dict() for p in Product.query.all()]
+    all_products = {p.name.lower(): p.to_dict() for p in Product.query.all()}
 
     return render_template("track_order.html", order=order.to_dict(), all_products=all_products)
-
 @app.route('/orders')
 def orders():
     if not session.get('user_email'):
@@ -1439,16 +1437,15 @@ def cart():
     payout_fee = round(min((subtotal * 0.0195) + 0.50, 500), 2)
     total = round(subtotal + payout_fee, 2)
 
-    # ── PROMO DISCOUNT ──
     promo = session.get('promo')
     discount = 0
     if promo:
         if promo.get('flat') and promo['flat'] > 0:
             discount = promo['flat']
         elif promo.get('discount') and promo['discount'] > 0:
-            discount = subtotal * promo['discount']
-        else:
-            discount = 0
+            discount = round(subtotal * promo['discount'], 2)
+
+    discounted_total = round(max(0, subtotal + payout_fee - discount), 2)
 
     return render_template('cart.html',
         cart_items=cart_items,
@@ -1460,7 +1457,6 @@ def cart():
         promo=promo,
         active_page='cart'
     )
-
 
 @app.route('/clear-cart')
 def clear_cart():
@@ -2490,8 +2486,22 @@ def admin_delete_promo(code):
         db.session.commit()
     return redirect(url_for('admin') + '#promos')
   
-with app.app_context():
-    db.create_all()  
+
+    
+import threading
+import requests
+
+def keep_alive():
+    import time
+    while True:
+        time.sleep(840)  # ping every 14 minutes
+        try:
+            requests.get('https://www.shopluxe.online', timeout=10)
+        except:
+            pass
+
+thread = threading.Thread(target=keep_alive, daemon=True)
+thread.start()    
 
 if __name__ == "__main__":
     app.run()

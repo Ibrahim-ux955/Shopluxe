@@ -191,21 +191,17 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
   {% endif %}
 
   
-  <!-- Items -->
+ <!-- Items -->
 <div class="a-card">
   <div class="a-card-head"><i class="bi bi-bag-check"></i><h6 class="a-card-title">Order Items</h6></div>
   <div class="a-card-body">
     {% for item in order.get('products') or order.get('items',[]) %}
     <div class="order-item">
       {% set ns = namespace(img='placeholder.jpg') %}
-      {% for p in all_products %}
-        {% if p.id == item.get('product_id') %}
-          {% if p.images %}
-            {% set ns.img = p.images[0] %}
-          {% endif %}
-        {% endif %}
-      {% endfor %}
-      {% set img = product.images[0] if product.images else '' %}
+      {% set matched = all_products.get(item.name|lower) %}
+      {% if matched and matched.images %}
+        {% set ns.img = matched.images[0] %}
+      {% endif %}
       {% if ns.img.startswith('http') %}
         <img src="{{ ns.img }}" alt="{{ item.name }}" style="width:52px;height:52px;border-radius:9px;object-fit:cover;">
       {% else %}
@@ -214,17 +210,10 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
       <div style="flex:1;min-width:0;">
         <div class="item-name">{{ item.name }}</div>
         <div class="item-meta">Qty: {{ item.get('quantity',1) }}{% if item.get('color') and item.get('color')!='-' %} · {{ item.color }}{% endif %}{% if item.get('size') and item.get('size')!='-' %} · Size {{ item.size }}{% endif %}</div>
-      </div>
-      <div class="item-price">GH₵ {{ "%.2f"|format((item.get('effective_price') or item.get('price',0))|float) }}</div>
-    </div>
-    {% endfor %}
-    <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:2px solid var(--border);margin-top:4px;font-weight:800;font-size:1rem;">
-      <span>Total Paid</span>
-      <span style="color:var(--brand);">GH₵ {{ "%.2f"|format((order.get('total') or order.get('amount',0))|float) }}</span>
-    </div>
-  </div>
-</div>
-
+     </div>
+     <div class="item-price">GH₵ {{ "%.2f"|format((item.get('effective_price') or item.get('price',0))|float) }}</div>
+   </div>
+   {% endfor %}
   <!-- CTA -->
   <a href="{{ url_for('home') }}" class="btn-home">
     <i class="bi bi-bag"></i> Continue Shopping
