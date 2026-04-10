@@ -911,7 +911,6 @@ def admin():
         delivery_info = request.form.get('delivery_info', 'Delivery in 2-4 working days').strip()
         tags = json.dumps([t.strip() for t in request.form.get('tags', '').split(',') if t.strip()])
 
-        # ✅ Dimension / size type fields
         product_type = request.form.get('product_type', 'standard')
         slot_length = request.form.get('slot_length', '').strip()
         slot_width = request.form.get('slot_width', '').strip()
@@ -928,9 +927,9 @@ def admin():
         image_filenames = []
         for img in images:
             if img and img.filename:
-               upload_result = cloudinary.uploader.upload(img)
-               image_filenames.append(upload_result['secure_url'])
-        # ✅ Set new_arrival_until to 30 days from now if new_arrival is ticked
+                upload_result = cloudinary.uploader.upload(img)
+                image_filenames.append(upload_result['secure_url'])
+
         new_arrival_until = ''
         if new_arrival:
             new_arrival_until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
@@ -942,7 +941,7 @@ def admin():
             images=json.dumps(image_filenames),
             brand=brand, sku=sku, tags=tags,
             delivery_info=delivery_info, new_arrival=new_arrival,
-            new_arrival_until=new_arrival_until,  # ✅ no leading space
+            new_arrival_until=new_arrival_until,
             product_type=product_type,
             slot_length=slot_length,
             slot_width=slot_width,
@@ -957,8 +956,7 @@ def admin():
     products = [p.to_dict() for p in Product.query.order_by(Product.timestamp.desc()).all()]
     orders = [o.to_dict() for o in Order.query.order_by(Order.timestamp.desc()).all()]
     promos = load_promos()
-   return render_template('admin.html', products=products, orders=orders, promos=promos, active_page='admin')
-
+    return render_template('admin.html', products=products, orders=orders, promos=promos, active_page='admin')
   
 @app.route('/delete/<product_id>', methods=['POST'])
 def delete(product_id):
