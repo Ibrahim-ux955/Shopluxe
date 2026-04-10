@@ -150,6 +150,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
   <button class="tab-btn" onclick="showTab('payments',this)"><i class="bi bi-credit-card"></i> Payments</button>
   <button class="tab-btn" onclick="window.location.href='{{ url_for('admin_vendors') }}'"><i class="bi bi-shop"></i> Vendors</button>
   <button class="tab-btn" onclick="window.location.href='{{ url_for('admin_payouts') }}'"><i class="bi bi-cash-stack"></i> Payouts</button>
+  <button class="tab-btn" onclick="showTab('promos',this)">
+  <i class="bi bi-tag"></i> Promo Codes
+  <span class="tab-badge">{{ promos|length }}</span>
+</button>
 </div>
 
 <!-- ADD PRODUCT -->
@@ -422,6 +426,116 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
         <span class="sbadge s-paid">✅ Paid</span>
       </div>
       {% else %}<p style="text-align:center;color:#aaa;padding:20px 0;">No payments yet.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- PROMO CODES -->
+<div id="tab-promos" class="admin-section">
+
+  <!-- Add new code form -->
+  <div class="a-card" style="margin-bottom:16px;">
+    <div class="a-card-head">
+      <div class="a-card-num">+</div>
+      <h6 class="a-card-title">Create Promo Code</h6>
+    </div>
+    <div class="a-card-body">
+      <form method="POST" action="{{ url_for('admin_add_promo') }}">
+        <div class="row-2 mb-3">
+          <div>
+            <label class="f-label">Code <span class="req">*</span></label>
+            <input type="text" name="code" class="f-input" placeholder="e.g. SAVE20"
+                   style="text-transform:uppercase;" required>
+          </div>
+          <div>
+            <label class="f-label">Label (shown to user) <span class="req">*</span></label>
+            <input type="text" name="label" class="f-input"
+                   placeholder="e.g. 20% off your order" required>
+          </div>
+        </div>
+        <div class="row-2 mb-3">
+          <div>
+            <label class="f-label">Discount Type <span class="req">*</span></label>
+            <select name="discount_type" class="f-select" required>
+              <option value="percent">Percentage (e.g. 10%)</option>
+              <option value="flat">Flat amount (e.g. GH₵50)</option>
+            </select>
+          </div>
+          <div>
+            <label class="f-label">Value <span class="req">*</span></label>
+            <input type="number" name="value" class="f-input"
+                   placeholder="e.g. 10 for 10% or 50 for GH₵50"
+                   step="0.01" min="0" required>
+          </div>
+        </div>
+        <button type="submit" class="btn-submit">
+          <i class="bi bi-plus-circle"></i> Add Code
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Existing codes -->
+  <div class="a-card">
+    <div class="a-card-head">
+      <div class="a-card-num"><i class="bi bi-tags"></i></div>
+      <h6 class="a-card-title">Active Codes</h6>
+    </div>
+    <div class="a-card-body" style="padding:0;">
+      {% if promos %}
+      <table class="o-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Label</th>
+            <th>Discount</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for code, p in promos.items() %}
+          <tr>
+            <td><code style="font-size:.8rem;font-weight:700;">{{ code }}</code></td>
+            <td style="font-size:.82rem;">{{ p.label }}</td>
+            <td>
+              {% if p.flat and p.flat > 0 %}
+                <span class="sbadge s-paid">GH₵{{ p.flat }} off</span>
+              {% else %}
+                <span class="sbadge s-process">{{ (p.discount * 100)|int }}% off</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if p.active %}
+                <span class="sbadge s-paid">✅ Active</span>
+              {% else %}
+                <span class="sbadge s-expired">⏸ Paused</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="o-actions">
+                <form method="POST" action="{{ url_for('admin_toggle_promo', code=code) }}">
+                  <button class="o-btn deliver" type="submit">
+                    {{ '⏸ Pause' if p.active else '▶ Resume' }}
+                  </button>
+                </form>
+                <form method="POST" action="{{ url_for('admin_delete_promo', code=code) }}"
+                      onsubmit="return confirm('Delete code {{ code }}?')">
+                  <button class="o-btn cancel" type="submit">
+                    <i class="bi bi-trash3"></i> Delete
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="text-align:center;color:#aaa;padding:30px 0;">
+        No promo codes yet. Create one above.
+      </p>
+      {% endif %}
     </div>
   </div>
 </div>

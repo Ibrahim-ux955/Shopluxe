@@ -956,7 +956,8 @@ def admin():
 
     products = [p.to_dict() for p in Product.query.order_by(Product.timestamp.desc()).all()]
     orders = [o.to_dict() for o in Order.query.order_by(Order.timestamp.desc()).all()]
-    return render_template('admin.html', products=products, orders=orders, active_page='admin')
+    promos = load_promos()
+   return render_template('admin.html', products=products, orders=orders, promos=promos, active_page='admin')
 
   
 @app.route('/delete/<product_id>', methods=['POST'])
@@ -2419,6 +2420,74 @@ with app.app_context():
 
         # ✅ SQLite doesn't support DROP COLUMN in older versions, so the Review model
         # must NOT have removed columns defined — just ignore them here
+# ── PROMO CODES ──
+PROMO_FILE = 'promos.json'
+
+def load_promos():
+    if os.path.exists(PROMO_FILE):
+        with open(PROMO_FILE) as f:
+            return json.load(f)
+    return {}
+
+def save_promos(promos):
+    with open(PROMO_FILE, 'w') as f:
+        json.dump(promos, f, indent=2)
+
+@app.route('/apply_promo', methods=['POST'])
+def apply_promo():
+    code = request.json.get('code', '').upper().strip()
+    promos = load_promos()
+    if code in promos:
+        p = promos[code]
+        if not p.get('active', True):
+            return jsonify(success=False, message='This code is no longer active')
+        session['promo'] = {'code': code, 'discount': p.get('discount', 0), 'flat': p.get('flat', 0), 'label': p['label']}
+        return jsonify(success=True, code=code, label=p['label'])
+    return jsonify(success=False, message='Invalid promo code')
+
+@app.route('/remove_promo', methods=['POST'])
+def remove_promo():
+    session.pop('promo', None)
+    return jsonify(success=True)
+
+@app.route('/admin/promo/add', methods=['POST'])
+def admin_add_promo():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    data = request.form
+    code = data.get('code', '').upper().strip()
+    label = data.get('label', '').strip()
+    discount_type = data.get('discount_type')
+    value = float(data.get('value', 0))
+    promos = load_promos()
+    promos[code] = {
+        'label': label,
+        'discount': value / 100 if discount_type == 'percent' else 0,
+        'flat': value if discount_type == 'flat' else 0,
+        'active': True
+    }
+    save_promos(promos)
+    flash(f'✅ Promo code {code} added!')
+    return redirect(url_for('admin') + '#promos')
+
+@app.route('/admin/promo/toggle/<code>', methods=['POST'])
+def admin_toggle_promo(code):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    promos = load_promos()
+    if code in promos:
+        promos[code]['active'] = not promos[code].get('active', True)
+        save_promos(promos)
+    return redirect(url_for('admin') + '#promos')
+
+@app.route('/admin/promo/delete/<code>', methods=['POST'])
+def admin_delete_promo(code):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    promos = load_promos()
+    promos.pop(code, None)
+    save_promos(promos)
+    return redirect(url_for('admin') + '#promos')
 
 if __name__ == "__main__":
     app.run()
