@@ -364,7 +364,6 @@
       <div class="carousel-item {% if loop.first %}active{% endif %}">
         <div style="display:grid;grid-template-columns:1fr 1fr;min-height:320px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.1);">
           
-          <!-- LEFT: Text content -->
           <div style="padding:36px 32px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(135deg,#1a1a2e 0%,#2d2d5e 100%);">
             <span style="display:inline-block;background:{% if badge_type=='sale' %}#ff6600{% elif badge_type=='new' %}#198754{% elif badge_type=='hot' %}#ef4444{% else %}#8b5cf6{% endif %};color:#fff;font-size:.68rem;font-weight:800;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;width:fit-content;">{{ label }}</span>
             <h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;color:#fff;margin:0 0 10px;line-height:1.25;">{{ product.name }}</h2>
@@ -388,7 +387,6 @@
             {% endif %}
           </div>
 
-          <!-- RIGHT: Product image -->
           <div style="position:relative;overflow:hidden;background:#f0f0f5;">
             <a href="{{ url_for('product_detail', product_id=product.id) }}">
               {% set img = product.images[0] if product.images else '' %}
@@ -408,7 +406,6 @@
       {% endfor %}
     </div>
 
-    <!-- Indicators -->
     <div style="display:flex;justify-content:center;gap:6px;margin-top:12px;">
       {% for item in carousel_items %}
       <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ loop.index0 }}"
@@ -428,7 +425,9 @@
     </button>
   </div>
 </div>
-{% endif %}
+{% endif %}{# end if carousel_items #}
+{% endif %}{# end if not query #}
+
 <!-- ── EMPTY STATE ── -->
 {% if not (popular_products or new_products or featured_products or sale_products or products) %}
 <div class="empty-state">
@@ -451,7 +450,6 @@
 </div>
 
 {% else %}
-
 <!-- ── MOST POPULAR ── -->
 {% if popular_products %}
 <div class="section-head">
