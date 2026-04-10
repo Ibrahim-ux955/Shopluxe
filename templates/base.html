@@ -13,6 +13,7 @@
 <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='logo/shopluxe.png', _external=True) }}{% endblock %}">
 <meta property="og:url" content="{{ request.url }}">
 <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
@@ -261,6 +262,17 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   /* Settings / profile */
   .pref-info strong { font-size: .9rem !important; }
   .pref-info small { font-size: .76rem !important; }
+}
+
+/* Prevent zoom on input focus on iOS */
+@media(max-width:768px){
+  input[type="search"],
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  select, textarea {
+    font-size: 16px !important;
+  }
 }
   </style>
 </head>
@@ -581,7 +593,9 @@ function renderSearchResults(data, query) {
   } else {
     box.innerHTML = data.map(p => `
       <a href="/product/${p.id}" class="search-item">
-        <img src="${p.image_url}" alt="${p.name}" onerror="this.src=''">
+        <img src="${p.image_url}" alt="${p.name}"
+             style="width:44px;height:44px;border-radius:8px;object-fit:cover;background:#f0f0f5;"
+             onerror="this.style.display='none'">
         <div>
           <div class="search-item-name">${p.name}</div>
           <div class="search-item-price">GH₵ ${p.price}</div>

@@ -480,22 +480,23 @@ def search():
 
 @app.route('/live_search')
 def live_search():
-    q = request.args.get('q', '').strip().lower()
+    q = request.args.get('q', '').strip()
     if not q:
         return jsonify([])
-    products = Product.query.filter(Product.name.ilike(f'%{q}%')).limit(8).all()
-    results = []
-    for p in products:
-        d = p.to_dict()
-        images = d.get('images', [])
-        results.append({
-            'id': d['id'],
-            'name': d['name'],
-            'price': d['price'],
-            'image_url': url_for('static', filename='shoes/' + images[0]) if images else ''
+    results = Product.query.filter(Product.name.ilike(f'%{q}%')).limit(8).all()
+    out = []
+    for p in results:
+        images = json.loads(p.images) if isinstance(p.images, str) else (p.images or [])
+        image_url = images[0] if images else ''
+        if image_url and not image_url.startswith('http'):
+            image_url = f"/static/shoes/{image_url}"
+        out.append({
+            'id': p.id,
+            'name': p.name,
+            'price': p.sale_price if p.on_sale and p.sale_price else p.price,
+            'image_url': image_url
         })
-    return jsonify(results)
-
+    return jsonify(out)
 
 @app.route('/filtered/<category>')
 def filtered(category):

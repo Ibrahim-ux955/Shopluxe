@@ -10,11 +10,11 @@
 
 {% block og_description %}{{ product.description[:150] if product.description else 'Shop ' ~ product.name ~ ' on ShopLuxe. Fast delivery across Ghana.' }}{% endblock %}
 
-{% block og_image %}{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg'), _external=True) }}{% endblock %}
+{% block og_image %}{% if product.images and product.images[0].startswith('http') %}{{ product.images[0] }}{% else %}{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg'), _external=True) }}{% endif %}{% endblock %}
 
 {% block og_type %}product{% endblock %}
 
-{% block twitter_title %}{{ product.name }} — GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }} | ShopLuxe{% endblock %}
+{% block twitter_image %}{% if product.images and product.images[0].startswith('http') %}{{ product.images[0] }}{% else %}{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg'), _external=True) }}{% endif %}{% endblock %}
 
 {% block twitter_description %}{{ product.description[:150] if product.description else 'Shop ' ~ product.name ~ ' on ShopLuxe Ghana.' }}{% endblock %}
 
@@ -779,8 +779,12 @@ select.form-select { display: none; } /* hide original select */
       {% for p in related %}
         <div class="col-6 col-md-3">
           <a href="{{ url_for('product_detail', product_id=p.id) }}" class="related-card">
-            {% set img = product.images[0] if product.images else '' %}
-            {% if img.startswith('http') %}
+            {% set img = p.images[0] if p.images else '' %}
+            {% if img and img.startswith('http') %}
+              <img src="{{ img }}" alt="{{ p.name }}">
+            {% else %}
+              <img src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ p.name }}">
+            {% endif %}
               <img id="mainImage" src="{{ img }}" alt="{{ product.name }}">
             {% else %}
               <img id="mainImage"
