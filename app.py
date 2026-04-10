@@ -1342,13 +1342,6 @@ def profile():
 
     return render_template('profile.html', user=user.to_dict(), stats=user_stats)
 
-
-
-@app.route('/remove_promo', methods=['POST'])
-def remove_promo():
-    session.pop('promo', None)
-    session.modified = True
-    return jsonify({'success': True})
 # ============================================================
 # CART ROUTES
 # ============================================================
