@@ -567,12 +567,16 @@ function closeBanner() {
   const msb = document.getElementById('mobileSearchBar');
   if(msb) msb.style.top = 'var(--nav-h)';
 }
-let mobileSearchOpen = false;
+
 function toggleMobileSearch() {
   mobileSearchOpen = !mobileSearchOpen;
   const bar = document.getElementById('mobileSearchBar');
   bar.style.display = mobileSearchOpen ? 'block' : 'none';
-  if (mobileSearchOpen) document.getElementById('mobileSearchInput').focus();
+  if (mobileSearchOpen) {
+    document.getElementById('mobileSearchInput').focus();
+    const sd = document.getElementById('searchDropdown');
+    sd.style.top = bar.getBoundingClientRect().bottom + 'px';
+  }
 }
 let searchTimer = null;
 function liveSearch(query) {
@@ -585,8 +589,24 @@ function liveSearch(query) {
       .catch(() => {});
   }, 280);
 }
+
 function renderSearchResults(data, query) {
   const box = document.getElementById('searchDropdown');
+  const isMobile = mobileSearchOpen;
+  if (isMobile) {
+    const bar = document.getElementById('mobileSearchBar');
+    box.style.top = (bar.getBoundingClientRect().bottom) + 'px';
+    box.style.left = '16px';
+    box.style.right = '16px';
+    box.style.transform = 'none';
+    box.style.width = 'auto';
+  } else {
+    box.style.top = '';
+    box.style.left = '50%';
+    box.style.right = '';
+    box.style.transform = 'translateX(-50%)';
+    box.style.width = 'min(600px, calc(100vw - 40px))';
+  }
   if (!data.length) {
     box.innerHTML = `<div class="search-empty">No results for "<strong>${query}</strong>"</div>`;
   } else {
@@ -602,6 +622,16 @@ function renderSearchResults(data, query) {
       </a>`).join('');
   }
   box.style.display = 'block';
+}
+function toggleMobileSearch() {
+  mobileSearchOpen = !mobileSearchOpen;
+  const bar = document.getElementById('mobileSearchBar');
+  bar.style.display = mobileSearchOpen ? 'block' : 'none';
+  if (mobileSearchOpen) {
+    document.getElementById('mobileSearchInput').focus();
+  } else {
+    hideDropdown();
+  }
 }
 function showDropdown() {
   const q = document.getElementById('searchInput').value.trim();
