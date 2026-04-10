@@ -598,11 +598,11 @@
         {% endif %}
       </div>
       <div class="p-delivery"><i class="bi bi-truck"></i> {{ product.delivery_info or 'Free delivery · 2–4 days' }}</div>
+      {% if product.stock == 0 %}
         <div class="p-stock-warn" style="color:#a32d2d;">Out of stock</div>
       {% elif product.stock < 5 %}
         <div class="p-stock-warn" style="color:#854f0b;">Only {{ product.stock }} left</div>
       {% endif %}
-    </div>
     <div class="p-card-footer">
       {% if product.stock > 0 %}
       <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
@@ -666,6 +666,7 @@
         {% endif %}
       </div>
       <div class="p-delivery"><i class="bi bi-truck"></i> {{ product.delivery_info or 'Free delivery · 2–4 days' }}</div>
+      {% if product.stock == 0 %}
         <div class="p-stock-warn" style="color:#a32d2d;">Out of stock</div>
       {% elif product.stock < 5 %}
         <div class="p-stock-warn" style="color:#854f0b;">Only {{ product.stock }} left</div>
@@ -732,6 +733,7 @@
         <span class="p-discount">-{{ disc }}%</span>
       </div>
       <div class="p-delivery"><i class="bi bi-truck"></i> {{ product.delivery_info or 'Free delivery · 2–4 days' }}</div>
+      {% if product.stock == 0 %}
         <div class="p-stock-warn" style="color:#a32d2d;">Out of stock</div>
       {% elif product.stock < 5 %}
         <div class="p-stock-warn" style="color:#854f0b;">Only {{ product.stock }} left</div>
@@ -802,6 +804,7 @@
         {% endif %}
       </div>
       <div class="p-delivery"><i class="bi bi-truck"></i> {{ product.delivery_info or 'Free delivery · 2–4 days' }}</div>
+      {% if product.stock == 0 %}
         <div class="p-stock-warn" style="color:#a32d2d;">Out of stock</div>
       {% elif product.stock < 5 %}
         <div class="p-stock-warn" style="color:#854f0b;">Only {{ product.stock }} left</div>
