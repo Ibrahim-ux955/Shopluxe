@@ -384,24 +384,28 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 
         <!-- Items -->
         {% for item in cart_items %}
-        <div class="order-item">
-          <div style="position:relative; flex-shrink:0;">
-            <img class="order-item-img"
-                 src="{{ url_for('static', filename='shoes/' ~ (item.images[0] if item.images else item.image or 'placeholder.jpg')) }}"
-                 alt="{{ item.name }}">
-            <div class="qty-badge">{{ item.quantity }}</div>
-          </div>
-          <div class="order-item-info">
-            <div class="order-item-name">{{ item.name }}</div>
-            <div class="order-item-meta">
-              {% if item.color and item.color != '-' %}{{ item.color }}{% endif %}
-              {% if item.size and item.size != '-' %} · {{ item.size }}{% endif %}
-            </div>
-          </div>
-          <div class="order-item-price">GH₵ {{ "%.2f"|format(item.effective_price * item.quantity) }}</div>
-        </div>
-        {% endfor %}
-
+<div class="order-item">
+  <div style="position:relative; flex-shrink:0;">
+    {% set img = item.images[0] if item.get('images') else (item.image if item.get('image') else '') %}
+    {% if img and img.startswith('http') %}
+      <img class="order-item-img" src="{{ img }}" alt="{{ item.name }}">
+    {% else %}
+      <img class="order-item-img"
+           src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
+           alt="{{ item.name }}">
+    {% endif %}
+    <div class="qty-badge">{{ item.quantity }}</div>
+  </div>
+  <div class="order-item-info">
+    <div class="order-item-name">{{ item.name }}</div>
+    <div class="order-item-meta">
+      {% if item.color and item.color != '-' %}{{ item.color }}{% endif %}
+      {% if item.size and item.size != '-' %} · {{ item.size }}{% endif %}
+    </div>
+  </div>
+  <div class="order-item-price">GH₵ {{ "%.2f"|format(item.effective_price * item.quantity) }}</div>
+</div>
+{% endfor %}
         <div class="summary-divider"></div>
 
         <!-- Totals -->
