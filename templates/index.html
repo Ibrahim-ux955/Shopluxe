@@ -603,6 +603,7 @@
       {% elif product.stock < 5 %}
         <div class="p-stock-warn" style="color:#854f0b;">Only {{ product.stock }} left</div>
       {% endif %}
+    </div>
     <div class="p-card-footer">
       {% if product.stock > 0 %}
       <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
