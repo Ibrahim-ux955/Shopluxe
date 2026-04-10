@@ -361,11 +361,11 @@
   <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4500">
     <div class="carousel-inner">
       {% for label, product, badge_type in carousel_items %}
-      <div class="carousel-item {% if loop.first %}active{% endif %}">
+      <div class="carousel-item {{ 'active' if loop.first else '' }}">
         <div style="display:grid;grid-template-columns:1fr 1fr;min-height:320px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.1);">
-          
+
           <div style="padding:36px 32px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(135deg,#1a1a2e 0%,#2d2d5e 100%);">
-            <span style="display:inline-block;background:{% if badge_type=='sale' %}#ff6600{% elif badge_type=='new' %}#198754{% elif badge_type=='hot' %}#ef4444{% else %}#8b5cf6{% endif %};color:#fff;font-size:.68rem;font-weight:800;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;width:fit-content;">{{ label }}</span>
+            <span style="display:inline-block;background:{{ '#ff6600' if badge_type=='sale' else '#198754' if badge_type=='new' else '#ef4444' if badge_type=='hot' else '#8b5cf6' }};color:#fff;font-size:.68rem;font-weight:800;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;width:fit-content;">{{ label }}</span>
             <h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;color:#fff;margin:0 0 10px;line-height:1.25;">{{ product.name }}</h2>
             {% if product.brand %}
             <div style="font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:12px;">{{ product.brand }}</div>
@@ -408,10 +408,11 @@
 
     <div style="display:flex;justify-content:center;gap:6px;margin-top:12px;">
       {% for item in carousel_items %}
-      <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ loop.index0 }}"
-              style="width:8px;height:8px;border-radius:50%;border:none;padding:0;
-                     background:{% if loop.first %}#1a1a2e{% else %}#ccc{% endif %};"
-              class="{% if loop.first %}active{% endif %}"></button>
+      <button type="button"
+              data-bs-target="#heroCarousel"
+              data-bs-slide-to="{{ loop.index0 }}"
+              style="width:8px;height:8px;border-radius:50%;border:none;padding:0;background:{{ '#1a1a2e' if loop.first else '#ccc' }};"
+              class="{{ 'active' if loop.first else '' }}"></button>
       {% endfor %}
     </div>
 
