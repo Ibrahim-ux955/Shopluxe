@@ -18,7 +18,6 @@
 
 {% block twitter_description %}{{ product.description[:150] if product.description else 'Shop ' ~ product.name ~ ' on ShopLuxe Ghana.' }}{% endblock %}
 
-{% block twitter_image %}{{ url_for('static', filename='shoes/' ~ (product.images[0] if product.images else 'placeholder.jpg'), _external=True) }}{% endblock %}
 
 {% block content %}
 <style>
@@ -785,13 +784,7 @@ select.form-select { display: none; } /* hide original select */
             {% else %}
               <img src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ p.name }}">
             {% endif %}
-              <img id="mainImage" src="{{ img }}" alt="{{ product.name }}">
-            {% else %}
-              <img id="mainImage"
-                   src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
-                   alt="{{ product.name }}">
-             {% endif %}
-            <div class="related-card-body">
+              <div class="related-card-body">
               <div class="related-card-name">{{ p.name }}</div>
               <div class="related-card-price">
                 {% if p.on_sale %}GH₵ {{ p.sale_price }}{% else %}GH₵ {{ p.price }}{% endif %}
