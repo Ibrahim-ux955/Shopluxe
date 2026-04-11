@@ -19,7 +19,7 @@
 <meta name="twitter:title" content="{% block twitter_title %}ShopLuxe — Online Shopping in Ghana{% endblock %}">
 <meta name="twitter:description" content="{% block twitter_description %}Buy quality products online with fast delivery and secure payment.{% endblock %}">
 <meta name="twitter:image" content="{% block twitter_image %}{{ url_for('static', filename='logo/shopluxe.png', _external=True) }}{% endblock %}">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
   <meta property="og:title" content="ShopLuxe — Online Shopping in Ghana">
   <meta property="og:description" content="Buy quality products online with fast delivery and secure payment.">
@@ -567,23 +567,20 @@ function closeBanner() {
   const msb = document.getElementById('mobileSearchBar');
   if(msb) msb.style.top = 'var(--nav-h)';
 }
+
 let mobileSearchOpen = false;
-function toggleMobileSearch() {
-  mobileSearchOpen = !mobileSearchOpen;
-  const bar = document.getElementById('mobileSearchBar');
-  bar.style.display = mobileSearchOpen ? 'block' : 'none';
-  if (mobileSearchOpen) document.getElementById('mobileSearchInput').focus();
-}
+
 function toggleMobileSearch() {
   mobileSearchOpen = !mobileSearchOpen;
   const bar = document.getElementById('mobileSearchBar');
   bar.style.display = mobileSearchOpen ? 'block' : 'none';
   if (mobileSearchOpen) {
     document.getElementById('mobileSearchInput').focus();
-    const sd = document.getElementById('searchDropdown');
-    sd.style.top = bar.getBoundingClientRect().bottom + 'px';
+  } else {
+    hideDropdown();
   }
 }
+
 let searchTimer = null;
 function liveSearch(query) {
   clearTimeout(searchTimer);
@@ -598,10 +595,9 @@ function liveSearch(query) {
 
 function renderSearchResults(data, query) {
   const box = document.getElementById('searchDropdown');
-  const isMobile = mobileSearchOpen;
-  if (isMobile) {
+  if (mobileSearchOpen) {
     const bar = document.getElementById('mobileSearchBar');
-    box.style.top = (bar.getBoundingClientRect().bottom) + 'px';
+    box.style.top = bar.getBoundingClientRect().bottom + 'px';
     box.style.left = '16px';
     box.style.right = '16px';
     box.style.transform = 'none';
@@ -629,32 +625,27 @@ function renderSearchResults(data, query) {
   }
   box.style.display = 'block';
 }
-function toggleMobileSearch() {
-  mobileSearchOpen = !mobileSearchOpen;
-  const bar = document.getElementById('mobileSearchBar');
-  bar.style.display = mobileSearchOpen ? 'block' : 'none';
-  if (mobileSearchOpen) {
-    document.getElementById('mobileSearchInput').focus();
-  } else {
-    hideDropdown();
-  }
-}
+
 function showDropdown() {
   const q = document.getElementById('searchInput').value.trim();
   if (q) liveSearch(q);
 }
+
 function hideDropdown() {
   document.getElementById('searchDropdown').style.display = 'none';
 }
+
 function performSearch(mobile = false) {
   const q = (mobile
     ? document.getElementById('mobileSearchInput')
     : document.getElementById('searchInput')).value.trim();
   if (q) window.location.href = `/search?q=${encodeURIComponent(q)}`;
 }
+
 document.addEventListener('click', e => {
-  if (!e.target.closest('#navSearch') && !e.target.closest('#searchDropdown')) hideDropdown();
+  if (!e.target.closest('#navSearch') && !e.target.closest('#searchDropdown') && !e.target.closest('#mobileSearchBar')) hideDropdown();
 });
+
 function updateCounts() {
   fetch('/cart_count').then(r => r.json()).then(d => {
     const v = d.count > 0 ? d.count : '';
