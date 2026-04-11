@@ -357,48 +357,71 @@
 {% endfor %}
 
 {% if carousel_items %}
-<div class="hero-wrap" style="margin-bottom:32px;">
-  <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="4500">
-    <div class="carousel-inner">
+<div style="margin-bottom:28px;">
+  <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+
+    <div class="carousel-inner" style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1);">
       {% for label, product, badge_type in carousel_items %}
       <div class="carousel-item {{ 'active' if loop.first else '' }}">
-        <div style="display:grid;grid-template-columns:1fr 1fr;min-height:320px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.1);">
+        <div style="display:flex;min-height:340px;background:#fff;">
 
-          <div style="padding:36px 32px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(135deg,#1a1a2e 0%,#2d2d5e 100%);">
-            <span style="display:inline-block;background:{{ '#ff6600' if badge_type=='sale' else '#198754' if badge_type=='new' else '#ef4444' if badge_type=='hot' else '#8b5cf6' }};color:#fff;font-size:.68rem;font-weight:800;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;width:fit-content;">{{ label }}</span>
-            <h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;color:#fff;margin:0 0 10px;line-height:1.25;">{{ product.name }}</h2>
+          <!-- LEFT: Dark panel with text -->
+          <div style="flex:0 0 45%;padding:36px 32px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(160deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%);position:relative;overflow:hidden;">
+            <!-- Decorative circle -->
+            <div style="position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.03);"></div>
+            <div style="position:absolute;right:20px;bottom:-60px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.03);"></div>
+
+            <span style="display:inline-block;background:{{ '#ff6600' if badge_type=='sale' else '#198754' if badge_type=='new' else '#ef4444' if badge_type=='hot' else '#8b5cf6' }};color:#fff;font-size:.65rem;font-weight:800;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;width:fit-content;">{{ label }}</span>
+
+            <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.1rem,2.5vw,1.7rem);color:#fff;margin:0 0 8px;line-height:1.3;word-break:break-word;">{{ product.name }}</h2>
+
             {% if product.brand %}
-            <div style="font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:12px;">{{ product.brand }}</div>
+            <div style="font-size:.75rem;color:rgba(255,255,255,.45);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px;">{{ product.brand }}</div>
             {% endif %}
-            <div style="margin-bottom:20px;">
-              <span style="font-size:1.5rem;font-weight:700;color:#fff;">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
+
+            <div style="margin-bottom:22px;">
+              <span style="font-size:clamp(1.3rem,3vw,1.8rem);font-weight:800;color:#fff;">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
               {% if product.on_sale and product.sale_price %}
-              <span style="font-size:.85rem;text-decoration:line-through;color:rgba(255,255,255,.4);margin-left:8px;">GH₵ {{ product.price }}</span>
+              <br>
+              <span style="font-size:.8rem;text-decoration:line-through;color:rgba(255,255,255,.35);">GH₵ {{ product.price }}</span>
               {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
-              <span style="background:#fff3cd;color:#856404;font-size:.7rem;font-weight:800;padding:3px 8px;border-radius:20px;margin-left:6px;">-{{ disc }}%</span>
+              <span style="background:#ff6600;color:#fff;font-size:.65rem;font-weight:800;padding:2px 8px;border-radius:20px;margin-left:6px;">Save {{ disc }}%</span>
               {% endif %}
             </div>
+
             <a href="{{ url_for('product_detail', product_id=product.id) }}"
-               style="display:inline-flex;align-items:center;gap:8px;background:#ff9900;color:#111;border-radius:10px;padding:12px 24px;font-size:.88rem;font-weight:700;text-decoration:none;width:fit-content;transition:opacity .2s;">
-              Shop Now <i class="bi bi-arrow-right"></i>
+               style="display:inline-flex;align-items:center;gap:8px;background:#ff9900;color:#111;border-radius:8px;padding:11px 22px;font-size:.85rem;font-weight:800;text-decoration:none;width:fit-content;border:2px solid #e68900;">
+              <i class="bi bi-bag-fill"></i> Shop Now
             </a>
+
             {% if product.stock and product.stock < 10 %}
-            <div style="margin-top:14px;font-size:.72rem;color:#fca5a5;">⚡ Only {{ product.stock }} left in stock</div>
+            <div style="margin-top:14px;font-size:.7rem;color:#fca5a5;display:flex;align-items:center;gap:4px;">
+              <i class="bi bi-lightning-fill"></i> Only {{ product.stock }} left — order soon!
+            </div>
             {% endif %}
+
+            <div style="margin-top:16px;font-size:.7rem;color:rgba(255,255,255,.3);display:flex;align-items:center;gap:4px;">
+              <i class="bi bi-truck"></i> {{ product.delivery_info or 'Free delivery across Ghana' }}
+            </div>
           </div>
 
-          <div style="position:relative;overflow:hidden;background:#f0f0f5;">
-            <a href="{{ url_for('product_detail', product_id=product.id) }}">
+          <!-- RIGHT: Product image -->
+          <div style="flex:1;overflow:hidden;background:#f5f5f5;position:relative;">
+            <a href="{{ url_for('product_detail', product_id=product.id) }}" style="display:block;height:100%;">
               {% set img = product.images[0] if product.images else '' %}
               {% if img and img.startswith('http') %}
                 <img src="{{ img }}" alt="{{ product.name }}"
-                     style="width:100%;height:100%;object-fit:cover;transition:transform .5s;">
+                     style="width:100%;height:100%;object-fit:cover;transition:transform .6s ease;">
               {% else %}
                 <img src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
                      alt="{{ product.name }}"
-                     style="width:100%;height:100%;object-fit:cover;transition:transform .5s;">
+                     style="width:100%;height:100%;object-fit:cover;transition:transform .6s ease;">
               {% endif %}
             </a>
+            <!-- Category tag on image -->
+            <div style="position:absolute;bottom:14px;right:14px;background:rgba(0,0,0,.5);color:#fff;font-size:.7rem;font-weight:600;padding:4px 10px;border-radius:20px;backdrop-filter:blur(4px);">
+              {{ product.category }}
+            </div>
           </div>
 
         </div>
@@ -406,29 +429,58 @@
       {% endfor %}
     </div>
 
-    <div style="display:flex;justify-content:center;gap:6px;margin-top:12px;">
+    <!-- Amazon-style bottom indicator bar -->
+    <div style="display:flex;gap:4px;margin-top:8px;padding:0 2px;">
       {% for item in carousel_items %}
       <button type="button"
               data-bs-target="#heroCarousel"
               data-bs-slide-to="{{ loop.index0 }}"
-              style="width:8px;height:8px;border-radius:50%;border:none;padding:0;background:{{ '#1a1a2e' if loop.first else '#ccc' }};"
+              style="flex:1;height:4px;border-radius:2px;border:none;padding:0;cursor:pointer;transition:background .3s;background:{{ '#1a1a2e' if loop.first else '#ddd' }};"
               class="{{ 'active' if loop.first else '' }}"></button>
       {% endfor %}
     </div>
 
+    <!-- Prev/Next arrows -->
     <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev"
-            style="width:40px;height:40px;background:rgba(0,0,0,.3);border-radius:50%;top:45%;left:8px;">
-      <span class="carousel-control-prev-icon"></span>
+            style="width:36px;height:36px;background:rgba(255,255,255,.9);border-radius:50%;top:46%;left:10px;box-shadow:0 2px 8px rgba(0,0,0,.15);">
+      <span class="carousel-control-prev-icon" style="filter:invert(1);width:14px;height:14px;"></span>
     </button>
     <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next"
-            style="width:40px;height:40px;background:rgba(0,0,0,.3);border-radius:50%;top:45%;right:8px;">
-      <span class="carousel-control-next-icon"></span>
+            style="width:36px;height:36px;background:rgba(255,255,255,.9);border-radius:50%;top:46%;right:10px;box-shadow:0 2px 8px rgba(0,0,0,.15);">
+      <span class="carousel-control-next-icon" style="filter:invert(1);width:14px;height:14px;"></span>
     </button>
+
   </div>
 </div>
+
+<style>
+#heroCarousel .carousel-item img:hover { transform: scale(1.04); }
+#heroCarousel .carousel-indicators-bar button.active { background: #1a1a2e !important; }
+@media(max-width:600px){
+  #heroCarousel .carousel-item > div { flex-direction: column !important; }
+  #heroCarousel .carousel-item > div > div:first-child {
+    flex: unset !important; padding: 22px 20px !important; min-height: auto !important;
+  }
+  #heroCarousel .carousel-item > div > div:last-child {
+    flex: unset !important; height: 200px !important;
+  }
+}
+
+/* Animate indicator bar on slide change */
+#heroCarousel .carousel-item.active ~ * button[data-bs-slide-to] { background: #ddd; }
+</style>
+
+<script>
+document.getElementById('heroCarousel')?.addEventListener('slide.bs.carousel', function(e) {
+  const bars = document.querySelectorAll('[data-bs-target="#heroCarousel"][data-bs-slide-to]');
+  bars.forEach((b, i) => {
+    b.style.background = i === e.to ? '#1a1a2e' : '#ddd';
+  });
+});
+</script>
+
 {% endif %}{# end if carousel_items #}
 {% endif %}{# end if not query #}
-
 <!-- ── EMPTY STATE ── -->
 {% if not (popular_products or new_products or featured_products or sale_products or products) %}
 <div class="empty-state">
@@ -473,7 +525,7 @@
     <div class="p-card-img-wrap">
       <a href="{{ url_for('product_detail', product_id=product.id) }}">
         {% set img = product.images[0] if product.images else '' %}
-        {% if img.startswith('http') %}
+        {% if img and img.startswith('http') %}
           <img class="p-card-img" src="{{ img }}" alt="{{ product.name }}">
         {% else %}
           <img class="p-card-img"
