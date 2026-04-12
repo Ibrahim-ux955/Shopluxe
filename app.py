@@ -369,8 +369,6 @@ def normalize_timestamps(products):
             p['timestamp'] = current_time
     return products
 
-import threading
-
 def send_email(to, subject, html):
     def _send():
         with app.app_context():
@@ -379,16 +377,13 @@ def send_email(to, subject, html):
                     subject=subject,
                     recipients=[to],
                     html=html,
-                    sender=("ShopLuxe", app.config['MAIL_USERNAME'])
+                    sender=(app.config['MAIL_DEFAULT_SENDER'])  # ← simplify this
                 )
                 mail.send(msg)
                 print(f"✅ Email sent to {to}")
             except Exception as e:
-                print(f"❌ Email failed to {to}: {e}")
-
+                print(f"❌ Email failed to {to}: {e}")   # ← CHECK YOUR RENDER LOGS
     threading.Thread(target=_send, daemon=True).start()
-    
-
 
 # ============================================================
 # TEMPLATE FILTER
@@ -409,7 +404,7 @@ def todatetime_filter(s):
 @app.template_filter('imgurl')
 def imgurl_filter(img):
     if not img:
-        return url_for('static', filename='shoes/placeholder.jpg')
+        return 'https://placehold.co/300x300?text=No+Image'  # ← CDN fallback
     if img.startswith('http'):
         return img
     return url_for('static', filename='shoes/' + img)
