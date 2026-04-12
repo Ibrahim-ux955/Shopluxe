@@ -45,7 +45,10 @@ database_url = os.getenv('DATABASE_URL', 'sqlite:///shopluxe.db')
 if database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 280,
+}
 
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
@@ -658,12 +661,16 @@ def health_check():
 @app.route('/test_email')
 def test_email():
     try:
-        msg = Message("✅ Test Email from Flask App", recipients=[app.config['MAIL_USERNAME']])
+        msg = Message(
+            "✅ Test Email from Flask App",
+            recipients=[app.config['MAIL_USERNAME']],
+            sender=("ShopLuxe", app.config['MAIL_USERNAME'])
+        )
         msg.body = "This is a test email to verify email sending from your Flask app."
         mail.send(msg)
         return "✅ Test email sent successfully!"
     except Exception as e:
-        return f"❌ Email failed: {str(e)}"
+        return f"❌ Email failed: {str(e)}", 500
 
 
 # ============================================================
@@ -1058,9 +1065,9 @@ def edit_product(product_id):
 
         new_images = request.files.getlist('new_images')
         for file in new_images:
-            if file and file.filename:
-                upload_result = cloudinary.uploader.upload(img)
-                image_filenames.append(upload_result['secure_url'])
+           if file and file.filename:
+               upload_result = cloudinary.uploader.upload(file)   # ← fix: use 'file'
+               kept_images.append(upload_result['secure_url'])    # ← fix: append to kept_images
         product.images = json.dumps(kept_images)
         product.timestamp = datetime.now(timezone.utc).isoformat()
         db.session.commit()
@@ -2210,8 +2217,8 @@ def vendor_edit_product(product_id):
         new_images = request.files.getlist('new_images')
         for file in new_images:
             if file and file.filename:
-                upload_result = cloudinary.uploader.upload(img)
-                image_filenames.append(upload_result['secure_url'])
+               upload_result = cloudinary.uploader.upload(file)   # ← fix: use 'file'
+               kept_images.append(upload_result['secure_url'])    # ← fix: append to kept_images
         product.images = json.dumps(kept_images)
         product.timestamp = datetime.now(timezone.utc).isoformat()
 
@@ -2533,20 +2540,7 @@ def contact():
 
     return redirect(url_for('support'))
     
-import threading
-import requests
 
-def keep_alive():
-    import time
-    while True:
-        time.sleep(840)  # ping every 14 minutes
-        try:
-            requests.get('https://www.shopluxe.online', timeout=10)
-        except:
-            pass
-
-thread = threading.Thread(target=keep_alive, daemon=True)
-thread.start()    
 
 if __name__ == "__main__":
     app.run()
