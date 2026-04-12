@@ -2500,7 +2500,33 @@ def admin_delete_promo(code):
         db.session.commit()
     return redirect(url_for('admin') + '#promos')
   
+@app.route('/contact', methods=['POST'])
+def contact():
+    name = request.form.get('name', '').strip()
+    email = request.form.get('email', '').strip()
+    subject = request.form.get('subject', 'General Enquiry')
+    message = request.form.get('message', '').strip()
 
+    try:
+        send_email(
+            "shopluxe374@gmail.com",
+            f"📩 Support Message: {subject}",
+            f"""
+            <div style="font-family:sans-serif; padding:20px; max-width:500px;">
+                <h2 style="color:#198754;">New Support Message</h2>
+                <p><strong>From:</strong> {name} ({email})</p>
+                <p><strong>Subject:</strong> {subject}</p>
+                <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
+                <p style="line-height:1.7;">{message}</p>
+            </div>
+            """
+        )
+        flash("✅ Message sent! We'll get back to you soon.")
+    except Exception as e:
+        print("Contact form email failed:", e)
+        flash("❌ Something went wrong. Please try WhatsApp instead.")
+
+    return redirect(url_for('support'))
     
 import threading
 import requests

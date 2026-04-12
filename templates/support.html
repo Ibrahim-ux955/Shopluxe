@@ -119,24 +119,28 @@ body { font-family:'DM Sans',sans-serif; background:var(--light); }
     </div>
   </div>
 
+  <!-- ✅ FIXED: Form now posts to Flask route instead of mailto -->
   <div class="a-card">
     <div class="a-card-head"><i class="bi bi-envelope-fill"></i><h6 class="a-card-title">Send Us a Message</h6></div>
     <div class="a-card-body">
-      <form action="mailto:shopluxe374@gmail.com" method="POST" enctype="text/plain">
+      <form action="{{ url_for('contact') }}" method="POST">
         <div class="row-2 mb-3">
-          <div><label class="f-label">Full Name</label><input type="text" class="f-input" placeholder="John Mensah" required></div>
-          <div><label class="f-label">Email</label><input type="email" class="f-input" placeholder="you@example.com" required></div>
+          <div><label class="f-label">Full Name</label><input type="text" name="name" class="f-input" placeholder="John Mensah" required></div>
+          <div><label class="f-label">Email</label><input type="email" name="email" class="f-input" placeholder="you@example.com" required></div>
         </div>
         <div class="mb-3">
           <label class="f-label">Subject</label>
-          <select class="f-select">
+          <select name="subject" class="f-select">
             <option value="" disabled selected>Select a topic</option>
-            <option>Order Issue</option><option>Delivery / Tracking</option>
-            <option>Return / Exchange</option><option>Payment Problem</option>
-            <option>Product Question</option><option>Other</option>
+            <option>Order Issue</option>
+            <option>Delivery / Tracking</option>
+            <option>Return / Exchange</option>
+            <option>Payment Problem</option>
+            <option>Product Question</option>
+            <option>Other</option>
           </select>
         </div>
-        <div class="mb-3"><label class="f-label">Message</label><textarea class="f-textarea" placeholder="Describe your issue in detail..."></textarea></div>
+        <div class="mb-3"><label class="f-label">Message</label><textarea name="message" class="f-textarea" placeholder="Describe your issue in detail..." required></textarea></div>
         <button type="submit" class="btn-send"><i class="bi bi-send"></i> Send Message</button>
       </form>
     </div>
