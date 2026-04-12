@@ -1159,24 +1159,24 @@ def signup():
         db.session.commit()
 
         try:
-    send_email(
-        email,
-        "🎉 Welcome to ShopLuxe!",
-        f"""
-        <div style="font-family:sans-serif; padding:20px; max-width:500px;">
-            <h2 style="color:#198754;">Welcome to ShopLuxe, {name}! 🛍️</h2>
-            <p>Thanks for creating an account. You can now track orders, save wishlists, and check out faster.</p>
-            <a href="https://www.shopluxe.online/shop"
-               style="background:#198754;color:#fff;padding:12px 24px;
-               border-radius:8px;text-decoration:none;display:inline-block;font-weight:bold;">
-               Start Shopping
-            </a>
-            <p style="color:#999;font-size:12px;margin-top:20px;">ShopLuxe Team</p>
-        </div>
-        """
-    )
-except Exception as e:
-    print("Welcome email failed:", e)
+            send_email(
+                email,
+                "🎉 Welcome to ShopLuxe!",
+                f"""
+                <div style="font-family:sans-serif; padding:20px; max-width:500px;">
+                    <h2 style="color:#198754;">Welcome to ShopLuxe, {name}! 🛍️</h2>
+                    <p>Thanks for creating an account. You can now track orders, save wishlists, and check out faster.</p>
+                    <a href="https://www.shopluxe.online/shop"
+                       style="background:#198754;color:#fff;padding:12px 24px;
+                       border-radius:8px;text-decoration:none;display:inline-block;font-weight:bold;">
+                       Start Shopping
+                    </a>
+                    <p style="color:#999;font-size:12px;margin-top:20px;">ShopLuxe Team</p>
+                </div>
+                """
+            )
+        except Exception as e:
+            print("Welcome email failed:", e)
 
         flash("✅ Account created. Please log in.")
         return redirect(url_for('login'))
