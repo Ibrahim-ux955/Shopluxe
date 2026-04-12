@@ -80,15 +80,14 @@
 <div class="vd-header">
   <div class="vd-header-left">
     {% if vendor.logo %}
-      {% set img = p.images[0] if p.images else '' %}
-      {% if img.startswith('http') %}
-        <img src="{{ img }}" alt="{{ p.name }}" class="vd-prod-img">
+      {% if vendor.logo.startswith('http') %}
+        <img src="{{ vendor.logo }}" alt="{{ vendor.shop_name }}" class="vd-logo">
       {% else %}
-        <img src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ p.name }}" class="vd-prod-img">
+        <img src="{{ url_for('static', filename='shoes/' ~ vendor.logo) }}" alt="{{ vendor.shop_name }}" class="vd-logo">
       {% endif %}
-      {% else %}
-        <div class="vd-logo-ph">🏪</div>
-      {% endif %}
+    {% else %}
+      <div class="vd-logo-ph">🏪</div>
+    {% endif %}
     <div>
       <h1 class="vd-shop-name">{{ vendor.shop_name }}</h1>
       <div class="vd-shop-sub">Vendor Dashboard</div>
@@ -148,15 +147,15 @@
         <td>
           <div class="vd-prod-cell">
             {% if p.images %}
-              {% set img = vendor.logo if vendor.logo else '' %}
+              {% set img = p.images[0] %}
               {% if img.startswith('http') %}
-                <img src="{{ img }}" alt="{{ vendor.shop_name }}" class="vd-logo">
+                <img src="{{ img }}" alt="{{ p.name }}" class="vd-prod-img">
               {% else %}
-                <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ vendor.shop_name }}" class="vd-logo">
+                <img src="{{ url_for('static', filename='shoes/' ~ img) }}" alt="{{ p.name }}" class="vd-prod-img">
               {% endif %}
-              {% else %}
-                <div class="vd-prod-img-ph">👟</div>
-              {% endif %}
+            {% else %}
+              <div class="vd-prod-img-ph">👟</div>
+            {% endif %}
             <div>
               <div class="vd-prod-name">{{ p.name }}</div>
               <div class="vd-prod-cat">{{ p.category or 'Uncategorized' }}</div>
