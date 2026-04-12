@@ -371,18 +371,35 @@ def normalize_timestamps(products):
             p['timestamp'] = current_time
     return products
 
+# Remove flask_mail imports and replace send_email with this:
+import urllib.request
+import json as json_lib
+
 def send_email(to, subject, html):
     def _send():
-        with app.app_context():
-            try:
-                msg = Message(subject=subject, recipients=[to], html=html,
-                              sender=("ShopLuxe", app.config['MAIL_USERNAME']))
-                mail.send(msg)
-                logging.info(f"✅ Email sent to {to}")
-            except Exception as e:
-                import traceback
-                logging.error(f"❌ Email failed to {to}: {e}")
-                logging.error(traceback.format_exc())
+        SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+        payload = json_lib.dumps({
+            "personalizations": [{"to": [{"email": to}]}],
+            "from": {"email": "shopluxe374@gmail.com", "name": "ShopLuxe"},
+            "subject": subject,
+            "content": [{"type": "text/html", "value": html}]
+        }).encode('utf-8')
+
+        req = urllib.request.Request(
+            "https://api.sendgrid.com/v3/mail/send",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {SENDGRID_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            method="POST"
+        )
+        try:
+            with urllib.request.urlopen(req) as resp:
+                logging.info(f"✅ Email sent to {to} — status {resp.status}")
+        except Exception as e:
+            logging.error(f"❌ Email failed to {to}: {e}")
+
     threading.Thread(target=_send, daemon=True).start()
 
 # ============================================================
