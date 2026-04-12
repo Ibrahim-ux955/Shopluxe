@@ -368,19 +368,24 @@ def normalize_timestamps(products):
             p['timestamp'] = current_time
     return products
 
+import threading
+
 def send_email(to, subject, html):
-    try:
-        msg = Message(
-            subject=subject,
-            recipients=[to],
-            html=html,
-            sender=("ShopLuxe", "shopluxe374@gmail.com")
-        )
-        mail.send(msg)
-        print(f"✅ Email sent to {to}")
-    except Exception as e:
-        print(f"❌ Email failed to {to}: {e}")
-    
+    def _send():
+        with app.app_context():
+            try:
+                msg = Message(
+                    subject=subject,
+                    recipients=[to],
+                    html=html,
+                    sender=("ShopLuxe", app.config['MAIL_USERNAME'])
+                )
+                mail.send(msg)
+                print(f"✅ Email sent to {to}")
+            except Exception as e:
+                print(f"❌ Email failed to {to}: {e}")
+
+    threading.Thread(target=_send, daemon=True).start()
     
 
 
