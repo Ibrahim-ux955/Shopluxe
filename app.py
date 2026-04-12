@@ -8,7 +8,8 @@ from uuid import uuid4
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 from urllib.parse import unquote, quote
-
+import logging
+logging.basicConfig(level=logging.INFO, force=True)  # ← ADD THIS
 
 import requests
 from dotenv import load_dotenv
@@ -374,16 +375,14 @@ def send_email(to, subject, html):
     def _send():
         with app.app_context():
             try:
-                msg = Message(
-                    subject=subject,
-                    recipients=[to],
-                    html=html,
-                    sender=(app.config['MAIL_DEFAULT_SENDER'])  # ← simplify this
-                )
+                msg = Message(subject=subject, recipients=[to], html=html,
+                              sender=("ShopLuxe", app.config['MAIL_USERNAME']))
                 mail.send(msg)
-                print(f"✅ Email sent to {to}")
+                logging.info(f"✅ Email sent to {to}")
             except Exception as e:
-                print(f"❌ Email failed to {to}: {e}")   # ← CHECK YOUR RENDER LOGS
+                import traceback
+                logging.error(f"❌ Email failed to {to}: {e}")
+                logging.error(traceback.format_exc())
     threading.Thread(target=_send, daemon=True).start()
 
 # ============================================================
