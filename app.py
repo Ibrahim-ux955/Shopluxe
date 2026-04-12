@@ -377,7 +377,7 @@ import json as json_lib
 
 def send_email(to, subject, html):
     def _send():
-        SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+        SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '').strip()
         payload = json_lib.dumps({
             "personalizations": [{"to": [{"email": to}]}],
             "from": {"email": "shopluxe374@gmail.com", "name": "ShopLuxe"},
