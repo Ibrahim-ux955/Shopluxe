@@ -367,7 +367,7 @@ def normalize_timestamps(products):
 
 def send_email(to, subject, html):
     resend.Emails.send({
-        "from": "Shopluxe <onboarding@resend.dev>",
+        "from": "Shopluxe <shopluxe374@gmail.com>",
         "to": [to],
         "subject": subject,
         "html": html
@@ -728,7 +728,7 @@ def verify_payment():
             if product.stock == 0:
                 try:
                     send_email(
-                        "vybezkhid7@gmail.com",
+                        "shopluxe374@gmail.com",
                         f"⚠️ Out of Stock Alert — {product.name}",
                         f"""
                         <div style="font-family:sans-serif; padding:20px;">
@@ -815,7 +815,7 @@ def verify_payment():
     order_time_str = datetime.now().strftime("%b %d, %Y, %I:%M %p")
 
     try:
-        send_email("vybezkhid7@gmail.com", "📦 New Paid Order - ShopLuxe",
+        send_email("shopluxe374@gmail.com", "📦 New Paid Order - ShopLuxe",
                    render_template("emails/admin_order_email.html", name=name, email=email,
                                    phone=phone, product_name=product_list, total=amount,
                                    order_time=order_time_str, track_order_url=track_order_url))
@@ -1951,7 +1951,7 @@ def become_vendor():
 
         try:
             send_email(
-                "vybezkhid7@gmail.com",
+                "shopluxe374@gmail.com",
                 "🛍️ New Vendor Application — ShopLuxe",
                 f"""
                 <div style="font-family:sans-serif; padding:20px;">
@@ -2270,7 +2270,7 @@ def vendor_mark_shipped(order_id):
     # ✅ Notify admin
     try:
         send_email(
-            "vybezkhid7@gmail.com",
+            "shopluxe374@gmail.com",
             f"📦 Order Shipped — {order.name}",
             f"""
             <div style="font-family:sans-serif; padding:20px;">
