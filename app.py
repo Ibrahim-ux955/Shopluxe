@@ -53,6 +53,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
+app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL', 'False') == 'True'  # ← ADD THIS
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
@@ -662,20 +663,6 @@ def support():
 def health_check():
     return "OK", 200
 
-
-@app.route('/test_email')
-def test_email():
-    try:
-        msg = Message(
-            "✅ Test Email from Flask App",
-            recipients=[app.config['MAIL_USERNAME']],
-            sender=("ShopLuxe", app.config['MAIL_USERNAME'])
-        )
-        msg.body = "This is a test email to verify email sending from your Flask app."
-        mail.send(msg)
-        return "✅ Test email sent successfully!"
-    except Exception as e:
-        return f"❌ Email failed: {str(e)}", 500
 
 
 # ============================================================
