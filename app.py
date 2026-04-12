@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 from urllib.parse import unquote, quote
 
-import resend
+
 import requests
 from dotenv import load_dotenv
 
@@ -57,7 +57,7 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
 db = SQLAlchemy(app)
 mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
-resend.api_key = os.getenv("RESEND_API_KEY")
+
 
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'fallback-admin-pass')
 MAX_ATTEMPTS = 5
@@ -366,12 +366,17 @@ def normalize_timestamps(products):
     return products
 
 def send_email(to, subject, html):
-    resend.Emails.send({
-        "from": "Shopluxe <shopluxe374@gmail.com>",
-        "to": [to],
-        "subject": subject,
-        "html": html
-    })
+    try:
+        msg = Message(
+            subject=subject,
+            recipients=[to],
+            html=html,
+            sender=("ShopLuxe", "shopluxe374@gmail.com")
+        )
+        mail.send(msg)
+        print(f"✅ Email sent to {to}")
+    except Exception as e:
+        print(f"❌ Email failed to {to}: {e}")
     
     
 
