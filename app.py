@@ -55,7 +55,6 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
-app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL', 'False') == 'True'  # ← ADD THIS
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
@@ -374,32 +373,18 @@ def normalize_timestamps(products):
 
 
 def send_email(to, subject, html):
-    def _send():
-        import urllib.request
-        RESEND_API_KEY = os.getenv('RESEND_API_KEY', '').strip()
-        payload = json.dumps({
-            "from": "ShopLuxe <onboarding@resend.dev>",
-            "to": [to],
-            "subject": subject,
-            "html": html
-        }).encode('utf-8')
-
-        req = urllib.request.Request(
-            "https://api.resend.com/emails",
-            data=payload,
-            headers={
-                "Authorization": f"Bearer {RESEND_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            method="POST"
-        )
-        try:
-            with urllib.request.urlopen(req) as resp:
-                logging.info(f"✅ Email sent to {to} — status {resp.status}")
-        except Exception as e:
-            logging.error(f"❌ Email failed to {to}: {e}")
-
-    threading.Thread(target=_send, daemon=True).start()
+    try:
+        with app.app_context():
+            msg = Message(
+                subject=subject,
+                recipients=[to],
+                html=html,
+                sender=("ShopLuxe", app.config['MAIL_USERNAME'])
+            )
+            mail.send(msg)
+            logging.info(f"✅ Email sent to {to}")
+    except Exception as e:
+        logging.error(f"❌ Email failed to {to}: {e}")
 
 # ============================================================
 # TEMPLATE FILTER
