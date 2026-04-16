@@ -315,12 +315,18 @@
 
 
 @media(max-width:600px){
-  #heroCarousel .carousel-item > div { flex-direction: column !important; }
   #heroCarousel .carousel-item > div > div:first-child {
-    flex: unset !important; padding: 22px 20px !important;
+    min-height: auto !important;
+    padding: 20px 16px !important;
   }
   #heroCarousel .carousel-item > div > div:last-child {
-    flex: unset !important; height: 200px !important; max-width:100% !important;
+    height: 180px !important;
+    min-height: 180px !important;
+    max-height: 180px !important;
+  }
+  /* Prevent price row overflow */
+  #heroCarousel [style*="display:flex"][style*="align-items:center"][style*="gap:6px"] {
+    flex-wrap: wrap;
   }
 }
 /* ── AMAZON-STYLE CARD IMPROVEMENTS ── */

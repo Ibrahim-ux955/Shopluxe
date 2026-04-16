@@ -181,6 +181,13 @@
   ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #bbb; }
 
+  @media(max-width:600px){
+  #heroCarousel .carousel-item > div {
+    max-height: 420px;
+    overflow: hidden;
+  }
+}
+
   /* ══ MOBILE TEXT SIZE FIX ══ */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
