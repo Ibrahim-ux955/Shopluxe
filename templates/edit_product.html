@@ -439,7 +439,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
         <div class="image-grid mb-4">
           {% for img in product.images %}
           <div class="image-thumb">
-            <img src="{{ url_for('static', filename='shoes/' + img) }}" alt="{{ product.name }}">
+            <img src="{% if img.startswith('http') %}{{ img }}{% else %}{{ url_for('static', filename='shoes/' + img) }}{% endif %}" alt="{{ product.name }}">
             <input type="checkbox" name="remove_images" value="{{ img }}"
                    id="rm_{{ loop.index }}" style="position:absolute;opacity:0;pointer-events:none;">
             <div class="remove-overlay" onclick="document.getElementById('rm_{{ loop.index }}').click()">

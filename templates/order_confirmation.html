@@ -233,9 +233,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
     <div class="a-card-body">
       {% for item in order.get('products') or order.get('items', []) %}
       <div class="order-item">
-        {% set img = item.get('images', [None])[0] if item.get('images') else item.get('image', 'placeholder.jpg') %}
+        {% set img = item.get('images', [None])[0] if item.get('images') else item.get('image', '') %}
         <img class="order-item-img"
-             src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
+             src="{% if img and img.startswith('http') %}{{ img }}{% elif img %}{{ url_for('static', filename='shoes/' ~ img) }}{% else %}{{ url_for('static', filename='shoes/placeholder.jpg') }}{% endif %}"
              alt="{{ item['name'] }}"
              onerror="this.src='{{ url_for('static', filename='shoes/placeholder.jpg') }}'">
         <div class="order-item-info">
@@ -281,13 +281,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
       <h6 class="a-card-title">Delivery Information</h6>
     </div>
     <div class="a-card-body">
-      <div class="delivery-card">
-        <div class="delivery-icon">🚚</div>
-        <div>
-          <div class="delivery-title">Standard Delivery — FREE</div>
-          <div class="delivery-sub">Expected within 2–4 working days. A confirmation email has been sent to {{ order['email'] }}.</div>
-        </div>
-      </div>
+      {% set first_item = (order.get('products') or order.get('items', []))|first %}
+      {% set delivery_info = first_item.get('delivery_info', '2–4 working days') if first_item else '2–4 working days' %}
+
+    <div class="delivery-card">
+      <div class="delivery-icon">🚚</div>
+      <div>
+        <div class="delivery-title">Standard Delivery — FREE</div>
+        <div class="delivery-sub">{{ delivery_info }}. A confirmation email has been sent to {{ order['email'] }}.</div>
+    </div>
+    </div>
     </div>
   </div>
 
