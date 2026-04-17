@@ -514,13 +514,16 @@ def filtered(category):
         products = [p.to_dict() for p in Product.query.filter_by(on_sale=True).all()]
     elif category in ('New Arrivals', 'new'):
         products = [p.to_dict() for p in Product.query.filter_by(new_arrival=True).all()]
+    elif category == 'featured':
+        products = [p.to_dict() for p in Product.query.filter_by(featured=True).all()]
+    elif category == 'popular':
+        products = [p.to_dict() for p in Product.query.order_by(Product.popularity.desc()).all()]
     else:
         products = [p.to_dict() for p in Product.query.filter(
             Product.category.ilike(category)).all()]
 
     return render_template('filtered.html', products=products,
                            category=category, active_page='categories')
-
 @app.route('/shop')
 def shop():
     category = request.args.get('category', 'all')

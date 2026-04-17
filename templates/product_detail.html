@@ -417,14 +417,7 @@ select.form-select { display: none; } /* hide original select */
 .related-card-name { font-weight: 600; font-size: .88rem; color: var(--dark); }
 .related-card-price { font-size: .85rem; color: var(--brand); font-weight: 700; }
 
-/* ── MOBILE FLOAT BAR ── */
-.mobile-cta {
-  position: fixed; bottom: 56px; left: 0; right: 0;
-  background: #fff; border-top: 1px solid #f0f0f5;
-  padding: 12px 16px; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-  box-shadow: 0 -4px 20px rgba(0,0,0,.06);
-}
+
 
 @media(max-width:768px){
   .product-title { font-size: 1.5rem; }
@@ -797,20 +790,6 @@ select.form-select { display: none; } /* hide original select */
   </div>
   {% endif %}
 
-</div>
-
-<!-- Mobile CTA -->
-<div class="mobile-cta d-md-none">
-  <div>
-    <div style="font-size:.7rem; color:#999;">Price</div>
-    <div style="font-size:1.2rem; font-weight:700; color:var(--brand);">
-      GH₵ {{ product.sale_price if product.on_sale else product.price }}
-    </div>
-  </div>
-  <button onclick="document.querySelector('#addToCartForm button[type=submit]').click()"
-          class="btn btn-success rounded-pill px-4 fw-semibold">
-    🛒 Add to Cart
-  </button>
 </div>
 <script>
 // ── Delivery date ──
