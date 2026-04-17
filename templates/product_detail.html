@@ -420,11 +420,31 @@ select.form-select { display: none; } /* hide original select */
 
 
 @media(max-width:768px){
-  .product-title { font-size: 1.5rem; }
-  .details-panel { padding: 20px 0 0; }
-  .price-sale, .price-normal { font-size: 1.8rem; }
+  .product-title { font-size: 1.3rem; }
+  .details-panel { padding: 16px 0 0; }
+  .price-sale, .price-normal { font-size: 1.6rem; }
   .rating-summary { padding: 18px; gap: 20px; }
   .big-score .num { font-size: 3rem; }
+
+  /* Fix trust badges into 2-column grid */
+  .trust-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Fix share buttons to scroll horizontally instead of stacking */
+  #share-whatsapp, #share-facebook, #share-twitter, #share-instagram {
+    flex-shrink: 0;
+  }
+  div[style*="display:flex; gap:8px; flex-wrap:wrap"] {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  /* Remove sticky on mobile - causes iOS scroll issues */
+  .gallery-wrap { position: static; }
 }
 </style>
 
