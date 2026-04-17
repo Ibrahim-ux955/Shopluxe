@@ -16,215 +16,243 @@
   --shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 
+* { box-sizing: border-box; }
 body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 
-.cart-page { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 5rem; }
+.cart-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 6rem;
+}
 
 /* ── PAGE TITLE ── */
 .cart-title {
   font-family: 'Playfair Display', serif;
-  font-size: 1.9rem; color: var(--dark);
-  margin-bottom: 6px;
+  font-size: 1.7rem; color: var(--dark);
+  margin-bottom: 4px;
 }
-.cart-subtitle { font-size: .85rem; color: #999; margin-bottom: 2rem; }
+.cart-subtitle { font-size: .82rem; color: #999; margin-bottom: 1.5rem; }
 
 /* ── LAYOUT ── */
-.cart-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
-@media(max-width:900px){ .cart-layout { grid-template-columns: 1fr; } }
+.cart-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
 
 /* ── CART ITEM CARD ── */
 .cart-card {
   background: var(--card);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 20px;
-  margin-bottom: 14px;
-  display: flex; gap: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  gap: 14px;
   align-items: flex-start;
   transition: box-shadow .2s;
-  animation: fadeUp .4s ease both;
+  animation: fadeUp .35s ease both;
 }
-.cart-card:hover { box-shadow: 0 8px 40px rgba(0,0,0,.1); }
+.cart-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.09); }
 
 @keyframes fadeUp {
-  from { opacity:0; transform:translateY(12px); }
+  from { opacity:0; transform:translateY(10px); }
   to   { opacity:1; transform:translateY(0); }
 }
 
 .cart-img {
-  width: 100px; height: 100px;
-  border-radius: 12px; object-fit: cover;
+  width: 90px; height: 90px;
+  border-radius: 10px; object-fit: cover;
   flex-shrink: 0; background: #f0f0f5;
+  display: block;
 }
-@media(max-width:480px){ .cart-img { width:72px; height:72px; } }
 
 .cart-info { flex: 1; min-width: 0; }
 
 .cart-name {
-  font-weight: 600; font-size: .95rem;
-  color: var(--dark); margin-bottom: 4px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-weight: 600; font-size: .92rem;
+  color: var(--dark); margin-bottom: 3px;
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  white-space: normal;
+  line-height: 1.35;
 }
-.cart-meta { font-size: .78rem; color: #999; margin-bottom: 8px; }
+.cart-meta { font-size: .75rem; color: #aaa; margin-bottom: 6px; line-height: 1.5; }
 
 .cart-price {
-  font-size: 1.1rem; font-weight: 700;
-  color: var(--brand); margin-bottom: 10px;
+  font-size: 1rem; font-weight: 700;
+  color: var(--brand); margin-bottom: 8px;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
 }
 .cart-price-original {
-  font-size: .8rem; color: #bbb;
-  text-decoration: line-through; margin-left: 6px;
+  font-size: .78rem; color: #bbb;
+  text-decoration: line-through;
   font-weight: 400;
 }
 .sale-tag {
   background: #fff3cd; color: #856404;
-  font-size: .68rem; font-weight: 700;
-  padding: 2px 7px; border-radius: 20px;
-  margin-left: 6px; vertical-align: middle;
+  font-size: .65rem; font-weight: 700;
+  padding: 2px 6px; border-radius: 20px;
+}
+.cart-subtotal {
+  font-size: .75rem; color: #aaa; font-weight: 400;
+  margin-left: 2px;
 }
 
 /* ── QTY CONTROLS ── */
-.qty-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.qty-row {
+  display: flex; align-items: center;
+  gap: 6px; flex-wrap: wrap;
+}
 .qty-controls {
   display: inline-flex; align-items: center;
-  border: 1.5px solid var(--border); border-radius: 10px;
+  border: 1.5px solid var(--border); border-radius: 9px;
   overflow: hidden;
 }
 .qty-btn {
-  width: 34px; height: 34px;
+  width: 32px; height: 32px;
   background: none; border: none;
   font-size: 1rem; cursor: pointer; color: var(--dark);
   transition: background .15s;
   display: flex; align-items: center; justify-content: center;
+  text-decoration: none;
 }
-.qty-btn:hover { background: #f0f0f8; }
+.qty-btn:hover { background: #f0f0f8; color: var(--dark); }
 .qty-num {
-  width: 36px; text-align: center;
-  font-weight: 600; font-size: .9rem; color: var(--dark);
+  width: 32px; text-align: center;
+  font-weight: 600; font-size: .88rem; color: var(--dark);
 }
 
 .btn-remove {
   background: none; border: none;
-  color: #dc3545; font-size: .78rem;
-  cursor: pointer; padding: 4px 8px;
-  border-radius: 8px;
+  color: #dc3545; font-size: .75rem;
+  cursor: pointer; padding: 4px 7px;
+  border-radius: 7px;
   transition: background .15s;
-  display: flex; align-items: center; gap: 4px;
+  display: flex; align-items: center; gap: 3px;
+  text-decoration: none;
 }
-.btn-remove:hover { background: #fce4e4; }
+.btn-remove:hover { background: #fce4e4; color: #dc3545; }
 
-.btn-wishlist {
+.btn-save {
   background: none; border: none;
-  color: #999; font-size: .78rem;
-  cursor: pointer; padding: 4px 8px;
-  border-radius: 8px;
+  color: #aaa; font-size: .75rem;
+  cursor: pointer; padding: 4px 7px;
+  border-radius: 7px;
   transition: background .15s, color .15s;
-  display: flex; align-items: center; gap: 4px;
+  display: flex; align-items: center; gap: 3px;
+  text-decoration: none;
 }
-.btn-wishlist:hover { background: #fce4f0; color: #e91e8c; }
+.btn-save:hover { background: #fce4f0; color: #e91e8c; }
 
-/* ── DELIVERY BADGE ── */
 .delivery-badge {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: .73rem; color: var(--brand);
+  font-size: .7rem; color: var(--brand);
   background: var(--brand-light);
-  padding: 3px 10px; border-radius: 20px;
-  margin-top: 6px;
+  padding: 3px 9px; border-radius: 20px;
+  margin-top: 7px;
 }
 
 /* ── SECTION HEADER ── */
 .section-header {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
-.section-header h6 { font-weight: 700; color: var(--dark); margin: 0; font-size: .9rem; }
+.section-header h6 { font-weight: 700; color: var(--dark); margin: 0; font-size: .88rem; }
 .clear-btn {
-  font-size: .78rem; color: #dc3545;
+  font-size: .75rem; color: #dc3545;
   text-decoration: none; font-weight: 600;
+  padding: 4px 8px; border-radius: 7px;
+  transition: background .15s;
 }
-.clear-btn:hover { color: #b02a37; }
+.clear-btn:hover { background: #fce4e4; color: #b02a37; }
 
 /* ── ORDER SUMMARY ── */
 .summary-card {
   background: var(--card);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 24px;
-  position: sticky; top: 80px;
+  padding: 20px;
+  position: sticky; top: 76px;
 }
 .summary-title {
   font-family: 'Playfair Display', serif;
-  font-size: 1.2rem; color: var(--dark);
-  margin-bottom: 20px;
+  font-size: 1.1rem; color: var(--dark);
+  margin-bottom: 16px;
 }
 
 .summary-row {
   display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 12px; font-size: .88rem; color: var(--mid);
+  margin-bottom: 10px; font-size: .85rem; color: var(--mid);
 }
 .summary-row.total {
-  font-size: 1.1rem; font-weight: 700;
+  font-size: 1.05rem; font-weight: 700;
   color: var(--dark); margin-top: 4px;
 }
-.summary-divider { height: 1px; background: var(--border); margin: 14px 0; }
+.summary-divider { height: 1px; background: var(--border); margin: 12px 0; }
 
 .summary-saving {
-  background: var(--brand-light);
-  border-radius: 10px; padding: 10px 14px;
-  font-size: .82rem; color: var(--brand);
-  font-weight: 600; margin-bottom: 16px;
+  border-radius: 9px; padding: 9px 12px;
+  font-size: .8rem; font-weight: 600; margin-bottom: 14px;
   display: flex; align-items: center; gap: 6px;
 }
+.summary-saving.green { background: var(--brand-light); color: var(--brand); }
+.summary-saving.blue  { background: #e0f2fe; color: #0369a1; }
 
 .btn-checkout {
   width: 100%;
   background: linear-gradient(135deg, #198754, #0d6efd);
   color: #fff; border: none;
-  border-radius: 12px; padding: 14px;
-  font-size: 1rem; font-weight: 700;
+  border-radius: 12px; padding: 13px;
+  font-size: .95rem; font-weight: 700;
   cursor: pointer; transition: opacity .2s, transform .1s;
   display: flex; align-items: center; justify-content: center; gap: 8px;
+  text-decoration: none;
 }
-.btn-checkout:hover { opacity: .92; transform: translateY(-1px); }
+.btn-checkout:hover { opacity: .92; transform: translateY(-1px); color: #fff; }
+.btn-checkout:active { transform: translateY(0); }
+.btn-checkout.loading { opacity: .7; pointer-events: none; }
 
 .btn-continue {
-  width: 100%; margin-top: 10px;
+  width: 100%; margin-top: 8px;
   background: none; border: 1.5px solid var(--border);
-  border-radius: 12px; padding: 11px;
-  font-size: .88rem; font-weight: 600; color: var(--mid);
+  border-radius: 12px; padding: 10px;
+  font-size: .85rem; font-weight: 600; color: var(--mid);
   cursor: pointer; transition: border-color .2s, color .2s;
   text-align: center; text-decoration: none; display: block;
 }
 .btn-continue:hover { border-color: var(--brand); color: var(--brand); }
 
 .trust-row {
-  display: flex; flex-direction: column; gap: 7px;
-  margin-top: 16px; padding-top: 16px;
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: 14px; padding-top: 14px;
   border-top: 1px solid var(--border);
 }
 .trust-item {
-  display: flex; align-items: center; gap: 8px;
-  font-size: .75rem; color: #999;
+  display: flex; align-items: center; gap: 7px;
+  font-size: .72rem; color: #999;
 }
-.trust-item i { color: var(--brand); }
+.trust-item i { color: var(--brand); font-size: .8rem; }
 
 /* ── COUPON ── */
-.coupon-row {
-  display: flex; gap: 8px; margin-bottom: 16px;
-}
+.coupon-row { display: flex; gap: 7px; margin-bottom: 14px; }
 .coupon-input {
   flex: 1; border: 1.5px solid var(--border);
-  border-radius: 10px; padding: 9px 12px;
-  font-size: .85rem; outline: none;
+  border-radius: 9px; padding: 8px 11px;
+  font-size: .83rem; outline: none;
   transition: border-color .2s;
+  font-family: 'DM Sans', sans-serif;
+  text-transform: uppercase;
 }
 .coupon-input:focus { border-color: var(--brand); }
 .coupon-btn {
   background: var(--dark); color: #fff;
-  border: none; border-radius: 10px;
-  padding: 9px 16px; font-size: .82rem;
+  border: none; border-radius: 9px;
+  padding: 8px 14px; font-size: .8rem;
   font-weight: 600; cursor: pointer;
   transition: background .2s;
+  white-space: nowrap;
 }
 .coupon-btn:hover { background: #333; }
 
@@ -234,9 +262,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
   background: var(--card); border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
-.empty-cart i { font-size: 3.5rem; color: #ddd; margin-bottom: 16px; display: block; }
-.empty-cart h5 { color: var(--dark); font-weight: 700; margin-bottom: 8px; }
-.empty-cart p { color: #999; font-size: .88rem; margin-bottom: 20px; }
+.empty-cart i { font-size: 3.5rem; color: #ddd; margin-bottom: 14px; display: block; }
+.empty-cart h5 { color: var(--dark); font-weight: 700; margin-bottom: 7px; }
+.empty-cart p { color: #999; font-size: .86rem; margin-bottom: 18px; line-height: 1.6; }
 .btn-shop {
   background: var(--brand); color: #fff;
   border: none; border-radius: 12px;
@@ -246,16 +274,39 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 }
 .btn-shop:hover { opacity: .88; color: #fff; }
 
-/* ── MOBILE STICKY CHECKOUT ── */
+/* ── MOBILE STICKY CHECKOUT BAR ── */
 .mobile-checkout-bar {
-  position: fixed; bottom: 56px; left: 0; right: 0;
-  background: #fff; border-top: 1px solid var(--border);
-  padding: 12px 16px; z-index: 100;
+  position: fixed;
+  bottom: 56px;
+  left: 0; right: 0;
+  background: #fff;
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
   box-shadow: 0 -4px 20px rgba(0,0,0,.07);
 }
-.mobile-total { font-size: .8rem; color: #999; }
-.mobile-total strong { display: block; font-size: 1.1rem; color: var(--dark); }
+.mobile-total { font-size: .75rem; color: #999; line-height: 1.2; }
+.mobile-total strong { display: block; font-size: 1rem; color: var(--dark); font-weight: 700; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px) {
+  .cart-layout { grid-template-columns: 1fr; }
+  .summary-card { position: static; }
+}
+
+@media(max-width:600px) {
+  .cart-page { padding: 1rem .75rem 7rem; }
+  .cart-title { font-size: 1.4rem; }
+  .cart-card { padding: 12px; gap: 10px; }
+  .cart-img { width: 76px; height: 76px; border-radius: 9px; }
+  .cart-name { font-size: .86rem; }
+  .cart-price { font-size: .95rem; }
+  .summary-card { padding: 16px; }
+  .qty-btn { width: 30px; height: 30px; }
+  .qty-num { width: 28px; font-size: .82rem; }
+}
 </style>
 
 <div class="cart-page">
@@ -275,11 +326,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
     <div>
       <div class="section-header">
         <h6>Your Items</h6>
-        <a href="{{ url_for('clear_cart') }}" class="clear-btn">🗑 Clear All</a>
+        <a href="{{ url_for('clear_cart') }}" class="clear-btn"
+           onclick="return confirm('Remove all items from your cart?')">
+          <i class="bi bi-trash3"></i> Clear All
+        </a>
       </div>
 
       {% for item in cart_items %}
-      <div class="cart-card" style="animation-delay: {{ loop.index0 * 0.07 }}s;">
+      <div class="cart-card" style="animation-delay: {{ loop.index0 * 0.06 }}s;">
 
         <a href="{{ url_for('product_detail', product_id=item.id) }}">
           {% set img = item.images[0] if item.get('images') else (item.image if item.get('image') else '') %}
@@ -289,14 +343,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
             <img src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ item.name }}" class="cart-img">
           {% endif %}
         </a>
+
         <div class="cart-info">
           <a href="{{ url_for('product_detail', product_id=item.id) }}" style="text-decoration:none;">
             <div class="cart-name">{{ item.name }}</div>
           </a>
+
           <div class="cart-meta">
-            {% if item.color and item.color != '-' %}Color: <strong>{{ item.color }}</strong>{% endif %}
-            {% if item.size and item.size != '-' %} &nbsp;|&nbsp; Size: <strong>{{ item.size }}</strong>{% endif %}
-            {% if item.brand %} &nbsp;|&nbsp; {{ item.brand }}{% endif %}
+            {% if item.color and item.color != '-' %}Color: <strong style="color:var(--dark);">{{ item.color }}</strong>{% endif %}
+            {% if item.size and item.size != '-' %}{% if item.color and item.color != '-' %} · {% endif %}Size: <strong style="color:var(--dark);">{{ item.size }}</strong>{% endif %}
+            {% if item.brand %}<br>{{ item.brand }}{% endif %}
           </div>
 
           <div class="cart-price">
@@ -305,20 +361,22 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
               <span class="cart-price-original">GH₵ {{ item.price }}</span>
               <span class="sale-tag">SALE</span>
             {% endif %}
+            <span class="cart-subtotal">× {{ item.quantity }}</span>
           </div>
 
           <div class="qty-row">
             <div class="qty-controls">
-              <a href="{{ url_for('decrease_quantity', product_id=item.id) }}" class="qty-btn">−</a>
+              <a href="{{ url_for('decrease_quantity', product_id=item.id) }}" class="qty-btn" title="Decrease">−</a>
               <span class="qty-num">{{ item.quantity }}</span>
-              <a href="{{ url_for('increase_quantity', product_id=item.id) }}" class="qty-btn">+</a>
+              <a href="{{ url_for('increase_quantity', product_id=item.id) }}" class="qty-btn" title="Increase">+</a>
             </div>
 
-            <a href="{{ url_for('remove_from_cart', product_id=item.id) }}" class="btn-remove">
+            <a href="{{ url_for('remove_from_cart', product_id=item.id) }}" class="btn-remove"
+               onclick="return confirm('Remove this item?')">
               <i class="bi bi-trash3"></i> Remove
             </a>
 
-            <a href="{{ url_for('add_to_wishlist', product_id=item.id) }}" class="btn-wishlist">
+            <a href="{{ url_for('add_to_wishlist', product_id=item.id) }}" class="btn-save">
               <i class="bi bi-heart"></i> Save
             </a>
           </div>
@@ -337,23 +395,23 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
       <div class="summary-card">
         <div class="summary-title">Order Summary</div>
 
-        <!-- Coupon -->
-<div class="coupon-row">
-  <input type="text" class="coupon-input" id="promoInput"
-         placeholder="Promo code" style="text-transform:uppercase;">
-  <button class="coupon-btn" id="promoBtn" onclick="applyPromo()">Apply</button>
-</div>
-<div id="promoMsg" style="font-size:.78rem; margin:-8px 0 12px; display:none;"></div>
-{% if session.get('promo') %}
-<div id="promoApplied" class="summary-saving" style="background:#e0f2fe; color:#0369a1;">
-  🏷️ <strong>{{ session['promo']['code'] }}</strong> applied — {{ session['promo']['label'] }}
-  <button onclick="removePromo()" style="margin-left:auto;background:none;border:none;color:#0369a1;cursor:pointer;font-size:.85rem;">✕</button>
-</div>
-{% else %}
-<div id="promoApplied" style="display:none;" class="summary-saving" style="background:#e0f2fe; color:#0369a1;"></div>
-{% endif %}
+        <!-- Promo code -->
+        <div class="coupon-row">
+          <input type="text" class="coupon-input" id="promoInput" placeholder="Promo code">
+          <button class="coupon-btn" id="promoBtn" onclick="applyPromo()">Apply</button>
+        </div>
+        <div id="promoMsg" style="font-size:.76rem; margin:-6px 0 10px; display:none;"></div>
 
-        <!-- Saving banner -->
+        {% if session.get('promo') %}
+        <div id="promoApplied" class="summary-saving blue">
+          🏷️ <strong>{{ session['promo']['code'] }}</strong> — {{ session['promo']['label'] }}
+          <button onclick="removePromo()" style="margin-left:auto;background:none;border:none;color:#0369a1;cursor:pointer;font-size:.85rem;padding:0;">✕</button>
+        </div>
+        {% else %}
+        <div id="promoApplied" class="summary-saving blue" style="display:none;"></div>
+        {% endif %}
+
+        <!-- Sale savings banner -->
         {% set total_saving = namespace(value=0) %}
         {% for item in cart_items %}
           {% if item.on_sale and item.sale_price %}
@@ -361,13 +419,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
           {% endif %}
         {% endfor %}
         {% if total_saving.value > 0 %}
-        <div class="summary-saving">
+        <div class="summary-saving green">
           🎉 You're saving GH₵ {{ "%.2f" | format(total_saving.value) }} on this order!
         </div>
         {% endif %}
 
+        <!-- Rows -->
         <div class="summary-row">
-          <span>Subtotal ({{ cart_items|length }} items)</span>
+          <span>Subtotal ({{ cart_items|length }} item{{ 's' if cart_items|length != 1 }})</span>
           <span>GH₵ {{ "%.2f" | format(subtotal) }}</span>
         </div>
         <div class="summary-row">
@@ -380,27 +439,26 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
         </div>
 
         {% if discount and discount > 0 %}
-<div class="summary-row" style="color:#198754; font-weight:600;">
-  <span>🏷️ Promo Discount</span>
-  <span>− GH₵ {{ "%.2f"|format(discount) }}</span>
-</div>
-{% endif %}
+        <div class="summary-row" style="color:#198754; font-weight:600;">
+          <span>🏷️ Promo Discount</span>
+          <span>− GH₵ {{ "%.2f" | format(discount) }}</span>
+        </div>
+        {% endif %}
 
         <div class="summary-divider"></div>
 
         <div class="summary-row total">
           <span>Total</span>
-          <span id="cartTotal">GH₵ {{ "%.2f" | format(discounted_total if discounted_total is defined else total) }}</span>
+          <span>GH₵ {{ "%.2f" | format(discounted_total if discounted_total is defined else total) }}</span>
         </div>
 
         <div class="summary-divider"></div>
 
-        <a href="{{ url_for('checkout') }}" class="btn-checkout">
+        <a href="{{ url_for('checkout') }}" class="btn-checkout" id="checkoutBtn"
+           onclick="this.classList.add('loading'); this.innerHTML='⏳ Loading...';">
           🔒 Proceed to Checkout
         </a>
-        <a href="{{ url_for('home') }}" class="btn-continue">
-          ← Continue Shopping
-        </a>
+        <a href="{{ url_for('home') }}" class="btn-continue">← Continue Shopping</a>
 
         <div class="trust-row">
           <div class="trust-item"><i class="bi bi-shield-lock"></i> Secure & encrypted checkout</div>
@@ -413,13 +471,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 
   </div>
 
-  <!-- Mobile sticky checkout bar -->
+  <!-- Mobile sticky checkout bar (hidden on md+) -->
   <div class="mobile-checkout-bar d-md-none">
     <div class="mobile-total">
       <span>Total</span>
-      <strong>GH₵ {{ "%.2f" | format(total) }}</strong>
+      <strong>GH₵ {{ "%.2f" | format(discounted_total if discounted_total is defined else total) }}</strong>
     </div>
-    <a href="{{ url_for('checkout') }}" class="btn-checkout" style="width:auto; padding: 12px 24px;">
+    <a href="{{ url_for('checkout') }}" class="btn-checkout"
+       style="width:auto; padding:10px 20px; font-size:.88rem;"
+       onclick="this.classList.add('loading'); this.innerHTML='⏳ Loading...';">
       🔒 Checkout
     </a>
   </div>
@@ -437,11 +497,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
   {% endif %}
 </div>
 
-
 <script>
 function applyPromo() {
   const code = document.getElementById('promoInput').value.trim();
   if (!code) return;
+  const btn = document.getElementById('promoBtn');
+  btn.textContent = '...';
+  btn.disabled = true;
+
   fetch('/apply_promo', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -457,12 +520,18 @@ function applyPromo() {
       msg.textContent = '✅ Promo code applied!';
       applied.style.display = 'flex';
       applied.innerHTML = `🏷️ <strong>${d.code}</strong> — ${d.label}
-        <button onclick="removePromo()" style="margin-left:auto;background:none;border:none;color:#0369a1;cursor:pointer;">✕</button>`;
-      setTimeout(() => location.reload(), 800);
+        <button onclick="removePromo()" style="margin-left:auto;background:none;border:none;color:#0369a1;cursor:pointer;padding:0;">✕</button>`;
+      setTimeout(() => location.reload(), 700);
     } else {
       msg.style.color = '#dc3545';
       msg.textContent = '❌ ' + d.message;
+      btn.textContent = 'Apply';
+      btn.disabled = false;
     }
+  })
+  .catch(() => {
+    btn.textContent = 'Apply';
+    btn.disabled = false;
   });
 }
 
