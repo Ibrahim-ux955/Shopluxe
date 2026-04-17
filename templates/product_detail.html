@@ -259,7 +259,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
   width: 44px; text-align: center;
   font-weight: 600; font-size: .95rem;
 }
-select.form-select { display: none; } /* hide original select */
+select.form-select { display: none; }
 
 /* ── CTA BUTTONS ── */
 .cta-wrap { display: flex; gap: 10px; margin-bottom: 16px; }
@@ -287,12 +287,55 @@ select.form-select { display: none; } /* hide original select */
 }
 .trust-item i { color: var(--brand); font-size: .9rem; }
 
-/* ── DESCRIPTION ── */
+/* ── DESCRIPTION with Read More ── */
 .desc-block {
   background: var(--brand-light);
   border-radius: 14px; padding: 16px 18px;
   font-size: .88rem; color: var(--mid);
-  line-height: 1.7; margin-bottom: 16px;
+  line-height: 1.7;
+  margin-bottom: 4px;
+  position: relative;
+  overflow: hidden;
+  max-height: 85px;
+  transition: max-height 0.4s ease;
+}
+.desc-block.expanded {
+  max-height: 1000px;
+}
+.desc-block::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 36px;
+  background: linear-gradient(transparent, #e8f5e9);
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.desc-block.expanded::after {
+  opacity: 0;
+}
+.desc-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--brand);
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-bottom: 12px;
+  font-family: 'DM Sans', sans-serif;
+  display: none;
+  align-items: center;
+  gap: 4px;
+}
+.desc-toggle-btn:hover { opacity: .8; }
+.desc-toggle-icon {
+  display: inline-block;
+  transition: transform 0.3s;
+  font-style: normal;
+}
+.desc-toggle-btn.expanded .desc-toggle-icon {
+  transform: rotate(180deg);
 }
 
 /* ── REVIEWS ── */
@@ -309,9 +352,7 @@ select.form-select { display: none; } /* hide original select */
   padding: 28px; box-shadow: var(--shadow);
   margin-bottom: 28px; flex-wrap: wrap;
 }
-.big-score {
-  text-align: center;
-}
+.big-score { text-align: center; }
 .big-score .num {
   font-family: 'Playfair Display', serif;
   font-size: 4rem; font-weight: 700;
@@ -410,15 +451,12 @@ select.form-select { display: none; } /* hide original select */
   display: block;
 }
 .related-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); }
-.related-card img {
-  width: 100%; aspect-ratio: 1/1; object-fit: cover;
-}
+.related-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
 .related-card-body { padding: 12px 14px; }
 .related-card-name { font-weight: 600; font-size: .88rem; color: var(--dark); }
 .related-card-price { font-size: .85rem; color: var(--brand); font-weight: 700; }
 
-
-
+/* ── RESPONSIVE ── */
 @media(max-width:768px){
   .product-title { font-size: 1.3rem; }
   .details-panel { padding: 16px 0 0; }
@@ -426,24 +464,21 @@ select.form-select { display: none; } /* hide original select */
   .rating-summary { padding: 18px; gap: 20px; }
   .big-score .num { font-size: 3rem; }
 
-  /* Fix trust badges into 2-column grid */
   .trust-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
 
-  /* Fix share buttons to scroll horizontally instead of stacking */
   #share-whatsapp, #share-facebook, #share-twitter, #share-instagram {
     flex-shrink: 0;
   }
-  div[style*="display:flex; gap:8px; flex-wrap:wrap"] {
+  .share-btns-row {
     flex-wrap: nowrap !important;
     overflow-x: auto;
     padding-bottom: 4px;
   }
 
-  /* Remove sticky on mobile - causes iOS scroll issues */
   .gallery-wrap { position: static; }
 }
 </style>
@@ -464,13 +499,12 @@ select.form-select { display: none; } /* hide original select */
       <div class="gallery-wrap">
 
         <div class="main-img-wrap">
-         <span class="badge-delivery">🚚 {{ product.delivery_info or 'Delivery in 2-4 working days' }}</span>
-         <img id="mainImage"
-             src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
-        <button class="wishlist-btn" id="wishlistBtn" data-product-id="{{ product.id }}">
-        <i id="wishlistIcon"
-           class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == product.id %}-fill text-danger{% endif %}{% endfor %}"></i>
-        </button>
+          <span class="badge-delivery">🚚 {{ product.delivery_info or 'Delivery in 2-4 working days' }}</span>
+          <img id="mainImage" src="{{ product.images[0]|imgurl }}" alt="{{ product.name }}">
+          <button class="wishlist-btn" id="wishlistBtn" data-product-id="{{ product.id }}">
+            <i id="wishlistIcon"
+               class="bi bi-heart{% for p in session.get('wishlist', []) %}{% if p.id == product.id %}-fill text-danger{% endif %}{% endfor %}"></i>
+          </button>
         </div>
 
         <div class="thumbs-row">
@@ -482,7 +516,7 @@ select.form-select { display: none; } /* hide original select */
               {% else %}
                 <img src="{{ url_for('static', filename='shoes/' ~ (timg or 'placeholder.jpg')) }}"
                      alt="{{ product.name }}">
-               {% endif %}
+              {% endif %}
             </div>
           {% endfor %}
         </div>
@@ -513,8 +547,12 @@ select.form-select { display: none; } /* hide original select */
           </a>
         </div>
 
-        <!-- Description -->
-        <div class="desc-block">{{ product.description }}</div>
+        <!-- Description with Read More -->
+        <div class="desc-block" id="descBlock">{{ product.description }}</div>
+        <button class="desc-toggle-btn" id="descToggleBtn" onclick="toggleDesc()">
+          <span id="descToggleText">Read more</span>
+          <i class="desc-toggle-icon bi bi-chevron-down"></i>
+        </button>
 
         <!-- Price -->
         <div class="price-block">
@@ -530,15 +568,15 @@ select.form-select { display: none; } /* hide original select */
 
         <!-- Stock -->
         {% if product.stock %}
-  {% if product.stock < 5 %}
-    <div class="stock-status" style="background:#fff3e0; color:#f97316;">
-      <i class="bi bi-exclamation-triangle-fill"></i> Only {{ product.stock }} left — order soon!
-    </div>
-  {% else %}
-    <div class="stock-status in-stock">
-      <i class="bi bi-check-circle-fill"></i> In Stock
-    </div>
-  {% endif %}
+          {% if product.stock < 5 %}
+            <div class="stock-status" style="background:#fff3e0; color:#f97316;">
+              <i class="bi bi-exclamation-triangle-fill"></i> Only {{ product.stock }} left — order soon!
+            </div>
+          {% else %}
+            <div class="stock-status in-stock">
+              <i class="bi bi-check-circle-fill"></i> In Stock
+            </div>
+          {% endif %}
           <div class="stock-bar-wrap">
             <div class="stock-label">Stock Level</div>
             <div class="stock-bar">
@@ -549,7 +587,6 @@ select.form-select { display: none; } /* hide original select */
           <div class="stock-status out-stock">
             <i class="bi bi-x-circle-fill"></i> Out of Stock
           </div>
-          <!-- Restock notify -->
           <form action="{{ url_for('restock_notify', product_id=product.id) }}" method="POST" class="d-flex gap-2 mb-3">
             <input type="email" name="email" class="form-control form-control-sm rounded-pill"
                    placeholder="Get notified when back in stock" required>
@@ -560,37 +597,37 @@ select.form-select { display: none; } /* hide original select */
         <div class="section-divider"></div>
 
         <!-- Sizes / Dimensions -->
-{% if product.product_type == 'slot' %}
-  {% if product.slot_length or product.slot_width or product.slot_depth %}
-  <div class="option-label">Dimensions</div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-    {% if product.slot_length %}
-    <div style="background:var(--brand-light);border:1.5px solid rgba(25,135,84,.2);color:var(--brand);border-radius:10px;padding:8px 16px;font-size:.85rem;font-weight:600;">
-      📏 L: {{ product.slot_length }} cm
-    </div>
-    {% endif %}
-    {% if product.slot_width %}
-    <div style="background:var(--brand-light);border:1.5px solid rgba(25,135,84,.2);color:var(--brand);border-radius:10px;padding:8px 16px;font-size:.85rem;font-weight:600;">
-      📐 W: {{ product.slot_width }} cm
-    </div>
-    {% endif %}
-    {% if product.slot_depth %}
-    <div style="background:var(--brand-light);border:1.5px solid rgba(25,135,84,.2);color:var(--brand);border-radius:10px;padding:8px 16px;font-size:.85rem;font-weight:600;">
-      🧊 D: {{ product.slot_depth }} cm
-    </div>
-    {% endif %}
-  </div>
-  {% endif %}
-{% else %}
-  {% if product.sizes %}
-    <div class="option-label">Size</div>
-    <div class="size-grid">
-      {% for size in product.sizes %}
-        <button type="button" class="size-btn" data-size="{{ size }}">{{ size }}</button>
-      {% endfor %}
-    </div>
-  {% endif %}
-{% endif %}
+        {% if product.product_type == 'slot' %}
+          {% if product.slot_length or product.slot_width or product.slot_depth %}
+            <div class="option-label">Dimensions</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+              {% if product.slot_length %}
+                <div style="background:var(--brand-light);border:1.5px solid rgba(25,135,84,.2);color:var(--brand);border-radius:10px;padding:8px 16px;font-size:.85rem;font-weight:600;">
+                  📏 L: {{ product.slot_length }} cm
+                </div>
+              {% endif %}
+              {% if product.slot_width %}
+                <div style="background:var(--brand-light);border:1.5px solid rgba(25,135,84,.2);color:var(--brand);border-radius:10px;padding:8px 16px;font-size:.85rem;font-weight:600;">
+                  📐 W: {{ product.slot_width }} cm
+                </div>
+              {% endif %}
+              {% if product.slot_depth %}
+                <div style="background:var(--brand-light);border:1.5px solid rgba(25,135,84,.2);color:var(--brand);border-radius:10px;padding:8px 16px;font-size:.85rem;font-weight:600;">
+                  🧊 D: {{ product.slot_depth }} cm
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% else %}
+          {% if product.sizes %}
+            <div class="option-label">Size</div>
+            <div class="size-grid">
+              {% for size in product.sizes %}
+                <button type="button" class="size-btn" data-size="{{ size }}">{{ size }}</button>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endif %}
 
         <!-- Colors -->
         {% if product.colors %}
@@ -626,7 +663,6 @@ select.form-select { display: none; } /* hide original select */
               <span id="cartLoader" class="spinner-border spinner-border-sm d-none ms-1"></span>
             </button>
           </div>
-
         </form>
 
         <!-- Trust Badges -->
@@ -637,60 +673,54 @@ select.form-select { display: none; } /* hide original select */
           <div class="trust-item"><i class="bi bi-patch-check"></i> Genuine Product</div>
         </div>
 
-        <!-- ── SHARE PRODUCT ── -->
-<div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
-  <div style="font-size:.78rem; font-weight:700; color:var(--mid); text-transform:uppercase; letter-spacing:.8px; margin-bottom:10px;">
-    Share this product
-  </div>
-  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <!-- Share Product -->
+        <div style="margin-top:16px; padding-top:16px; border-top:1px solid #f0f0f5;">
+          <div style="font-size:.78rem; font-weight:700; color:var(--mid); text-transform:uppercase; letter-spacing:.8px; margin-bottom:10px;">
+            Share this product
+          </div>
+          <div class="share-btns-row" style="display:flex; gap:8px;">
 
-    <!-- WhatsApp -->
-    <a id="share-whatsapp" href="#" target="_blank" rel="noopener"
-       style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#25d366;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;transition:opacity .2s;">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.534 5.858L.057 23.998l6.305-1.654A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.002-1.368l-.359-.214-3.722.976.993-3.622-.234-.373A9.818 9.818 0 1112 21.818z"/></svg>
-      WhatsApp
-    </a>
+            <a id="share-whatsapp" href="#" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#25d366;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.534 5.858L.057 23.998l6.305-1.654A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.002-1.368l-.359-.214-3.722.976.993-3.622-.234-.373A9.818 9.818 0 1112 21.818z"/></svg>
+              WhatsApp
+            </a>
 
-    <!-- Facebook -->
-    <a id="share-facebook" href="#" target="_blank" rel="noopener"
-       style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#1877f2;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;transition:opacity .2s;">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.931-1.956 1.887v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
-      Facebook
-    </a>
+            <a id="share-facebook" href="#" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#1877f2;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.931-1.956 1.887v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+              Facebook
+            </a>
 
-    <!-- Twitter/X -->
-    <a id="share-twitter" href="#" target="_blank" rel="noopener"
-       style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#000;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;transition:opacity .2s;">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-      X (Twitter)
-    </a>
+            <a id="share-twitter" href="#" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#000;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              X (Twitter)
+            </a>
 
-    <!-- Instagram -->
-    <a id="share-instagram" href="https://www.instagram.com/shopluxe" target="_blank" rel="noopener"
-       style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;transition:opacity .2s;">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-      Instagram
-    </a>
+            <a id="share-instagram" href="https://www.instagram.com/shopluxe" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+              Instagram
+            </a>
 
-    <!-- TikTok -->
-    <a href="https://www.tiktok.com/@shopluxe" target="_blank" rel="noopener"
-       style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#010101;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;transition:opacity .2s;">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
-      TikTok
-    </a>
+            <a href="https://www.tiktok.com/@shopluxe" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#010101;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
+              TikTok
+            </a>
 
-    <!-- Copy Link -->
-    <button id="copy-link-btn" onclick="copyLink()"
-       style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:var(--light);border:1.5px solid var(--border);color:var(--dark);font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;">
-      <i class="bi bi-link-45deg"></i>
-      <span id="copy-link-label">Copy Link</span>
-    </button>
+            <button id="copy-link-btn" onclick="copyLink()"
+               style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:var(--light);border:1.5px solid #e0e0e8;color:var(--dark);font-size:.78rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">
+              <i class="bi bi-link-45deg"></i>
+              <span id="copy-link-label">Copy Link</span>
+            </button>
 
-  </div>
-</div>
+          </div>
+        </div>
 
         <!-- Delivery Estimate -->
-        <div style="background:#f8f9fc; border-radius:12px; padding:12px 16px; font-size:.82rem; color:#666;">
+        <div style="background:#f8f9fc; border-radius:12px; padding:12px 16px; font-size:.82rem; color:#666; margin-top:14px;">
           🚚 Estimated delivery: <strong id="deliveryDate"></strong>
         </div>
 
@@ -703,7 +733,6 @@ select.form-select { display: none; } /* hide original select */
   <div class="reviews-section" id="reviews-section">
     <h4>Customer Reviews</h4>
 
-    <!-- Summary -->
     <div class="rating-summary">
       <div class="big-score">
         <div class="num">{{ product.rating or 0 }}</div>
@@ -741,10 +770,8 @@ select.form-select { display: none; } /* hide original select */
             {% endfor %}
           </div>
           <input type="hidden" name="rating" id="reviewRatingInput" value="0">
-
           <textarea name="comment" class="review-textarea"
                     placeholder="Share your honest experience — quality, fit, delivery..."></textarea>
-
           <div class="mt-3">
             <button type="submit" class="btn-submit-review">Submit Review</button>
           </div>
@@ -797,7 +824,7 @@ select.form-select { display: none; } /* hide original select */
             {% else %}
               <img src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ p.name }}">
             {% endif %}
-              <div class="related-card-body">
+            <div class="related-card-body">
               <div class="related-card-name">{{ p.name }}</div>
               <div class="related-card-price">
                 {% if p.on_sale %}GH₵ {{ p.sale_price }}{% else %}GH₵ {{ p.price }}{% endif %}
@@ -811,6 +838,7 @@ select.form-select { display: none; } /* hide original select */
   {% endif %}
 
 </div>
+
 <script>
 // ── Delivery date ──
 const deliveryEl = document.getElementById('deliveryDate');
@@ -922,7 +950,7 @@ if (starsBox) {
   });
 }
 
-// ── SHARE BUTTONS ──
+// ── Share buttons ──
 (function() {
   const url = encodeURIComponent(window.location.href);
   const title = encodeURIComponent("{{ product.name }} — ShopLuxe");
@@ -945,10 +973,41 @@ function copyLink() {
     setTimeout(() => {
       label.textContent = 'Copy Link';
       btn.style.background = 'var(--light)';
-      btn.style.borderColor = 'var(--border)';
+      btn.style.borderColor = '#e0e0e8';
       btn.style.color = 'var(--dark)';
     }, 2000);
   });
+}
+
+// ── Description Read More / Show Less ──
+const descBlock = document.getElementById('descBlock');
+const descToggleBtn = document.getElementById('descToggleBtn');
+const descToggleText = document.getElementById('descToggleText');
+const descToggleIcon = descToggleBtn.querySelector('.desc-toggle-icon');
+let descExpanded = false;
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (descBlock.scrollHeight > 90) {
+    descToggleBtn.style.display = 'inline-flex';
+  } else {
+    descBlock.style.maxHeight = 'none';
+    descBlock.style.overflow = 'visible';
+  }
+});
+
+function toggleDesc() {
+  descExpanded = !descExpanded;
+  if (descExpanded) {
+    descBlock.style.maxHeight = descBlock.scrollHeight + 'px';
+    descBlock.classList.add('expanded');
+    descToggleBtn.classList.add('expanded');
+    descToggleText.textContent = 'Show less';
+  } else {
+    descBlock.style.maxHeight = '85px';
+    descBlock.classList.remove('expanded');
+    descToggleBtn.classList.remove('expanded');
+    descToggleText.textContent = 'Read more';
+  }
 }
 
 // ── Review star picker ──
