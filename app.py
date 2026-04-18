@@ -1215,17 +1215,7 @@ def login():
 
     return render_template('login.html')
   
-@app.route('/save_address', methods=['POST'])
-@login_required
-def save_address():
-    data = request.get_json()
-    user_id = session.get('user_id')
-    # Save to your users table or a separate addresses table
-    db.execute("""
-        UPDATE users SET saved_address=? WHERE id=?
-    """, [json.dumps(data), user_id])
-    db.commit()
-    return jsonify({'success': True})  
+  
 
 
 @app.route('/logout')
@@ -2052,6 +2042,15 @@ def vendor_required(f):
 
         return f(*args, **kwargs)
     return decorated
+  
+ def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('user_id'):
+            flash("❌ Please log in first.")
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated 
 
 
 @app.route('/vendor/dashboard')
