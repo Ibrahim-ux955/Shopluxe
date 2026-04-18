@@ -651,12 +651,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
               <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
               X (Twitter)
             </a>
-            <a id="share-instagram" href="https://www.instagram.com/shopluxe" target="_blank" rel="noopener"
+            <a id="share-instagram" href="https://www.instagram.com/shopluxe.gh" target="_blank" rel="noopener"
                style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
               Instagram
             </a>
-            <a href="https://www.tiktok.com/@shopluxe" target="_blank" rel="noopener"
+            <a href="https://www.tiktok.com/@shopluxe.gh" target="_blank" rel="noopener"
                style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#010101;color:#fff;font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
               TikTok
@@ -837,7 +837,7 @@ if (deliveryEl) {
   prevBtn?.addEventListener('click', e => { e.stopPropagation(); goTo(current - 1); });
   nextBtn?.addEventListener('click', e => { e.stopPropagation(); goTo(current + 1); });
 
-  // Touch swipe — distinguish tap vs swipe
+  // Touch swipe (mobile) — swipe to navigate
   let startX = 0, startY = 0, touchMoved = false;
   gallery.addEventListener('touchstart', e => {
     startX = e.touches[0].clientX;
@@ -847,21 +847,14 @@ if (deliveryEl) {
   gallery.addEventListener('touchmove', e => {
     const dx = e.touches[0].clientX - startX;
     const dy = e.touches[0].clientY - startY;
-    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) touchMoved = true;
-    if (Math.abs(dx) > Math.abs(dy)) e.preventDefault();
+    if (Math.abs(dx) > Math.abs(dy)) { touchMoved = true; e.preventDefault(); }
   }, { passive: false });
   gallery.addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - startX;
-    if (touchMoved && Math.abs(dx) > 40) {
-      // swipe — navigate
-      goTo(dx < 0 ? current + 1 : current - 1);
-    } else if (!touchMoved) {
-      // clean tap — open lightbox
-      openLightbox(current);
-    }
+    if (touchMoved && Math.abs(dx) > 40) goTo(dx < 0 ? current + 1 : current - 1);
   });
 
-  // Mouse: track drag distance to tell apart click vs drag
+  // Mouse (desktop): track drag distance to tell apart click vs drag
   let mouseDownX = 0, mouseDragged = false;
   gallery.addEventListener('mousedown', e => { mouseDownX = e.clientX; mouseDragged = false; });
   gallery.addEventListener('mousemove', e => { if (Math.abs(e.clientX - mouseDownX) > 6) mouseDragged = true; });
@@ -872,11 +865,10 @@ if (deliveryEl) {
     }
   });
 
-  // Desktop click opens lightbox only if not a drag
+  // Desktop click opens lightbox only if not a drag (touch devices fire click after touchend — ignore it)
   gallery.addEventListener('click', e => {
+    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
     if (mouseDragged) return;
-    // on touch devices the click fires after touchend — skip it since touchend handles it
-    if (e.sourceCapabilities && !e.sourceCapabilities.firesTouchEvents === false) return;
     openLightbox(current);
   });
 
@@ -946,18 +938,13 @@ if (deliveryEl) {
     img.style.cursor = 'zoom-out';
   }
 
-  // Desktop click to zoom at cursor position (mobile uses touchend instead)
+  // Desktop click to zoom at cursor position
   lbTrack.addEventListener('click', e => {
-    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return; // skip on touch
+    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
     const img = e.target.closest('img');
     if (!img) return;
     e.stopPropagation();
-
-    if (zoomed) {
-      resetZoom();
-      return;
-    }
-
+    if (zoomed) { resetZoom(); return; }
     const rect = img.getBoundingClientRect();
     const ox = ((e.clientX - rect.left) / rect.width) * 100;
     const oy = ((e.clientY - rect.top) / rect.height) * 100;
@@ -1023,7 +1010,7 @@ if (deliveryEl) {
     if (e.key === 'ArrowRight') lbGoTo(lbCurrent + 1);
   });
 
-  // Touch swipe (mobile) — tap to zoom, swipe to navigate
+  // Touch swipe inside lightbox (mobile)
   let lbStartX = 0, lbStartY = 0, lbTouchMoved = false;
   overlay.addEventListener('touchstart', e => {
     lbStartX = e.touches[0].clientX;
@@ -1034,31 +1021,12 @@ if (deliveryEl) {
     if (zoomed) return;
     const dx = e.touches[0].clientX - lbStartX;
     const dy = e.touches[0].clientY - lbStartY;
-    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) lbTouchMoved = true;
-    if (Math.abs(dx) > Math.abs(dy)) e.preventDefault();
+    if (Math.abs(dx) > Math.abs(dy)) { lbTouchMoved = true; e.preventDefault(); }
   }, { passive: false });
   overlay.addEventListener('touchend', e => {
     if (zoomed) return;
     const dx = e.changedTouches[0].clientX - lbStartX;
-    if (lbTouchMoved && Math.abs(dx) > 40) {
-      // swipe to navigate
-      lbGoTo(dx < 0 ? lbCurrent + 1 : lbCurrent - 1);
-    } else if (!lbTouchMoved) {
-      // tap — zoom in/out on the image
-      const img = getCurrentImg();
-      if (img && e.target === img) {
-        if (zoomed) {
-          resetZoom();
-        } else {
-          const rect = img.getBoundingClientRect();
-          const ox = ((e.changedTouches[0].clientX - rect.left) / rect.width) * 100;
-          const oy = ((e.changedTouches[0].clientY - rect.top) / rect.height) * 100;
-          applyZoom(img, ox, oy);
-        }
-      } else if (e.target === overlay || e.target.classList.contains('lightbox-slide')) {
-        closeLightbox();
-      }
-    }
+    if (lbTouchMoved && Math.abs(dx) > 40) lbGoTo(dx < 0 ? lbCurrent + 1 : lbCurrent - 1);
   });
 
   lbGoTo(0, false);
