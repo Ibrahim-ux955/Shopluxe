@@ -2043,14 +2043,30 @@ def vendor_required(f):
         return f(*args, **kwargs)
     return decorated
   
- def login_required(f):
+ 
+
+
+def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not session.get('user_id'):
             flash("❌ Please log in first.")
             return redirect(url_for('login'))
         return f(*args, **kwargs)
-    return decorated 
+    return decorated
+  
+@app.route('/save_address', methods=['POST'])
+@login_required
+def save_address():
+    data = request.get_json()
+    user = User.query.get(session['user_id'])
+    if user:
+        user.address = data.get('address', '')
+        user.city = data.get('city', '')
+        user.region = data.get('region', '')
+        user.delivery_note = data.get('delivery_note', '')
+        db.session.commit()
+    return jsonify({'success': True})  
 
 
 @app.route('/vendor/dashboard')
