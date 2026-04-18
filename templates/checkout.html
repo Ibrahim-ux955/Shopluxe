@@ -17,76 +17,85 @@
 }
 
 body { font-family: 'DM Sans', sans-serif; background: var(--light); }
-
 .checkout-page { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 6rem; }
 
-.page-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.9rem; color: var(--dark); margin-bottom: 6px;
+.page-title { font-family: 'Playfair Display', serif; font-size: 1.9rem; color: var(--dark); margin-bottom: 6px; }
+.page-subtitle { font-size: .85rem; color: #999; margin-bottom: 1.5rem; }
+
+/* ── PROGRESS BAR ── */
+.checkout-progress {
+  display: flex; align-items: center;
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 16px 24px;
+  margin-bottom: 24px;
 }
-.page-subtitle { font-size: .85rem; color: #999; margin-bottom: 2rem; }
+.progress-step {
+  display: flex; flex-direction: column; align-items: center;
+  flex: 1; position: relative;
+}
+.progress-step:not(:last-child)::after {
+  content: '';
+  position: absolute; top: 18px; left: 60%; right: -40%;
+  height: 2px; background: var(--border); z-index: 0;
+}
+.progress-step.done:not(:last-child)::after { background: var(--brand); }
+
+.progress-dot {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; font-weight: 700; z-index: 1;
+  border: 2px solid var(--border); background: #fff; color: #bbb;
+  transition: all .3s;
+}
+.progress-step.done .progress-dot { background: var(--brand); border-color: var(--brand); color: #fff; }
+.progress-step.active .progress-dot { background: var(--dark); border-color: var(--dark); color: #fff; box-shadow: 0 0 0 4px rgba(25,135,84,.15); }
+
+.progress-label { font-size: .7rem; font-weight: 600; margin-top: 6px; color: #bbb; text-align: center; white-space: nowrap; }
+.progress-step.done .progress-label { color: var(--brand); }
+.progress-step.active .progress-label { color: var(--dark); }
 
 /* ── LAYOUT ── */
-.checkout-layout {
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 24px; align-items: start;
-}
+.checkout-layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
 @media(max-width:900px){ .checkout-layout { grid-template-columns: 1fr; } }
 
 /* ── STEP CARD ── */
-.step-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  margin-bottom: 16px;
-  overflow: hidden;
-}
-.step-header {
-  display: flex; align-items: center; gap: 12px;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--border);
-}
-.step-num {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: var(--brand); color: #fff;
-  font-size: .8rem; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
+.step-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+.step-header { display: flex; align-items: center; gap: 12px; padding: 18px 22px; border-bottom: 1px solid var(--border); }
+.step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--brand); color: #fff; font-size: .8rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .step-title { font-weight: 700; font-size: .95rem; color: var(--dark); margin: 0; }
 .step-body { padding: 22px; }
 
+/* ── SAVED ADDRESS BANNER ── */
+.saved-address-banner {
+  background: var(--brand-light);
+  border: 1.5px solid rgba(25,135,84,.2);
+  border-radius: 12px; padding: 12px 16px;
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: .82rem; color: var(--brand);
+}
+.saved-address-banner i { font-size: 1rem; flex-shrink: 0; }
+.saved-address-banner strong { display: block; font-size: .85rem; color: var(--dark); }
+.use-saved-btn {
+  margin-left: auto; background: var(--brand); color: #fff;
+  border: none; border-radius: 8px; padding: 6px 12px;
+  font-size: .75rem; font-weight: 700; cursor: pointer;
+  white-space: nowrap; transition: opacity .2s;
+  flex-shrink: 0;
+}
+.use-saved-btn:hover { opacity: .85; }
+
 /* ── FORM ── */
-.form-label {
-  font-size: .8rem; font-weight: 600;
-  color: var(--mid); margin-bottom: 6px;
-  text-transform: uppercase; letter-spacing: .5px;
-}
-.form-control {
-  border: 1.5px solid var(--border);
-  border-radius: 12px; padding: 11px 14px;
-  font-size: .9rem; font-family: 'DM Sans', sans-serif;
-  transition: border-color .2s, box-shadow .2s;
-  outline: none; width: 100%;
-}
-.form-control:focus {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(25,135,84,.1);
-}
-.input-group-wrap {
-  position: relative;
-}
-.input-icon {
-  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
-  color: #aaa; font-size: .9rem; pointer-events: none;
-}
+.form-label { font-size: .8rem; font-weight: 600; color: var(--mid); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+.form-control { border: 1.5px solid var(--border); border-radius: 12px; padding: 11px 14px; font-size: .9rem; font-family: 'DM Sans', sans-serif; transition: border-color .2s, box-shadow .2s; outline: none; width: 100%; }
+.form-control:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(25,135,84,.1); }
+.input-group-wrap { position: relative; }
+.input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: .9rem; pointer-events: none; }
 .input-icon + .form-control { padding-left: 36px; }
 
 /* ── DELIVERY OPTIONS ── */
 .delivery-option {
-  border: 1.5px solid var(--border);
-  border-radius: 12px; padding: 14px 16px;
+  border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 16px;
   margin-bottom: 10px; cursor: pointer;
   transition: border-color .2s, background .2s;
   display: flex; align-items: center; gap: 14px;
@@ -100,78 +109,28 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 .delivery-price { font-weight: 700; color: var(--brand); font-size: .88rem; }
 
 /* ── PAYMENT METHOD ── */
-.payment-option {
-  border: 1.5px solid var(--border);
-  border-radius: 12px; padding: 14px 16px;
-  margin-bottom: 10px; cursor: pointer;
-  transition: border-color .2s, background .2s;
-  display: flex; align-items: center; gap: 14px;
-}
-.payment-option:hover { border-color: var(--brand); }
+.payment-option { border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; transition: border-color .2s, background .2s; display: flex; align-items: center; gap: 14px; }
 .payment-option.selected { border-color: var(--brand); background: var(--brand-light); }
-.payment-logo {
-  width: 44px; height: 28px; border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: .65rem; font-weight: 800; color: #fff;
-  flex-shrink: 0;
-}
+.payment-logo { width: 44px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: .65rem; font-weight: 800; color: #fff; flex-shrink: 0; }
 
 /* ── ORDER SUMMARY ── */
-.summary-card {
-  background: var(--card); border-radius: var(--radius);
-  box-shadow: var(--shadow); padding: 24px;
-  position: sticky; top: 80px;
-}
-.summary-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.2rem; color: var(--dark); margin-bottom: 18px;
-}
+.summary-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; position: sticky; top: 80px; }
+.summary-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--dark); margin-bottom: 18px; }
 
-.order-item {
-  display: flex; gap: 12px; align-items: flex-start;
-  margin-bottom: 14px; padding-bottom: 14px;
-  border-bottom: 1px solid var(--border);
-}
+.order-item { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
 .order-item:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-
-.order-item-img {
-  width: 54px; height: 54px; border-radius: 10px;
-  object-fit: cover; flex-shrink: 0; background: #f0f0f5;
-}
+.order-item-img { width: 54px; height: 54px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: #f0f0f5; }
 .order-item-info { flex: 1; min-width: 0; }
-.order-item-name {
-  font-size: .82rem; font-weight: 600; color: var(--dark);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.order-item-name { font-size: .82rem; font-weight: 600; color: var(--dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .order-item-meta { font-size: .72rem; color: #999; margin-top: 2px; }
-.order-item-price {
-  font-size: .88rem; font-weight: 700; color: var(--brand);
-  white-space: nowrap;
-}
-.qty-badge {
-  background: var(--brand); color: #fff;
-  font-size: .6rem; font-weight: 700;
-  width: 18px; height: 18px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  position: absolute; top: -5px; right: -5px;
-}
+.order-item-price { font-size: .88rem; font-weight: 700; color: var(--brand); white-space: nowrap; }
+.qty-badge { background: var(--brand); color: #fff; font-size: .6rem; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; top: -5px; right: -5px; }
 
 .summary-divider { height: 1px; background: var(--border); margin: 14px 0; }
-.summary-row {
-  display: flex; justify-content: space-between;
-  font-size: .85rem; color: var(--mid); margin-bottom: 8px;
-}
-.summary-row.total {
-  font-size: 1.05rem; font-weight: 700; color: var(--dark);
-  margin-top: 4px;
-}
+.summary-row { display: flex; justify-content: space-between; font-size: .85rem; color: var(--mid); margin-bottom: 8px; }
+.summary-row.total { font-size: 1.05rem; font-weight: 700; color: var(--dark); margin-top: 4px; }
 
-.saving-badge {
-  background: var(--brand-light); border-radius: 10px;
-  padding: 8px 12px; font-size: .78rem;
-  color: var(--brand); font-weight: 600;
-  margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
-}
+.saving-badge { background: var(--brand-light); border-radius: 10px; padding: 8px 12px; font-size: .78rem; color: var(--brand); font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
 
 /* ── PAY BUTTON ── */
 .btn-pay {
@@ -186,26 +145,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 .btn-pay:hover { opacity: .92; transform: translateY(-1px); }
 .btn-pay:disabled { opacity: .6; cursor: not-allowed; transform: none; }
 
-.secure-note {
-  text-align: center; font-size: .72rem; color: #aaa;
-  margin-top: 10px; display: flex; align-items: center;
-  justify-content: center; gap: 4px;
-}
+.secure-note { text-align: center; font-size: .72rem; color: #aaa; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 4px; }
 
-.trust-row {
-  display: flex; flex-direction: column; gap: 6px;
-  margin-top: 14px; padding-top: 14px;
-  border-top: 1px solid var(--border);
-}
-.trust-item {
-  display: flex; align-items: center; gap: 8px;
-  font-size: .72rem; color: #999;
-}
+.trust-row { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.trust-item { display: flex; align-items: center; gap: 8px; font-size: .72rem; color: #999; }
 .trust-item i { color: var(--brand); }
 
 /* ── MOBILE STICKY ── */
 .mobile-pay-bar {
-  position: fixed; bottom: 56px; left: 0; right: 0;
+  position: fixed; bottom: 0; left: 0; right: 0;
   background: #fff; border-top: 1px solid var(--border);
   padding: 12px 16px; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
@@ -213,15 +161,37 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 }
 .mobile-total { font-size: .75rem; color: #999; }
 .mobile-total strong { display: block; font-size: 1.1rem; color: var(--dark); }
-.btn-pay-mobile {
-  background: linear-gradient(135deg, #198754, #0d6efd);
-  color: #fff; border: none; border-radius: 10px;
-  padding: 11px 22px; font-weight: 700; font-size: .88rem;
-  cursor: pointer;
+.btn-pay-mobile { background: linear-gradient(135deg, #198754, #0d6efd); color: #fff; border: none; border-radius: 10px; padding: 11px 22px; font-weight: 700; font-size: .88rem; cursor: pointer; }
+
+@media(max-width:600px){
+  .checkout-progress { padding: 14px 12px; }
+  .progress-label { font-size: .62rem; }
+  .progress-dot { width: 30px; height: 30px; font-size: .72rem; }
 }
 </style>
 
 <div class="checkout-page">
+
+  <!-- ── PROGRESS BAR ── -->
+  <div class="checkout-progress">
+    <div class="progress-step done">
+      <div class="progress-dot"><i class="bi bi-check2"></i></div>
+      <div class="progress-label">Cart</div>
+    </div>
+    <div class="progress-step active">
+      <div class="progress-dot"><i class="bi bi-person"></i></div>
+      <div class="progress-label">Details</div>
+    </div>
+    <div class="progress-step">
+      <div class="progress-dot">3</div>
+      <div class="progress-label">Payment</div>
+    </div>
+    <div class="progress-step">
+      <div class="progress-dot"><i class="bi bi-check2"></i></div>
+      <div class="progress-label">Done</div>
+    </div>
+  </div>
+
   <h1 class="page-title">Checkout</h1>
   <p class="page-subtitle">Complete your order securely</p>
 
@@ -231,87 +201,111 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
     <div>
 
       <!-- Step 1: Contact Info -->
-<div class="step-card">
-  <div class="step-header">
-    <div class="step-num">1</div>
-    <h6 class="step-title">Contact & Delivery Information</h6>
-  </div>
-  <div class="step-body">
-    <div class="row g-3">
-      <div class="col-md-6">
-        <label class="form-label">Full Name</label>
-        <div class="input-group-wrap">
-          <i class="bi bi-person input-icon"></i>
-          <input type="text" id="field-name" class="form-control"
-                 placeholder="John Mensah"
-                 value="{{ session.get('user_name', '') }}" required>
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-num">1</div>
+          <h6 class="step-title">Contact & Delivery Information</h6>
         </div>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Phone Number</label>
-        <div class="input-group-wrap">
-          <i class="bi bi-telephone input-icon"></i>
-          <input type="tel" id="field-phone" class="form-control"
-                 placeholder="024 000 0000" required>
-        </div>
-      </div>
-      <div class="col-12">
-        <label class="form-label">Email Address</label>
-        <div class="input-group-wrap">
-          <i class="bi bi-envelope input-icon"></i>
-          <input type="email" id="field-email" class="form-control"
-                 placeholder="you@email.com"
-                 value="{{ session.get('user_email', '') }}" required>
+        <div class="step-body">
+
+          <!-- Saved address banner (only show if user has a saved address) -->
+          {% if saved_address and saved_address.get('address') %}
+          <div class="saved-address-banner" id="savedBanner">
+            <i class="bi bi-geo-alt-fill"></i>
+            <div>
+              <strong>Use your saved address?</strong>
+              {{ saved_address.get('address') }}, {{ saved_address.get('city') }}, {{ saved_address.get('region') }}
+            </div>
+            <button class="use-saved-btn" onclick="fillSavedAddress()">Use this</button>
+          </div>
+          {% endif %}
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Full Name</label>
+              <div class="input-group-wrap">
+                <i class="bi bi-person input-icon"></i>
+                <input type="text" id="field-name" class="form-control"
+                       placeholder="John Mensah"
+                       value="{{ session.get('user_name', '') }}" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone Number</label>
+              <div class="input-group-wrap">
+                <i class="bi bi-telephone input-icon"></i>
+                <input type="tel" id="field-phone" class="form-control"
+                       placeholder="024 000 0000"
+                       value="{{ saved_address.get('phone', '') }}" required>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Email Address</label>
+              <div class="input-group-wrap">
+                <i class="bi bi-envelope input-icon"></i>
+                <input type="email" id="field-email" class="form-control"
+                       placeholder="you@email.com"
+                       value="{{ session.get('user_email', '') }}" required>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div style="height:1px;background:var(--border);margin:6px 0 12px;"></div>
+              <div style="font-size:.78rem;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">📍 Delivery Address</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Street Address</label>
+              <div class="input-group-wrap">
+                <i class="bi bi-geo-alt input-icon"></i>
+                <input type="text" id="field-address" class="form-control"
+                       placeholder="e.g. 12 Independence Ave, Osu"
+                       value="{{ saved_address.get('address', '') }}" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">City / Town</label>
+              <div class="input-group-wrap">
+                <i class="bi bi-building input-icon"></i>
+                <input type="text" id="field-city" class="form-control"
+                       placeholder="e.g. Accra"
+                       value="{{ saved_address.get('city', '') }}" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Region</label>
+              <div class="input-group-wrap">
+                <i class="bi bi-map input-icon"></i>
+                <select id="field-region" class="form-control" required>
+                  <option value="" disabled {% if not saved_address.get('region') %}selected{% endif %}>Select region</option>
+                  {% for r in ['Greater Accra','Ashanti','Western','Eastern','Central','Northern','Upper East','Upper West','Volta','Brong-Ahafo','Oti','Savannah','North East','Western North','Ahafo','Bono East'] %}
+                  <option value="{{ r }}" {% if saved_address.get('region') == r %}selected{% endif %}>{{ r }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Delivery Note <span style="color:#bbb;font-weight:400;text-transform:none;">(optional)</span></label>
+              <div class="input-group-wrap">
+                <i class="bi bi-chat-text input-icon"></i>
+                <input type="text" id="field-note" class="form-control"
+                       placeholder="e.g. Blue gate, call on arrival..."
+                       value="{{ saved_address.get('delivery_note', '') }}">
+              </div>
+            </div>
+
+            <!-- Save address checkbox -->
+            <div class="col-12">
+              <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--mid);cursor:pointer;margin-top:4px;">
+                <input type="checkbox" id="save-address-check" style="accent-color:var(--brand);width:16px;height:16px;"
+                       {% if saved_address and saved_address.get('address') %}checked{% endif %}>
+                Save this address for future orders
+              </label>
+            </div>
+
+          </div>
         </div>
       </div>
 
-      <!-- ✅ NEW: Delivery Address Fields -->
-      <div class="col-12">
-        <div style="height:1px;background:var(--border);margin:6px 0 12px;"></div>
-        <div style="font-size:.78rem;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">📍 Delivery Address</div>
-      </div>
-      <div class="col-12">
-        <label class="form-label">Street Address</label>
-        <div class="input-group-wrap">
-          <i class="bi bi-geo-alt input-icon"></i>
-          <input type="text" id="field-address" class="form-control"
-       placeholder="e.g. 12 Independence Ave, Osu"
-       value="{{ saved_address.get('address', '') }}" required>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">City / Town</label>
-        <div class="input-group-wrap">
-          <i class="bi bi-building input-icon"></i>
-          <input type="text" id="field-city" class="form-control"
-       placeholder="e.g. Accra"
-       value="{{ saved_address.get('city', '') }}" required>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Region</label>
-        <div class="input-group-wrap">
-          <i class="bi bi-map input-icon"></i>
-          <select id="field-region" class="form-control" required>
-            <option value="" disabled {% if not saved_address.get('region') %}selected{% endif %}>Select region</option>
-            {% for r in ['Greater Accra','Ashanti','Western','Eastern','Central','Northern','Upper East','Upper West','Volta','Brong-Ahafo','Oti','Savannah','North East','Western North','Ahafo','Bono East'] %}
-            <option value="{{ r }}" {% if saved_address.get('region') == r %}selected{% endif %}>{{ r }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-      <div class="col-12">
-        <label class="form-label">Delivery Note <span style="color:#bbb;font-weight:400;text-transform:none;">(optional)</span></label>
-        <div class="input-group-wrap">
-          <i class="bi bi-chat-text input-icon"></i>
-          <input type="text" id="field-note" class="form-control"
-       placeholder="e.g. Blue gate, call on arrival, near the church..."
-       value="{{ saved_address.get('delivery_note', '') }}">
-      </div>
-
-    </div>
-  </div>
-</div>
       <!-- Step 2: Delivery -->
       <div class="step-card">
         <div class="step-header">
@@ -319,7 +313,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
           <h6 class="step-title">Delivery Method</h6>
         </div>
         <div class="step-body">
-
           <label class="delivery-option selected" id="delivery-standard">
             <input type="radio" name="delivery" value="standard" checked>
             <div class="delivery-label">
@@ -328,7 +321,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
             </div>
             <span class="delivery-price">FREE</span>
           </label>
-
           <label class="delivery-option" id="delivery-express">
             <input type="radio" name="delivery" value="express">
             <div class="delivery-label">
@@ -337,7 +329,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
             </div>
             <span class="delivery-price">GH₵ 15.00</span>
           </label>
-
           <label class="delivery-option" id="delivery-pickup">
             <input type="radio" name="delivery" value="pickup">
             <div class="delivery-label">
@@ -346,7 +337,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
             </div>
             <span class="delivery-price">FREE</span>
           </label>
-
         </div>
       </div>
 
@@ -357,7 +347,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
           <h6 class="step-title">Payment Method</h6>
         </div>
         <div class="step-body">
-
           <div class="payment-option selected">
             <input type="radio" name="payment" checked>
             <div class="payment-logo" style="background:linear-gradient(135deg,#00c9a7,#845ec2);">PS</div>
@@ -366,12 +355,10 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
               <div style="font-size:.75rem; color:#999;">Card, Mobile Money, Bank Transfer</div>
             </div>
           </div>
-
           <div style="background:#f8f9fc; border-radius:12px; padding:12px 16px; font-size:.78rem; color:#888; margin-top:8px;">
             <i class="bi bi-shield-lock text-success me-1"></i>
             Your payment is secured with 256-bit SSL encryption. We never store your card details.
           </div>
-
         </div>
       </div>
 
@@ -382,44 +369,38 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
       <div class="summary-card">
         <div class="summary-title">Order Summary</div>
 
-        <!-- Items -->
         {% for item in cart_items %}
-<div class="order-item">
-  <div style="position:relative; flex-shrink:0;">
-    {% set img = item.images[0] if item.get('images') else (item.image if item.get('image') else '') %}
-    {% if img and img.startswith('http') %}
-      <img class="order-item-img" src="{{ img }}" alt="{{ item.name }}">
-    {% else %}
-      <img class="order-item-img"
-           src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}"
-           alt="{{ item.name }}">
-    {% endif %}
-    <div class="qty-badge">{{ item.quantity }}</div>
-  </div>
-  <div class="order-item-info">
-    <div class="order-item-name">{{ item.name }}</div>
-    <div class="order-item-meta">
-      {% if item.color and item.color != '-' %}{{ item.color }}{% endif %}
-      {% if item.size and item.size != '-' %} · {{ item.size }}{% endif %}
-    </div>
-  </div>
-  <div class="order-item-price">GH₵ {{ "%.2f"|format(item.effective_price * item.quantity) }}</div>
-</div>
-{% endfor %}
+        <div class="order-item">
+          <div style="position:relative; flex-shrink:0;">
+            {% set img = item.images[0] if item.get('images') else (item.image if item.get('image') else '') %}
+            {% if img and img.startswith('http') %}
+              <img class="order-item-img" src="{{ img }}" alt="{{ item.name }}">
+            {% else %}
+              <img class="order-item-img" src="{{ url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) }}" alt="{{ item.name }}">
+            {% endif %}
+            <div class="qty-badge">{{ item.quantity }}</div>
+          </div>
+          <div class="order-item-info">
+            <div class="order-item-name">{{ item.name }}</div>
+            <div class="order-item-meta">
+              {% if item.color and item.color != '-' %}{{ item.color }}{% endif %}
+              {% if item.size and item.size != '-' %} · {{ item.size }}{% endif %}
+            </div>
+          </div>
+          <div class="order-item-price">GH₵ {{ "%.2f"|format(item.effective_price * item.quantity) }}</div>
+        </div>
+        {% endfor %}
+
         <div class="summary-divider"></div>
 
-        <!-- Totals -->
         {% set total_saving = namespace(value=0) %}
         {% for item in cart_items %}
           {% if item.on_sale and item.sale_price %}
             {% set total_saving.value = total_saving.value + ((item.price|float - item.sale_price|float) * item.quantity) %}
           {% endif %}
         {% endfor %}
-
         {% if total_saving.value > 0 %}
-        <div class="saving-badge">
-          🎉 You save GH₵ {{ "%.2f"|format(total_saving.value) }} on this order!
-        </div>
+        <div class="saving-badge">🎉 You save GH₵ {{ "%.2f"|format(total_saving.value) }} on this order!</div>
         {% endif %}
 
         <div class="summary-row">
@@ -457,7 +438,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
           <div class="trust-item"><i class="bi bi-patch-check"></i> 100% genuine products</div>
           <div class="trust-item"><i class="bi bi-headset"></i> 24/7 customer support</div>
         </div>
-
       </div>
     </div>
 
@@ -470,19 +450,26 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
     <span>Total</span>
     <strong>GH₵ {{ "%.2f"|format(total) }}</strong>
   </div>
-  <button class="btn-pay-mobile" id="pay-btn-mobile">
-    🔒 Pay Now
-  </button>
+  <button class="btn-pay-mobile" id="pay-btn-mobile">🔒 Pay Now</button>
 </div>
-
-<input type="hidden" id="timezone">
 
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
-// Auto timezone
-document.getElementById("timezone").value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+// ── Fill saved address ──
+function fillSavedAddress() {
+  document.getElementById('field-address').value = "{{ saved_address.get('address', '')|e }}";
+  document.getElementById('field-city').value = "{{ saved_address.get('city', '')|e }}";
+  document.getElementById('field-note').value = "{{ saved_address.get('delivery_note', '')|e }}";
+  document.getElementById('field-phone').value = "{{ saved_address.get('phone', '')|e }}";
+  const regionSel = document.getElementById('field-region');
+  const saved = "{{ saved_address.get('region', '') }}";
+  for (let opt of regionSel.options) { if (opt.value === saved) { opt.selected = true; break; } }
+  // hide the banner after using
+  const banner = document.getElementById('savedBanner');
+  if (banner) { banner.style.opacity = '.5'; banner.style.pointerEvents = 'none'; }
+}
 
-// Delivery option toggle
+// ── Delivery option toggle ──
 const deliveryOptions = document.querySelectorAll('.delivery-option');
 let deliveryFee = 0;
 const baseTotal = {{ total }};
@@ -492,40 +479,45 @@ deliveryOptions.forEach(opt => {
     deliveryOptions.forEach(o => o.classList.remove('selected'));
     opt.classList.add('selected');
     opt.querySelector('input[type=radio]').checked = true;
-
     const val = opt.querySelector('input').value;
     deliveryFee = val === 'express' ? 15 : 0;
-
     const newTotal = baseTotal + deliveryFee;
     document.getElementById('grand-total').textContent = 'GH₵ ' + newTotal.toFixed(2);
     document.getElementById('pay-amount').textContent = newTotal.toFixed(2);
-
-    const feeRow = document.getElementById('delivery-fee-row').querySelector('span:last-child');
-    feeRow.textContent = deliveryFee > 0 ? 'GH₵ 15.00' : 'FREE';
-    feeRow.style.color = deliveryFee > 0 ? '#333' : 'var(--brand)';
-    feeRow.style.fontWeight = '600';
+    const feeSpan = document.getElementById('delivery-fee-row').querySelector('span:last-child');
+    feeSpan.textContent = deliveryFee > 0 ? 'GH₵ 15.00' : 'FREE';
+    feeSpan.style.color = deliveryFee > 0 ? '#333' : 'var(--brand)';
+    feeSpan.style.fontWeight = '600';
   });
 });
 
-// Pay function
+// ── Pay function ──
 function triggerPayment() {
-  const name = document.getElementById('field-name').value.trim();
-  const email = document.getElementById('field-email').value.trim();
-  const phone = document.getElementById('field-phone').value.trim();
+  const name    = document.getElementById('field-name').value.trim();
+  const email   = document.getElementById('field-email').value.trim();
+  const phone   = document.getElementById('field-phone').value.trim();
   const address = document.getElementById('field-address').value.trim();
-  const city = document.getElementById('field-city').value.trim();
-  const region = document.getElementById('field-region').value.trim();
-  const note = document.getElementById('field-note').value.trim();
+  const city    = document.getElementById('field-city').value.trim();
+  const region  = document.getElementById('field-region').value.trim();
+  const note    = document.getElementById('field-note').value.trim();
+  const saveAddr = document.getElementById('save-address-check').checked;
 
   if (!name || !email || !phone) {
     alert('Please fill in your name, email, and phone number.');
-    window.scrollTo({top: 0, behavior: 'smooth'});
-    return;
+    window.scrollTo({top: 0, behavior: 'smooth'}); return;
   }
   if (!address || !city || !region) {
     alert('Please fill in your delivery address, city, and region.');
-    window.scrollTo({top: 0, behavior: 'smooth'});
-    return;
+    window.scrollTo({top: 0, behavior: 'smooth'}); return;
+  }
+
+  // Save address to server if checkbox ticked
+  if (saveAddr) {
+    fetch('/save_address', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ address, city, region, phone, delivery_note: note })
+    }).catch(() => {});
   }
 
   const finalAmount = baseTotal + deliveryFee;
@@ -537,28 +529,19 @@ function triggerPayment() {
     amount: Math.round(finalAmount * 100),
     currency: "GHS",
     metadata: {
-      name: name,
-      email: email,
-      phone: phone,
-      address: fullAddress,        // ✅ NEW
-      delivery_note: note,          // ✅ NEW
+      name, email, phone,
+      address: fullAddress,
+      delivery_note: note,
       items: [
         {% for item in cart_items %}
-        {
-          name: "{{ item.name }}",
-          price: {{ item.effective_price }},
-          effective_price: {{ item.effective_price }},
-          quantity: {{ item.quantity }},
-          color: "{{ item.color or '' }}",
-          size: "{{ item.size or '' }}"
-        },
+        { name: "{{ item.name }}", price: {{ item.effective_price }}, effective_price: {{ item.effective_price }}, quantity: {{ item.quantity }}, color: "{{ item.color or '' }}", size: "{{ item.size or '' }}" },
         {% endfor %}
       ],
       custom_fields: [
         { display_name: "Full Name", variable_name: "full_name", value: name },
         { display_name: "Phone", variable_name: "phone", value: phone },
-        { display_name: "Delivery Address", variable_name: "address", value: fullAddress },  // ✅ NEW
-        { display_name: "Delivery Note", variable_name: "delivery_note", value: note }        // ✅ NEW
+        { display_name: "Delivery Address", variable_name: "address", value: fullAddress },
+        { display_name: "Delivery Note", variable_name: "delivery_note", value: note }
       ]
     },
     callback: function(response) {
@@ -568,8 +551,8 @@ function triggerPayment() {
   });
   handler.openIframe();
 }
+
 document.getElementById('pay-btn').addEventListener('click', triggerPayment);
 document.getElementById('pay-btn-mobile')?.addEventListener('click', triggerPayment);
 </script>
-
 {% endblock %}
