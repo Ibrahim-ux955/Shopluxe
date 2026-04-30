@@ -315,36 +315,63 @@
 
 
 @media(max-width:600px){
-  #heroCarousel .carousel-item > div > div:first-child {
-    min-height: auto !important;
-    padding: 20px 16px !important;
+  /* Force vertical stacking */
+  #heroCarousel .carousel-item > div {
+    flex-direction: column !important;
+    min-height: unset !important;
   }
-  #heroCarousel .carousel-item > div > div:last-child {
-    height: 180px !important;
-    min-height: 180px !important;
-    max-height: 180px !important;
-  }
-  /* Prevent price row overflow */
-  #heroCarousel [style*="display:flex"][style*="align-items:center"][style*="gap:6px"] {
-    flex-wrap: wrap;
-  }
-}
-/* ── AMAZON-STYLE CARD IMPROVEMENTS ── */
-.p-card-name {
-  white-space: normal !important;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  min-height: 38px;
-  line-height: 1.4;
-}
-.p-stars { color: #f59e0b; font-size: .72rem; letter-spacing: 1px; }
-.p-review-count { font-size: .7rem; color: #198754; }
-.p-prime { font-size: .68rem; color: #00a8e0; font-weight: 700; display:flex; align-items:center; gap:3px; margin: 3px 0; }
-.p-card-body { padding: 10px 12px 6px; }
-.p-card-footer { padding: 0 12px 12px; }
 
+  /* Text panel — compact */
+  #heroCarousel .carousel-item > div > div:first-child {
+    flex: unset !important;
+    min-height: unset !important;
+    padding: 14px 16px 10px !important;
+  }
+
+  /* Image panel — short */
+  #heroCarousel .carousel-item > div > div:last-child {
+    flex: unset !important;
+    height: 155px !important;
+    min-height: 155px !important;
+    max-height: 155px !important;
+  }
+
+  /* Smaller heading */
+  #heroCarousel h2 {
+    font-size: .95rem !important;
+    margin-bottom: 4px !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Smaller price */
+  #heroCarousel span[style*="1.8rem"],
+  #heroCarousel span[style*="1.3rem"] {
+    font-size: 1rem !important;
+  }
+
+  /* Compact CTA button */
+  #heroCarousel a[style*="Shop Now"],
+  #heroCarousel a[style*="inline-flex"] {
+    padding: 7px 14px !important;
+    font-size: .76rem !important;
+  }
+
+  /* Hide brand + delivery line to save space */
+  #heroCarousel div[style*="letter-spacing:.5px"],
+  #heroCarousel div[style*="bi-truck"] {
+    display: none !important;
+  }
+
+  /* Fix price row wrapping */
+  #heroCarousel div[style*="gap:6px"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* Hide low-stock warning on mobile */
+  #heroCarousel div[style*="fca5a5"] {
+    display: none !important;
+  }
+}
 </style>
 
 <!-- ── SEARCH RESULTS BANNER ── -->
