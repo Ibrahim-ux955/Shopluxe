@@ -514,9 +514,10 @@ document.getElementById('heroCarousel')?.addEventListener('slide.bs.carousel', f
         {% endif %}
         {% if event.promo_code %}
         <div style="background:rgba(255,255,255,.15);border:1px dashed rgba(255,255,255,.4);border-radius:8px;padding:5px 12px;font-size:.75rem;color:#fff;font-weight:700;cursor:pointer;"
-             onclick="navigator.clipboard.writeText('{{ event.promo_code }}');this.innerHTML='✅ Copied!'">
-          🏷️ Use code: <strong>{{ event.promo_code }}</strong> — tap to copy
+             onclick="applyEventPromo('{{ event.promo_code }}', this)">
+          🏷️ Use code: <strong>{{ event.promo_code }}</strong> — tap to apply
         </div>
+        {% endif %}
         {% endif %}
       </div>
     </div>
@@ -1036,4 +1037,27 @@ document.getElementById('heroCarousel')?.addEventListener('slide.bs.carousel', f
 {% endif %}{# end empty check #}
 {% endif %}{# end if not query #}
 
+
+<script>
+function applyEventPromo(code, el) {
+  fetch('/apply_promo', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({code: code})
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      el.innerHTML = '✅ Code <strong>' + code + '</strong> applied! <a href="/cart" style="color:#ff9900;margin-left:6px;">Go to cart →</a>';
+      el.style.background = 'rgba(25,135,84,.4)';
+      el.style.border = '1px solid #198754';
+    } else {
+      el.innerHTML = '❌ Code not valid';
+    }
+  })
+  .catch(() => {
+    el.innerHTML = '❌ Something went wrong';
+  });
+}
+</script>
 {% endblock %}
