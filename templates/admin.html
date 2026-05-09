@@ -560,7 +560,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
           </div>
           <div>
             <label class="f-label">Promo Code (optional)</label>
-            <input type="text" name="promo_code" class="f-input" placeholder="e.g. MOM2026" style="text-transform:uppercase;">
+            <div style="display:flex;gap:8px;">
+              <input type="text" name="promo_code" id="promoCodeInput" class="f-input" 
+                     placeholder="e.g. MOM2026" style="text-transform:uppercase;">
+              <button type="button" onclick="generatePromoCode()" 
+                      style="background:var(--brand);color:#fff;border:none;border-radius:10px;
+                      padding:9px 14px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+                🎲 Generate
+              </button>
+            </div>
+            <div class="f-hint">Click Generate for auto code, or type your own</div>
           </div>
         </div>
         <div class="mb-3">
@@ -754,5 +763,13 @@ function switchProductType(type) {
   document.getElementById('typeSlotLabel').style.background = type === 'slot' ? 'var(--brand-light)' : '#fff';
 }
 switchProductType('standard');
+function generatePromoCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  document.getElementById('promoCodeInput').value = code;
+}
 </script>
 {% endblock %}
