@@ -822,6 +822,7 @@ def verify_payment():
 
     address = metadata.get("address", "")
     delivery_note = metadata.get("delivery_note", "")
+    delivery_method = metadata.get("delivery_method", "🚚 Standard Delivery")
     new_order = Order(
         id=order_id, name=name, email=email, phone=phone,
         address=address,           # ✅ NEW
@@ -873,15 +874,18 @@ def verify_payment():
     )
     order_time_str = datetime.now().strftime("%b %d, %Y, %I:%M %p")
 
+    delivery_method = metadata.get("delivery_method", "🚚 Standard Delivery")
     try:
         send_email("shopluxe374@gmail.com", "📦 New Paid Order - ShopLuxe",
                    render_template("emails/admin_order_email.html", name=name, email=email,
                                    phone=phone, product_name=product_list, total=amount,
-                                   order_time=order_time_str, track_order_url=track_order_url))
+                                   order_time=order_time_str, track_order_url=track_order_url,
+                                   delivery_method=delivery_method))  # ✅ ADD
         send_email(email, "✅ Payment Received - ShopLuxe",
                    render_template("emails/user_order_email.html", name=name,
                                    product_name=product_list, total=amount,
-                                   order_time=order_time_str, track_order_url=track_order_url))
+                                   order_time=order_time_str, track_order_url=track_order_url,
+                                   delivery_method=delivery_method))  # ✅ ADD
     except Exception as e:
         print("⚠️ Email sending failed:", e)
 

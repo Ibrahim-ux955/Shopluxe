@@ -527,6 +527,10 @@ function triggerPayment() {
     }).catch(() => {});
   }
 
+  const selectedDelivery = document.querySelector('input[name="delivery"]:checked').value;
+  const deliveryLabel = selectedDelivery === 'express' ? '⚡ Express Delivery (Tomorrow by 6pm)' 
+                      : selectedDelivery === 'pickup' ? '🏪 Pickup In Store' 
+                      : '🚚 Standard Delivery (2–4 working days)';
   const finalAmount = baseTotal + deliveryFee;
   const fullAddress = `${address}, ${city}, ${region}`;
 
@@ -539,6 +543,7 @@ function triggerPayment() {
       name, email, phone,
       address: fullAddress,
       delivery_note: note,
+      delivery_method: deliveryLabel,
       items: [
         {% for item in cart_items %}
         { name: "{{ item.name }}", price: {{ item.effective_price }}, effective_price: {{ item.effective_price }}, quantity: {{ item.quantity }}, color: "{{ item.color or '' }}", size: "{{ item.size or '' }}" },
