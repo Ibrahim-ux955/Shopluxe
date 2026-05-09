@@ -1605,6 +1605,17 @@ def checkout():
     payout_fee = round(min((subtotal * 0.0195) + 0.50, 500), 2)
     total = round(subtotal + payout_fee, 2)
 
+    # ✅ Apply promo discount
+    promo = session.get('promo')
+    discount = 0
+    if promo:
+        if promo.get('flat') and promo['flat'] > 0:
+            discount = promo['flat']
+        elif promo.get('discount') and promo['discount'] > 0:
+            discount = round(subtotal * promo['discount'], 2)
+    
+    discounted_total = round(max(0, total - discount), 2)
+
     # ✅ Load saved address for autofill
     saved_address = {}
     if session.get('user_id'):
@@ -1623,6 +1634,9 @@ def checkout():
         subtotal=subtotal,
         payout_fee=payout_fee,
         total=total,
+        discount=discount,           # ✅ ADD
+        discounted_total=discounted_total,  # ✅ ADD
+        promo=promo,                 # ✅ ADD
         paystack_public_key=PAYSTACK_PUBLIC_KEY,
         saved_address=saved_address
     )
