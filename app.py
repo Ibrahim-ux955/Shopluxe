@@ -70,6 +70,25 @@ LOCKOUT_DURATION = timedelta(minutes=5)
 PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
 PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY")
 
+# Events table columns
+for col, definition in [
+    ("title", "VARCHAR(200) DEFAULT ''"),
+    ("description", "TEXT DEFAULT ''"),
+    ("image_url", "VARCHAR(500) DEFAULT ''"),
+    ("bg_color", "VARCHAR(50) DEFAULT '#1a1a2e'"),
+    ("link", "VARCHAR(500) DEFAULT ''"),
+    ("promo_code", "VARCHAR(50) DEFAULT ''"),
+    ("start_date", "VARCHAR(50) DEFAULT ''"),
+    ("end_date", "VARCHAR(50) DEFAULT ''"),
+    ("active", "BOOLEAN DEFAULT 1"),
+    ("created_at", "VARCHAR(50) DEFAULT ''"),
+]:
+    try:
+        conn.execute(db.text(f"ALTER TABLE events ADD COLUMN {col} {definition}"))
+        conn.commit()
+    except:
+        pass
+
 # ============================================================
 # DATABASE MODELS
 # ============================================================
@@ -302,6 +321,33 @@ class Promo(db.Model):
     active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.String(50), default=lambda: datetime.now(timezone.utc).isoformat())        
 
+class Event(db.Model):
+    __tablename__ = 'events'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, default='')
+    image_url = db.Column(db.String(500), default='')
+    bg_color = db.Column(db.String(50), default='#1a1a2e')
+    link = db.Column(db.String(500), default='')
+    promo_code = db.Column(db.String(50), default='')
+    start_date = db.Column(db.String(50), default='')
+    end_date = db.Column(db.String(50), default='')
+    active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.String(50), default=lambda: datetime.now(timezone.utc).isoformat())
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'image_url': self.image_url,
+            'bg_color': self.bg_color,
+            'link': self.link,
+            'promo_code': self.promo_code,
+            'start_date': self.start_date,
+            'end_date': self.end_date,
+            'active': self.active,
+        }
 # ============================================================
 # HELPER FUNCTIONS
 # ============================================================
@@ -451,11 +497,38 @@ def home():
     # ✅ Sale — only if on_sale is checked
     sale_products = [p for p in all_products if p.get('on_sale')][:6]
 
+    # ✅ Active Events — only show within date range
+    all_events = Event.query.filter_by(active=True).all()
+    active_events = []
+    for e in all_events:
+        show = True
+        if e.start_date:
+            try:
+                start = datetime.fromisoformat(e.start_date)
+                if start.tzinfo is None:
+                    start = start.replace(tzinfo=timezone.utc)
+                if now < start:
+                    show = False
+            except Exception:
+                pass
+        if e.end_date:
+            try:
+                end = datetime.fromisoformat(e.end_date)
+                if end.tzinfo is None:
+                    end = end.replace(tzinfo=timezone.utc)
+                if now > end:
+                    show = False
+            except Exception:
+                pass
+        if show:
+            active_events.append(e.to_dict())
+
     return render_template('index.html',
         popular_products=popular_products,
         new_products=new_products,
         featured_products=featured_products,
         sale_products=sale_products,
+        active_events=active_events,  # ✅ NEW
         active_page='home'
     )
 
@@ -971,6 +1044,7 @@ def admin():
     orders = [o.to_dict() for o in Order.query.order_by(Order.timestamp.desc()).all()]
     promos = {p.code: {'label': p.label, 'discount': p.discount, 'flat': p.flat, 'active': p.active}
               for p in Promo.query.order_by(Promo.created_at.desc()).all()}
+    events = [e.to_dict() for e in Event.query.order_by(Event.created_at.desc()).all()]
     return render_template('admin.html', products=products, orders=orders, promos=promos, active_page='admin')
   
 @app.route('/delete/<product_id>', methods=['POST'])
@@ -2529,6 +2603,53 @@ def admin_delete_promo(code):
         db.session.delete(promo)
         db.session.commit()
     return redirect(url_for('admin') + '#promos')
+  
+@app.route('/admin/events/add', methods=['POST'])
+def admin_add_event():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    image_url = ''
+    image = request.files.get('image')
+    if image and image.filename:
+        upload_result = cloudinary.uploader.upload(image)
+        image_url = upload_result['secure_url']
+
+    event = Event(
+        title=request.form.get('title', '').strip(),
+        description=request.form.get('description', '').strip(),
+        image_url=image_url,
+        bg_color=request.form.get('bg_color', '#1a1a2e').strip(),
+        link=request.form.get('link', '').strip(),
+        promo_code=request.form.get('promo_code', '').strip().upper(),
+        start_date=request.form.get('start_date', '').strip(),
+        end_date=request.form.get('end_date', '').strip(),
+        active=True
+    )
+    db.session.add(event)
+    db.session.commit()
+    flash('✅ Event added!')
+    return redirect(url_for('admin') + '#events')
+
+@app.route('/admin/events/toggle/<int:event_id>', methods=['POST'])
+def admin_toggle_event(event_id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    event = Event.query.get(event_id)
+    if event:
+        event.active = not event.active
+        db.session.commit()
+    return redirect(url_for('admin') + '#events')
+
+@app.route('/admin/events/delete/<int:event_id>', methods=['POST'])
+def admin_delete_event(event_id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    event = Event.query.get(event_id)
+    if event:
+        db.session.delete(event)
+        db.session.commit()
+    return redirect(url_for('admin') + '#events')  
   
 @app.route('/contact', methods=['POST'])
 def contact():

@@ -154,6 +154,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
   <i class="bi bi-tag"></i> Promo Codes
   <span class="tab-badge">{{ promos|length }}</span>
 </button>
+<button class="tab-btn" onclick="showTab('events',this)">
+  <i class="bi bi-calendar-event"></i> Events
+  <span class="tab-badge">{{ events|length if events else 0 }}</span>
+</button>
 </div>
 
 <!-- ADD PRODUCT -->
@@ -535,6 +539,138 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
       <p style="text-align:center;color:#aaa;padding:30px 0;">
         No promo codes yet. Create one above.
       </p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- EVENTS -->
+<div id="tab-events" class="admin-section">
+  <div class="a-card" style="margin-bottom:16px;">
+    <div class="a-card-head">
+      <div class="a-card-num">🎉</div>
+      <h6 class="a-card-title">Create Event / Banner</h6>
+    </div>
+    <div class="a-card-body">
+      <form method="POST" action="{{ url_for('admin_add_event') }}" enctype="multipart/form-data">
+        <div class="row-2 mb-3">
+          <div>
+            <label class="f-label">Event Title <span class="req">*</span></label>
+            <input type="text" name="title" class="f-input" placeholder="e.g. Mother's Day Sale 🌸" required>
+          </div>
+          <div>
+            <label class="f-label">Promo Code (optional)</label>
+            <input type="text" name="promo_code" class="f-input" placeholder="e.g. MOM2026" style="text-transform:uppercase;">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="f-label">Description</label>
+          <textarea name="description" class="f-textarea" placeholder="e.g. Celebrate mums with 20% off all orders!"></textarea>
+        </div>
+        <div class="row-2 mb-3">
+          <div>
+            <label class="f-label">Link (where to go when clicked)</label>
+            <input type="text" name="link" class="f-input" placeholder="e.g. /filtered/Sale">
+          </div>
+          <div>
+            <label class="f-label">Background Color</label>
+            <input type="color" name="bg_color" value="#1a1a2e" class="f-input" style="height:42px;padding:4px;">
+          </div>
+        </div>
+        <div class="row-2 mb-3">
+          <div>
+            <label class="f-label">Start Date (optional)</label>
+            <input type="datetime-local" name="start_date" class="f-input">
+          </div>
+          <div>
+            <label class="f-label">End Date (optional)</label>
+            <input type="datetime-local" name="end_date" class="f-input">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="f-label">Banner Image (optional)</label>
+          <input type="file" name="image" accept="image/*" class="f-input">
+          <div class="f-hint">Wide/landscape image works best. If no image, background color is used.</div>
+        </div>
+        <button type="submit" class="btn-submit">
+          <i class="bi bi-calendar-plus"></i> Add Event
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="a-card">
+    <div class="a-card-head">
+      <div class="a-card-num"><i class="bi bi-calendar2-week"></i></div>
+      <h6 class="a-card-title">All Events</h6>
+    </div>
+    <div class="a-card-body" style="padding:0;">
+      {% if events %}
+      <table class="o-table">
+        <thead>
+          <tr>
+            <th>Preview</th>
+            <th>Title</th>
+            <th>Promo</th>
+            <th>Dates</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in events %}
+          <tr>
+            <td>
+              {% if e.image_url %}
+              <img src="{{ e.image_url }}" style="width:60px;height:40px;object-fit:cover;border-radius:6px;">
+              {% else %}
+              <div style="width:60px;height:40px;border-radius:6px;background:{{ e.bg_color }};"></div>
+              {% endif %}
+            </td>
+            <td>
+              <div style="font-weight:700;font-size:.85rem;">{{ e.title }}</div>
+              <div style="font-size:.72rem;color:#aaa;">{{ e.description[:50] if e.description else '' }}{% if e.description and e.description|length > 50 %}...{% endif %}</div>
+            </td>
+            <td>
+              {% if e.promo_code %}
+              <code style="font-size:.78rem;font-weight:700;background:#f0f0f5;padding:2px 8px;border-radius:6px;">{{ e.promo_code }}</code>
+              {% else %}
+              <span style="color:#ccc;font-size:.75rem;">None</span>
+              {% endif %}
+            </td>
+            <td style="font-size:.72rem;color:#888;">
+              {% if e.start_date %}From: {{ e.start_date[:10] }}<br>{% endif %}
+              {% if e.end_date %}To: {{ e.end_date[:10] }}{% endif %}
+              {% if not e.start_date and not e.end_date %}Always on{% endif %}
+            </td>
+            <td>
+              {% if e.active %}
+              <span class="sbadge s-paid">✅ Active</span>
+              {% else %}
+              <span class="sbadge s-expired">⏸ Hidden</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="o-actions">
+                <form method="POST" action="{{ url_for('admin_toggle_event', event_id=e.id) }}">
+                  <button class="o-btn deliver" type="submit">
+                    {{ '⏸ Hide' if e.active else '▶ Show' }}
+                  </button>
+                </form>
+                <form method="POST" action="{{ url_for('admin_delete_event', event_id=e.id) }}"
+                      onsubmit="return confirm('Delete this event?')">
+                  <button class="o-btn cancel" type="submit">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="text-align:center;color:#aaa;padding:30px 0;">No events yet. Create one above! 🎉</p>
       {% endif %}
     </div>
   </div>
