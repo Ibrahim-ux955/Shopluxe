@@ -390,7 +390,14 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
           <div class="order-item-price">GH₵ {{ "%.2f"|format(item.effective_price * item.quantity) }}</div>
         </div>
         {% endfor %}
-
+         
+        {% if discount and discount > 0 %}
+        <div class="summary-row" style="color:#198754;font-weight:600;">
+          <span>🏷️ Promo Discount ({{ promo.code }})</span>
+          <span>- GH₵ {{ "%.2f"|format(discount) }}</span>
+        </div>
+        {% endif %}
+ 
         <div class="summary-divider"></div>
 
         {% set total_saving = namespace(value=0) %}
@@ -420,12 +427,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 
         <div class="summary-row total">
           <span>Total</span>
-          <span id="grand-total">GH₵ {{ "%.2f"|format(total) }}</span>
+          <span id="grand-total">GH₵ {{ "%.2f"|format(discounted_total) }}</span>
         </div>
 
         <button class="btn-pay" id="pay-btn" type="button">
           <i class="bi bi-lock"></i>
-          Pay GH₵ <span id="pay-amount">{{ "%.2f"|format(total) }}</span>
+          Pay GH₵ <span id="pay-amount">{{ "%.2f"|format(discounted_total) }}</span>
         </button>
 
         <div class="secure-note">
@@ -448,7 +455,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--light); }
 <div class="mobile-pay-bar d-md-none">
   <div class="mobile-total">
     <span>Total</span>
-    <strong>GH₵ {{ "%.2f"|format(total) }}</strong>
+    <strong>GH₵ {{ "%.2f"|format(discounted_total) }}</strong>
   </div>
   <button class="btn-pay-mobile" id="pay-btn-mobile">🔒 Pay Now</button>
 </div>
@@ -472,7 +479,7 @@ function fillSavedAddress() {
 // ── Delivery option toggle ──
 const deliveryOptions = document.querySelectorAll('.delivery-option');
 let deliveryFee = 0;
-const baseTotal = {{ total }};
+const baseTotal = {{ discounted_total }};
 
 deliveryOptions.forEach(opt => {
   opt.addEventListener('click', () => {
