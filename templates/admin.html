@@ -592,6 +592,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
           <input type="file" name="image" accept="image/*" class="f-input">
           <div class="f-hint">Wide/landscape image works best. If no image, background color is used.</div>
         </div>
+
+        <!-- ✅ Promo discount fields -->
+        <div class="row-2 mb-3">
+          <div>
+            <label class="f-label">Discount % (optional)</label>
+            <input type="number" name="discount_percent" class="f-input" placeholder="e.g. 15 for 15%" min="0" max="100" step="0.01">
+            <div class="f-hint">e.g. 15 = 15% off</div>
+          </div>
+          <div>
+            <label class="f-label">OR Flat Amount GH₵ (optional)</label>
+            <input type="number" name="flat_amount" class="f-input" placeholder="e.g. 50 for GH₵50 off" min="0" step="0.01">
+            <div class="f-hint">e.g. 50 = GH₵50 off</div>
+          </div>
+        </div>
         <button type="submit" class="btn-submit">
           <i class="bi bi-calendar-plus"></i> Add Event
         </button>

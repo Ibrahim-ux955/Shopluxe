@@ -70,24 +70,7 @@ LOCKOUT_DURATION = timedelta(minutes=5)
 PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
 PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY")
 
-# Events table columns
-for col, definition in [
-    ("title", "VARCHAR(200) DEFAULT ''"),
-    ("description", "TEXT DEFAULT ''"),
-    ("image_url", "VARCHAR(500) DEFAULT ''"),
-    ("bg_color", "VARCHAR(50) DEFAULT '#1a1a2e'"),
-    ("link", "VARCHAR(500) DEFAULT ''"),
-    ("promo_code", "VARCHAR(50) DEFAULT ''"),
-    ("start_date", "VARCHAR(50) DEFAULT ''"),
-    ("end_date", "VARCHAR(50) DEFAULT ''"),
-    ("active", "BOOLEAN DEFAULT 1"),
-    ("created_at", "VARCHAR(50) DEFAULT ''"),
-]:
-    try:
-        conn.execute(db.text(f"ALTER TABLE events ADD COLUMN {col} {definition}"))
-        conn.commit()
-    except:
-        pass
+
 
 # ============================================================
 # DATABASE MODELS
@@ -1045,7 +1028,7 @@ def admin():
     promos = {p.code: {'label': p.label, 'discount': p.discount, 'flat': p.flat, 'active': p.active}
               for p in Promo.query.order_by(Promo.created_at.desc()).all()}
     events = [e.to_dict() for e in Event.query.order_by(Event.created_at.desc()).all()]
-    return render_template('admin.html', products=products, orders=orders, promos=promos, active_page='admin')
+    return render_template('admin.html', products=products, orders=orders, promos=promos, events=events, active_page='admin')
   
 @app.route('/delete/<product_id>', methods=['POST'])
 def delete(product_id):
@@ -2434,93 +2417,7 @@ def vendor_mark_shipped(order_id):
 
     flash("✅ Order marked as shipped. Admin and customer have been notified.")
     return redirect(url_for('vendor_dashboard'))
-# ============================================================
-# DB INIT & RUN
-# ============================================================
-
-with app.app_context():
-    db.create_all()
-
-    with db.engine.connect() as conn:
-        # ✅ Products table
-        for col, definition in [
-            ("brand", "VARCHAR(100) DEFAULT ''"),
-            ("sku", "VARCHAR(100) DEFAULT ''"),
-            ("tags", "TEXT DEFAULT '[]'"),
-            ("delivery_info", "VARCHAR(200) DEFAULT 'Delivery in 2-4 working days'"),
-            ("new_arrival", "BOOLEAN DEFAULT 0"),
-            ("vendor_id", "VARCHAR DEFAULT NULL"),
-            ("product_type", "VARCHAR DEFAULT 'standard'"),
-            ("slot_length", "VARCHAR DEFAULT ''"),
-            ("slot_width", "VARCHAR DEFAULT ''"),
-            ("slot_depth", "VARCHAR DEFAULT ''"),
-            ("new_arrival_until", "VARCHAR DEFAULT ''"),  # ✅ NEW
-        ]:
-            try:
-                conn.execute(db.text(f"ALTER TABLE products ADD COLUMN {col} {definition}"))
-                conn.commit()
-            except:
-                pass
-
-        # ✅ Orders table — address fields
-        for col, definition in [
-            ("address", "VARCHAR DEFAULT ''"),        # ✅ NEW
-            ("delivery_note", "VARCHAR DEFAULT ''"),   # ✅ NEW
-        ]:
-            try:
-                conn.execute(db.text(f"ALTER TABLE orders ADD COLUMN {col} {definition}"))
-                conn.commit()
-            except:
-                pass
-
-        # ✅ Users table — reset password columns
-        for col, definition in [
-            ("reset_token", "VARCHAR DEFAULT NULL"),
-            ("reset_token_expiry", "VARCHAR DEFAULT NULL"),
-            ("address", "VARCHAR DEFAULT ''"),        # ✅ NEW
-            ("city", "VARCHAR DEFAULT ''"),           # ✅ NEW
-            ("region", "VARCHAR DEFAULT ''"),         # ✅ NEW
-            ("delivery_note", "VARCHAR DEFAULT ''"),  # ✅ NEW
-        ]:
-            try:
-                conn.execute(db.text(f"ALTER TABLE users ADD COLUMN {col} {definition}"))
-                conn.commit()
-            except:
-                pass
-
-        # ✅ Vendors table — safety net for new columns
-        for col, definition in [
-            ("phone", "VARCHAR DEFAULT ''"),
-            ("bank_name", "VARCHAR DEFAULT ''"),
-            ("bank_account", "VARCHAR DEFAULT ''"),
-            ("logo", "VARCHAR DEFAULT ''"),
-            ("is_approved", "BOOLEAN DEFAULT 0"),
-            ("is_banned", "BOOLEAN DEFAULT 0"),
-            ("shop_description", "TEXT DEFAULT ''"),
-            ("timestamp", "VARCHAR DEFAULT ''"),
-        ]:
-            try:
-                conn.execute(db.text(f"ALTER TABLE vendors ADD COLUMN {col} {definition}"))
-                conn.commit()
-            except:
-                pass
-
-        # ✅ Payouts table — safety net
-        for col, definition in [
-            ("order_id", "VARCHAR DEFAULT ''"),
-            ("amount", "FLOAT DEFAULT 0"),
-            ("platform_fee", "FLOAT DEFAULT 0"),
-            ("status", "VARCHAR DEFAULT 'Pending'"),
-            ("timestamp", "VARCHAR DEFAULT ''"),
-        ]:
-            try:
-                conn.execute(db.text(f"ALTER TABLE payouts ADD COLUMN {col} {definition}"))
-                conn.commit()
-            except:
-                pass
-
-        # ✅ SQLite doesn't support DROP COLUMN in older versions, so the Review model
-        # must NOT have removed columns defined — just ignore them here
+  
 # ── PROMO CODES ──
 PROMO_FILE = 'promos.json'
 
@@ -2609,6 +2506,8 @@ def admin_add_event():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
 
+    promo_code = request.form.get('promo_code', '').strip().upper()
+
     image_url = ''
     image = request.files.get('image')
     if image and image.filename:
@@ -2621,12 +2520,25 @@ def admin_add_event():
         image_url=image_url,
         bg_color=request.form.get('bg_color', '#1a1a2e').strip(),
         link=request.form.get('link', '').strip(),
-        promo_code=request.form.get('promo_code', '').strip().upper(),
+        promo_code=promo_code,
         start_date=request.form.get('start_date', '').strip(),
         end_date=request.form.get('end_date', '').strip(),
         active=True
     )
     db.session.add(event)
+
+    # ✅ Auto-create promo code if provided
+    if promo_code:
+        existing = Promo.query.filter_by(code=promo_code).first()
+        if not existing:
+            db.session.add(Promo(
+                code=promo_code,
+                label=request.form.get('title', '').strip(),
+                discount=float(request.form.get('discount_percent', 0)) / 100,
+                flat=float(request.form.get('flat_amount', 0)),
+                active=True
+            ))
+
     db.session.commit()
     flash('✅ Event added!')
     return redirect(url_for('admin') + '#events')
@@ -2677,7 +2589,114 @@ def contact():
         print("Contact form email failed:", e)
         flash("❌ Something went wrong. Please try WhatsApp instead.")
 
-    return redirect(url_for('support'))
+    return redirect(url_for('support'))  
+# ============================================================
+# DB INIT & RUN
+# ============================================================
+
+with app.app_context():
+    db.create_all()
+
+    with db.engine.connect() as conn:
+        # ✅ Products table
+        for col, definition in [
+            ("brand", "VARCHAR(100) DEFAULT ''"),
+            ("sku", "VARCHAR(100) DEFAULT ''"),
+            ("tags", "TEXT DEFAULT '[]'"),
+            ("delivery_info", "VARCHAR(200) DEFAULT 'Delivery in 2-4 working days'"),
+            ("new_arrival", "BOOLEAN DEFAULT 0"),
+            ("vendor_id", "VARCHAR DEFAULT NULL"),
+            ("product_type", "VARCHAR DEFAULT 'standard'"),
+            ("slot_length", "VARCHAR DEFAULT ''"),
+            ("slot_width", "VARCHAR DEFAULT ''"),
+            ("slot_depth", "VARCHAR DEFAULT ''"),
+            ("new_arrival_until", "VARCHAR DEFAULT ''"),  # ✅ NEW
+        ]:
+            try:
+                conn.execute(db.text(f"ALTER TABLE products ADD COLUMN {col} {definition}"))
+                conn.commit()
+            except:
+                pass
+
+        # ✅ Orders table — address fields
+        for col, definition in [
+            ("address", "VARCHAR DEFAULT ''"),        # ✅ NEW
+            ("delivery_note", "VARCHAR DEFAULT ''"),   # ✅ NEW
+        ]:
+            try:
+                conn.execute(db.text(f"ALTER TABLE orders ADD COLUMN {col} {definition}"))
+                conn.commit()
+            except:
+                pass
+
+        # ✅ Users table — reset password columns
+        for col, definition in [
+            ("reset_token", "VARCHAR DEFAULT NULL"),
+            ("reset_token_expiry", "VARCHAR DEFAULT NULL"),
+            ("address", "VARCHAR DEFAULT ''"),        # ✅ NEW
+            ("city", "VARCHAR DEFAULT ''"),           # ✅ NEW
+            ("region", "VARCHAR DEFAULT ''"),         # ✅ NEW
+            ("delivery_note", "VARCHAR DEFAULT ''"),  # ✅ NEW
+        ]:
+            try:
+                conn.execute(db.text(f"ALTER TABLE users ADD COLUMN {col} {definition}"))
+                conn.commit()
+            except:
+                pass
+
+        # ✅ Vendors table — safety net for new columns
+        for col, definition in [
+            ("phone", "VARCHAR DEFAULT ''"),
+            ("bank_name", "VARCHAR DEFAULT ''"),
+            ("bank_account", "VARCHAR DEFAULT ''"),
+            ("logo", "VARCHAR DEFAULT ''"),
+            ("is_approved", "BOOLEAN DEFAULT 0"),
+            ("is_banned", "BOOLEAN DEFAULT 0"),
+            ("shop_description", "TEXT DEFAULT ''"),
+            ("timestamp", "VARCHAR DEFAULT ''"),
+        ]:
+            try:
+                conn.execute(db.text(f"ALTER TABLE vendors ADD COLUMN {col} {definition}"))
+                conn.commit()
+            except:
+                pass
+
+        # ✅ Payouts table — safety net
+        for col, definition in [
+            ("order_id", "VARCHAR DEFAULT ''"),
+            ("amount", "FLOAT DEFAULT 0"),
+            ("platform_fee", "FLOAT DEFAULT 0"),
+            ("status", "VARCHAR DEFAULT 'Pending'"),
+            ("timestamp", "VARCHAR DEFAULT ''"),
+        ]:
+            try:
+                conn.execute(db.text(f"ALTER TABLE payouts ADD COLUMN {col} {definition}"))
+                conn.commit()
+            except:
+                pass
+        
+        # ✅ Events table
+        for col, definition in [
+            ("title", "VARCHAR(200) DEFAULT ''"),
+            ("description", "TEXT DEFAULT ''"),
+            ("image_url", "VARCHAR(500) DEFAULT ''"),
+            ("bg_color", "VARCHAR(50) DEFAULT '#1a1a2e'"),
+            ("link", "VARCHAR(500) DEFAULT ''"),
+            ("promo_code", "VARCHAR(50) DEFAULT ''"),
+            ("start_date", "VARCHAR(50) DEFAULT ''"),
+            ("end_date", "VARCHAR(50) DEFAULT ''"),
+            ("active", "BOOLEAN DEFAULT TRUE"),
+            ("created_at", "VARCHAR(50) DEFAULT ''"),
+        ]:
+            try:
+                conn.execute(db.text(f"ALTER TABLE events ADD COLUMN {col} {definition}"))
+                conn.commit()
+            except:
+                pass      
+
+        # ✅ SQLite doesn't support DROP COLUMN in older versions, so the Review model
+        # must NOT have removed columns defined — just ignore them here
+
     
 
 
