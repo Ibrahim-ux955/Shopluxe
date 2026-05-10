@@ -280,10 +280,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--light);}
         <div class="drop-zone" id="dropZone" onclick="document.getElementById('imgInput').click()">
           <i class="bi bi-cloud-upload"></i>
           <p>Drag & drop or <strong>click to browse</strong></p>
-          <p style="font-size:.68rem;">JPG, PNG, WEBP · First image = main photo</p>
+          <p style="font-size:.68rem;">JPG, PNG, WEBP · Click a thumbnail to pick the main photo</p>
         </div>
         <input type="file" name="images" id="imgInput" multiple accept="image/*" required style="display:none;">
+        <input type="hidden" name="main_image_index" id="mainImgIndex" value="0">
         <div class="img-prev-grid" id="imgPreview"></div>
+        <div class="f-hint" id="mainHint" style="display:none;">👆 Click any photo to set it as the main card image</div>
       </div>
     </div>
 
@@ -738,11 +740,40 @@ dz?.addEventListener('drop', e => {
 });
 document.getElementById('imgInput')?.addEventListener('change', e => previewImgs(e.target.files));
 function previewImgs(files) {
-  const grid = document.getElementById('imgPreview'); grid.innerHTML = '';
+  const grid = document.getElementById('imgPreview');
+  grid.innerHTML = '';
+  document.getElementById('mainHint').style.display = files.length > 1 ? 'block' : 'none';
+
   [...files].forEach((f, i) => {
     const r = new FileReader();
-    r.onload = e => { const w = document.createElement('div'); w.className = 'img-prev-wrap'; w.innerHTML = `<img src="${e.target.result}" class="img-prev">${i===0?'<span class="img-prev-main">Main</span>':''}`; grid.appendChild(w); };
+    r.onload = e => {
+      const w = document.createElement('div');
+      w.className = 'img-prev-wrap';
+      w.dataset.index = i;
+      w.style.cssText = 'position:relative;cursor:pointer;';
+      w.innerHTML = `
+        <img src="${e.target.result}" class="img-prev"
+             style="width:68px;height:68px;border-radius:8px;object-fit:cover;
+                    border:2px solid ${i === 0 ? 'var(--brand)' : 'var(--brand-light)'};
+                    transition:border .15s;">
+        <span class="img-prev-main" style="display:${i === 0 ? 'block' : 'none'};">Main</span>
+      `;
+      w.addEventListener('click', () => setMainImage(i));
+      grid.appendChild(w);
+    };
     r.readAsDataURL(f);
+  });
+}
+
+function setMainImage(selectedIndex) {
+  document.getElementById('mainImgIndex').value = selectedIndex;
+  document.querySelectorAll('.img-prev-wrap').forEach(w => {
+    const idx = parseInt(w.dataset.index);
+    const img = w.querySelector('img');
+    const badge = w.querySelector('.img-prev-main');
+    const isMain = idx === selectedIndex;
+    img.style.border = `2px solid ${isMain ? 'var(--brand)' : 'var(--brand-light)'}`;
+    badge.style.display = isMain ? 'block' : 'none';
   });
 }
 const tagField = document.getElementById('tagField');

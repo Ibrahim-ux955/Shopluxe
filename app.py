@@ -998,6 +998,10 @@ def admin():
         colors = json.dumps([c.strip() for c in request.form.get('colors', '').split(',') if c.strip()])
 
         images = request.files.getlist('images')
+        main_idx = int(request.form.get('main_image_index', 0))
+        if 0 <= main_idx < len(images):
+            images.insert(0, images.pop(main_idx))
+
         image_filenames = []
         for img in images:
             if img and img.filename:
