@@ -1,276 +1,349 @@
 {% extends 'base.html' %}
 {% block content %}
 <style>
-.vep-back { display: inline-flex; align-items: center; gap: 6px; color: #999; text-decoration: none; font-size: .85rem; margin-bottom: 20px; transition: color .2s; }
-.vep-back:hover { color: var(--brand); }
-.vep-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--dark); margin-bottom: 4px; }
-.vep-sub { font-size: .85rem; color: #aaa; margin-bottom: 28px; }
-.vep-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
-.vep-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.04); margin-bottom: 18px; }
-.vep-card-header { padding: 16px 22px; border-bottom: 1px solid var(--border); background: var(--light); display: flex; align-items: center; gap: 8px; }
-.vep-card-header h2 { font-size: .92rem; font-weight: 700; color: var(--dark); margin: 0; }
-.vep-card-body { padding: 22px; }
-.f-label { display: block; font-size: .78rem; font-weight: 700; color: var(--mid); margin-bottom: 7px; }
-.f-input, .f-textarea, .f-select { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 13px; font-size: .88rem; font-family: 'DM Sans', sans-serif; color: var(--dark); background: #fafbfc; outline: none; transition: border-color .2s, box-shadow .2s; }
-.f-input:focus, .f-textarea:focus, .f-select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(25,135,84,.1); background: #fff; }
-.f-textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
-.f-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.f-group { margin-bottom: 16px; }
-.f-hint { font-size: .72rem; color: #bbb; margin-top: 5px; }
-.price-wrap { position: relative; }
-.price-wrap .currency { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: .85rem; pointer-events: none; }
-.price-wrap .f-input { padding-left: 38px; }
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root {
+  --brand:#198754;--brand-dark:#146c43;--brand-light:#e8f5e9;
+  --accent:#ff6600;--dark:#1a1a2e;--mid:#555570;
+  --light:#f4f6f9;--card:#ffffff;--border:#eef0f5;
+  --radius:14px;--shadow:0 4px 24px rgba(0,0,0,0.06);--danger:#dc3545;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--light);}
 
-/* ✅ Toggle pills - div-based to avoid nested label bug */
-.toggle-group { display: flex; gap: 10px; flex-wrap: wrap; }
-.toggle-pill { display: flex; align-items: center; gap: 7px; background: var(--light); border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 14px; cursor: pointer; transition: all .2s; }
-.toggle-pill:has(input:checked) { border-color: var(--brand); background: var(--brand-light); }
-.toggle-pill input { accent-color: var(--brand); }
-.toggle-pill label { font-size: .82rem; font-weight: 600; color: var(--mid); cursor: pointer; margin: 0; }
-.toggle-pill:has(input:checked) label { color: var(--brand); }
+.vep-header{background:linear-gradient(135deg,var(--dark) 0%,#2d2d5e 100%);border-radius:var(--radius);padding:22px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+.vep-back-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.8);text-decoration:none;font-size:.8rem;font-weight:600;padding:7px 14px;border-radius:9px;transition:background .2s;}
+.vep-back-btn:hover{background:rgba(255,255,255,.18);color:#fff;}
+.vep-header h1{font-family:'Playfair Display',serif;font-size:1.5rem;color:#fff;margin:0 0 4px;}
+.vep-header p{font-size:.8rem;color:rgba(255,255,255,.6);margin:0;}
+.vep-header-left{display:flex;align-items:center;gap:14px;}
 
-.img-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(82px,1fr)); gap: 10px; margin-bottom: 14px; }
-.img-item { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border); }
-.img-item img { width: 100%; height: 100%; object-fit: cover; }
-.img-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s; }
-.img-item:hover .img-overlay { opacity: 1; }
-.img-remove-label { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
-.img-remove-label input { display: none; }
-.img-remove-label span { font-size: 10px; color: #fff; font-weight: 700; }
-.img-item:has(input:checked) { border-color: #dc3545; opacity: .55; }
-.img-item:has(input:checked) .img-overlay { opacity: 1; background: rgba(220,53,69,.35); }
-.upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 22px 16px; text-align: center; cursor: pointer; position: relative; background: #fafbfc; transition: all .2s; }
-.upload-area:hover { border-color: var(--brand); background: var(--brand-light); }
-.upload-area input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
-.upload-area p { font-size: .8rem; color: #aaa; margin: 4px 0 0; }
-.upload-area strong { color: var(--brand); }
-.vep-publish { position: sticky; top: 112px; }
-.vep-publish .vep-card-body { display: flex; flex-direction: column; gap: 12px; }
-.btn-save-vep { width: 100%; background: linear-gradient(135deg, var(--brand), #0d6efd); color: #fff; font-family: 'DM Sans', sans-serif; font-size: .95rem; font-weight: 700; border: none; border-radius: 10px; padding: 13px; cursor: pointer; transition: opacity .2s; }
-.btn-save-vep:hover { opacity: .88; }
-.btn-discard { display: block; text-align: center; border: 1.5px solid var(--border); border-radius: 10px; padding: 11px; font-size: .85rem; color: #aaa; text-decoration: none; transition: all .2s; }
-.btn-discard:hover { border-color: var(--mid); color: var(--mid); }
-.danger-zone { padding: 14px; background: #fff5f5; border: 1.5px solid #fecaca; border-radius: 10px; }
-.danger-zone p { font-size: .72rem; color: #aaa; margin-bottom: 10px; }
-.btn-delete-prod { width: 100%; background: transparent; border: 1.5px solid #fecaca; color: #dc3545; border-radius: 8px; padding: 10px; font-family: 'DM Sans', sans-serif; font-size: .82rem; font-weight: 700; cursor: pointer; transition: background .2s; }
-.btn-delete-prod:hover { background: #fee2e2; }
-@media(max-width:900px){ .vep-layout { grid-template-columns: 1fr; } .f-row { grid-template-columns: 1fr; } }
+.a-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden;}
+.a-card-head{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--border);background:#fafbfc;}
+.a-card-num{width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.a-card-title{font-weight:700;font-size:.88rem;color:var(--dark);margin:0;}
+.a-card-body{padding:18px;}
+
+.f-label{font-size:.7rem;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block;}
+.f-label .req{color:var(--danger);}
+.f-input,.f-select,.f-textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:9px 13px;font-size:.85rem;font-family:'DM Sans',sans-serif;color:var(--dark);background:#fff;transition:border-color .2s,box-shadow .2s;outline:none;}
+.f-input:focus,.f-select:focus,.f-textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(25,135,84,.1);}
+.f-textarea{resize:vertical;min-height:78px;}
+.f-hint{font-size:.68rem;color:#aaa;margin-top:3px;}
+.f-pre{position:relative;}
+.f-pre-lbl{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:.8rem;font-weight:600;color:#aaa;pointer-events:none;}
+.f-pre .f-input{padding-left:36px;}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.mb-3{margin-bottom:13px;}.mb-4{margin-bottom:16px;}.mt-2{margin-top:8px;}
+@media(max-width:600px){.row-2{grid-template-columns:1fr;}}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;margin-bottom:8px;transition:border-color .2s,background .2s;}
+.toggle-row:has(input:checked){border-color:var(--brand);background:var(--brand-light);}
+.toggle-info strong{font-size:.83rem;color:var(--dark);display:block;}
+.toggle-info small{font-size:.7rem;color:#aaa;}
+.toggle-sw{position:relative;width:40px;height:22px;flex-shrink:0;}
+.toggle-sw input{opacity:0;width:0;height:0;}
+.toggle-sl{position:absolute;inset:0;background:#ddd;border-radius:22px;cursor:pointer;transition:background .2s;}
+.toggle-sl::before{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;left:3px;top:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.toggle-sw input:checked + .toggle-sl{background:var(--brand);}
+.toggle-sw input:checked + .toggle-sl::before{transform:translateX(18px);}
+
+.size-presets{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px;}
+.sz-btn{padding:4px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:.73rem;font-weight:600;cursor:pointer;background:#fff;color:var(--mid);transition:all .15s;}
+.sz-btn:hover{border-color:var(--brand);color:var(--brand);}
+.sz-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
+
+.clr-swatches{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:7px;}
+.clr-dot{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;position:relative;}
+.clr-dot:hover{transform:scale(1.15);}
+.clr-dot.active{border-color:var(--dark);}
+.clr-dot.active::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:#fff;font-weight:700;}
+
+/* Existing image grid */
+.img-exist-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.img-exist-item{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:2px solid var(--border);}
+.img-exist-item img{width:100%;height:100%;object-fit:cover;}
+.img-exist-overlay{position:absolute;inset:0;background:rgba(0,0,0,.52);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;}
+.img-exist-item:hover .img-exist-overlay{opacity:1;}
+.img-exist-item:has(input:checked){border-color:var(--danger);opacity:.5;}
+.img-exist-item:has(input:checked) .img-exist-overlay{opacity:1;background:rgba(220,53,69,.38);}
+.img-remove-lbl{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;}
+.img-remove-lbl input{display:none;}
+.img-remove-lbl span{font-size:10px;color:#fff;font-weight:700;}
+
+.drop-zone{border:2px dashed var(--border);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;}
+.drop-zone:hover,.drop-zone.over{border-color:var(--brand);background:var(--brand-light);}
+.drop-zone i{font-size:1.5rem;color:#ccc;display:block;margin-bottom:5px;}
+.drop-zone p{font-size:.78rem;color:#aaa;margin:0;}
+.drop-zone strong{color:var(--brand);}
+.img-prev-grid{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;}
+.img-prev-wrap{position:relative;cursor:pointer;}
+.img-prev-main{position:absolute;top:-4px;left:-4px;background:var(--brand);color:#fff;font-size:.5rem;font-weight:800;padding:2px 5px;border-radius:4px;}
+
+.tags-wrap{display:flex;flex-wrap:wrap;gap:5px;border:1.5px solid var(--border);border-radius:10px;padding:7px 9px;min-height:40px;cursor:text;transition:border-color .2s;}
+.tags-wrap:focus-within{border-color:var(--brand);}
+.tag-pill{display:inline-flex;align-items:center;gap:3px;background:var(--brand-light);color:var(--brand);border-radius:20px;padding:2px 9px;font-size:.72rem;font-weight:600;}
+.tag-pill button{background:none;border:none;color:var(--brand);cursor:pointer;padding:0;font-size:.8rem;line-height:1;}
+.tag-field{border:none;outline:none;font-size:.8rem;font-family:'DM Sans',sans-serif;min-width:100px;flex:1;padding:2px;}
+
+.submit-bar{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;}
+.submit-bar-right{display:flex;gap:9px;flex-wrap:wrap;align-items:center;}
+.btn-submit{background:linear-gradient(135deg,#198754,#0d6efd);color:#fff;border:none;border-radius:10px;padding:11px 26px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;transition:opacity .2s;}
+.btn-submit:hover{opacity:.92;}
+.btn-discard{background:none;border:1.5px solid var(--border);border-radius:10px;padding:11px 18px;font-size:.84rem;font-weight:600;color:var(--mid);cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:border-color .2s;}
+.btn-discard:hover{border-color:var(--mid);color:var(--mid);}
+.btn-delete{background:none;border:1.5px solid #fecaca;border-radius:10px;padding:11px 18px;font-size:.84rem;font-weight:700;color:var(--danger);cursor:pointer;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:5px;transition:background .2s;}
+.btn-delete:hover{background:#fee2e2;}
+
+.type-radio-card{border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s;background:#fff;}
 </style>
 
-<a href="{{ url_for('vendor_dashboard') }}" class="vep-back"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
-<h1 class="vep-title">Edit: {{ product.name }}</h1>
-<p class="vep-sub">Update the details below and save your changes.</p>
-
-<form method="POST" enctype="multipart/form-data">
-<div class="vep-layout">
-  <!-- LEFT -->
-  <div>
-
-    <!-- Basic Info -->
-    <div class="vep-card">
-      <div class="vep-card-header"><span>📋</span><h2>Basic Information</h2></div>
-      <div class="vep-card-body">
-        <div class="f-group">
-          <label class="f-label">Product Name</label>
-          <input type="text" name="name" class="f-input" value="{{ product.name }}" required>
-        </div>
-        <div class="f-group">
-          <label class="f-label">Description</label>
-          <textarea name="description" class="f-textarea">{{ product.description }}</textarea>
-        </div>
-        <div class="f-row">
-          <div class="f-group">
-            <label class="f-label">Brand</label>
-            <input type="text" name="brand" class="f-input" value="{{ product.brand }}">
-          </div>
-          <div class="f-group">
-            <label class="f-label">SKU</label>
-            <input type="text" name="sku" class="f-input" value="{{ product.sku }}">
-          </div>
-        </div>
-        <div class="f-group">
-          <label class="f-label">Tags</label>
-          <input type="text" name="tags" class="f-input" value="{{ product.tags | join(', ') }}">
-        </div>
-      </div>
-    </div>
-
-    <!-- Images -->
-    <div class="vep-card">
-      <div class="vep-card-header"><span>🖼️</span><h2>Images</h2></div>
-      <div class="vep-card-body">
-        {% if product.images %}
-        <p class="f-hint" style="margin-bottom:10px;">Hover and click to remove an image</p>
-        <div class="img-grid">
-          {% for img in product.images %}
-          <div class="img-item">
-            <img src="{{ url_for('static', filename='shoes/' + img) }}" alt="">
-            <div class="img-overlay">
-              <label class="img-remove-label">
-                <input type="checkbox" name="remove_images" value="{{ img }}">
-                <span>🗑️ Remove</span>
-              </label>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-        {% endif %}
-        <div class="upload-area">
-          <input type="file" name="new_images" accept="image/*" multiple>
-          <div style="font-size:1.4rem;margin-bottom:6px;">➕</div>
-          <p><strong style="color:var(--brand);">Add more images</strong></p>
-          <p>PNG, JPG supported</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Pricing -->
-    <div class="vep-card">
-      <div class="vep-card-header"><span>💰</span><h2>Pricing</h2></div>
-      <div class="vep-card-body">
-        <div class="f-row">
-          <div class="f-group">
-            <label class="f-label">Regular Price</label>
-            <div class="price-wrap"><span class="currency">GH₵</span><input type="number" name="price" class="f-input" step="0.01" value="{{ product.price }}" required></div>
-          </div>
-          <div class="f-group">
-            <label class="f-label">Sale Price</label>
-            <div class="price-wrap"><span class="currency">GH₵</span><input type="number" name="sale_price" class="f-input" step="0.01" value="{{ product.sale_price or '' }}"></div>
-          </div>
-        </div>
-        <!-- ✅ FIXED: div wrappers not label wrappers -->
-        <div class="toggle-group">
-          <div class="toggle-pill"><input type="checkbox" id="on_sale" name="on_sale" {% if product.on_sale %}checked{% endif %}><label for="on_sale">🔥 On Sale</label></div>
-          <div class="toggle-pill"><input type="checkbox" id="featured" name="featured" {% if product.featured %}checked{% endif %}><label for="featured">⭐ Featured</label></div>
-          <div class="toggle-pill"><input type="checkbox" id="new_arrival" name="new_arrival" {% if product.new_arrival %}checked{% endif %}><label for="new_arrival">🆕 New Arrival</label></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Variants & Inventory -->
-    <div class="vep-card">
-      <div class="vep-card-header"><span>🎨</span><h2>Variants & Inventory</h2></div>
-      <div class="vep-card-body">
-
-        <!-- ✅ Size Type Selector -->
-        <div class="f-group">
-          <label class="f-label">Size Type</label>
-          <div class="f-row" style="margin-bottom:14px;">
-            <label style="border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s;" id="typeStandardLabel">
-              <input type="radio" name="product_type" value="standard"
-                     {% if product.product_type != 'slot' %}checked{% endif %}
-                     onchange="switchProductType('standard')" style="accent-color:var(--brand);">
-              <div>
-                <div style="font-size:.83rem;font-weight:700;color:var(--dark);">👟 Shoe / Clothing</div>
-                <div style="font-size:.68rem;color:#aaa;">e.g. 39, 40 or S, M, L</div>
-              </div>
-            </label>
-            <label style="border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s;" id="typeSlotLabel">
-              <input type="radio" name="product_type" value="slot"
-                     {% if product.product_type == 'slot' %}checked{% endif %}
-                     onchange="switchProductType('slot')" style="accent-color:var(--brand);">
-              <div>
-                <div style="font-size:.83rem;font-weight:700;color:var(--dark);">📦 Dimensions</div>
-                <div style="font-size:.68rem;color:#aaa;">Length × Width × Depth (cm)</div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <!-- ✅ Standard Sizes -->
-        <div id="shoeSizesGroup" class="f-group">
-          <label class="f-label">Sizes <span class="f-hint" style="display:inline;">(comma-separated)</span></label>
-          <input type="text" name="sizes" id="sizesInput" class="f-input"
-                 value="{{ product.sizes | join(', ') if product.sizes else '' }}"
-                 placeholder="e.g. 39, 40, 41, 42">
-        </div>
-
-        <!-- ✅ Slot Dimensions -->
-        <div id="slotSizesGroup" style="display:none;">
-          <div class="f-row">
-            <div class="f-group">
-              <label class="f-label">Length (cm)</label>
-              <input type="number" name="slot_length" class="f-input" step="0.1" min="0"
-                     value="{{ product.slot_length or '' }}" placeholder="e.g. 30">
-            </div>
-            <div class="f-group">
-              <label class="f-label">Width (cm)</label>
-              <input type="number" name="slot_width" class="f-input" step="0.1" min="0"
-                     value="{{ product.slot_width or '' }}" placeholder="e.g. 20">
-            </div>
-          </div>
-          <div class="f-group">
-            <label class="f-label">Depth (cm)</label>
-            <input type="number" name="slot_depth" class="f-input" step="0.1" min="0"
-                   value="{{ product.slot_depth or '' }}" placeholder="e.g. 15">
-            <p class="f-hint">Physical dimensions of the product in centimetres.</p>
-          </div>
-        </div>
-
-        <div class="f-group">
-          <label class="f-label">Colors</label>
-          <input type="text" name="colors" class="f-input"
-                 value="{{ product.colors | join(', ') if product.colors else '' }}"
-                 placeholder="e.g. Black, White, Red">
-        </div>
-
-        <div class="f-row">
-          <div class="f-group">
-            <label class="f-label">Stock</label>
-            <input type="number" name="stock" class="f-input" min="0" value="{{ product.stock }}">
-          </div>
-          <div class="f-group">
-            <label class="f-label">Category</label>
-            <select name="category" class="f-select">
-              {% for cat in ['Men','Women','Kids','Sneakers','Sandals','Boots','Formal','Sport','Appliances','Software','Books','Accessories'] %}
-              <option value="{{ cat }}" {% if product.category == cat %}selected{% endif %}>{{ cat }}</option>
-              {% endfor %}
-              <option value="custom" {% if product.category not in ['Men','Women','Kids','Sneakers','Sandals','Boots','Formal','Sport','Appliances','Software','Books','Accessories'] %}selected{% endif %}>+ Custom</option>
-            </select>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Delivery -->
-    <div class="vep-card">
-      <div class="vep-card-header"><span>🚚</span><h2>Delivery Info</h2></div>
-      <div class="vep-card-body">
-        <input type="text" name="delivery_info" class="f-input" value="{{ product.delivery_info }}">
-      </div>
-    </div>
-
-  </div>
-
-  <!-- SIDEBAR -->
-  <div class="vep-publish">
-    <div class="vep-card">
-      <div class="vep-card-header"><span>💾</span><h2>Save Changes</h2></div>
-      <div class="vep-card-body">
-        <button type="submit" class="btn-save-vep">Save Changes</button>
-        <a href="{{ url_for('vendor_dashboard') }}" class="btn-discard">Discard</a>
-        <div class="danger-zone">
-          <p>Danger zone</p>
-          <form method="POST" action="{{ url_for('vendor_delete_product', product_id=product.id) }}" onsubmit="return confirm('Permanently delete this product?')">
-            <button type="submit" class="btn-delete-prod">🗑️ Delete Product</button>
-          </form>
-        </div>
-      </div>
+<div class="vep-header">
+  <div class="vep-header-left">
+    <a href="{{ url_for('vendor_dashboard') }}" class="vep-back-btn"><i class="bi bi-arrow-left"></i> Dashboard</a>
+    <div>
+      <h1>✏️ Edit Product</h1>
+      <p>{{ product.name }}</p>
     </div>
   </div>
 </div>
+
+<form method="POST" action="{{ url_for('vendor_edit_product', product_id=product.id) }}" enctype="multipart/form-data" id="editForm">
+
+  <!-- 1. BASIC INFO -->
+  <div class="a-card">
+    <div class="a-card-head"><div class="a-card-num">1</div><h6 class="a-card-title">Basic Information</h6></div>
+    <div class="a-card-body">
+      <div class="mb-3">
+        <label class="f-label">Product Name <span class="req">*</span></label>
+        <input type="text" name="name" class="f-input" value="{{ product.name }}" required>
+      </div>
+      <div class="row-2 mb-3">
+        <div><label class="f-label">Brand</label><input type="text" name="brand" class="f-input" value="{{ product.brand or '' }}"></div>
+        <div><label class="f-label">SKU</label><input type="text" name="sku" class="f-input" value="{{ product.sku or '' }}"></div>
+      </div>
+      <div class="mb-3">
+        <label class="f-label">Category</label>
+        {% set known_cats = ['Men','Women','Kids','Sneakers','Sandals','Boots','Formal','Sport','Appliances','Software','Books','Accessories'] %}
+        <select name="category" id="catSel" class="f-select">
+          {% for cat in known_cats %}
+          <option value="{{ cat }}" {% if product.category == cat %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+          <option value="custom" {% if product.category and product.category not in known_cats %}selected{% endif %}>Other (custom)</option>
+        </select>
+        <input type="text" name="category_custom" id="catCustom" class="f-input mt-2"
+               placeholder="Enter custom category"
+               value="{% if product.category and product.category not in known_cats %}{{ product.category }}{% endif %}"
+               style="display:{% if product.category and product.category not in known_cats %}block{% else %}none{% endif %};">
+      </div>
+      <div class="mb-3">
+        <label class="f-label">Description</label>
+        <textarea name="description" class="f-textarea">{{ product.description or '' }}</textarea>
+      </div>
+      <div>
+        <label class="f-label">Tags</label>
+        <div class="tags-wrap" id="tagsWrap" onclick="document.getElementById('tagField').focus()">
+          {% if product.tags %}
+            {% for tag in product.tags %}
+            <span class="tag-pill" data-tag="{{ tag }}">{{ tag }}<button type="button" onclick="this.parentElement.remove();updateTags()">×</button></span>
+            {% endfor %}
+          {% endif %}
+          <input type="text" id="tagField" class="tag-field" placeholder="Type and press Enter…">
+        </div>
+        <input type="hidden" name="tags" id="tagsHidden" value="{{ product.tags | join(',') if product.tags else '' }}">
+        <div class="f-hint">Press Enter or comma to add</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. PRICING & STATUS -->
+  <div class="a-card">
+    <div class="a-card-head"><div class="a-card-num">2</div><h6 class="a-card-title">Pricing &amp; Status</h6></div>
+    <div class="a-card-body">
+      <div class="row-2 mb-3">
+        <div>
+          <label class="f-label">Regular Price <span class="req">*</span></label>
+          <div class="f-pre"><span class="f-pre-lbl">GH₵</span><input type="number" step="0.01" name="price" class="f-input" value="{{ product.price }}" required></div>
+        </div>
+        <div>
+          <label class="f-label">Sale Price</label>
+          <div class="f-pre"><span class="f-pre-lbl">GH₵</span><input type="number" step="0.01" name="sale_price" id="salePriceInput" class="f-input" value="{{ product.sale_price or '' }}"></div>
+          <div class="f-hint">Required if On Sale is enabled</div>
+        </div>
+      </div>
+      <div class="toggle-row"><div class="toggle-info"><strong>🔥 On Sale</strong><small>Show sale badge &amp; discounted price</small></div><label class="toggle-sw"><input type="checkbox" name="on_sale" id="onSaleToggle" {% if product.on_sale %}checked{% endif %}><span class="toggle-sl"></span></label></div>
+      <div class="toggle-row"><div class="toggle-info"><strong>⭐ Featured</strong><small>Show in homepage carousel</small></div><label class="toggle-sw"><input type="checkbox" name="featured" {% if product.featured %}checked{% endif %}><span class="toggle-sl"></span></label></div>
+      <div class="toggle-row"><div class="toggle-info"><strong>🆕 New Arrival</strong><small>Show "New" badge on product</small></div><label class="toggle-sw"><input type="checkbox" name="new_arrival" {% if product.new_arrival %}checked{% endif %}><span class="toggle-sl"></span></label></div>
+    </div>
+  </div>
+
+  <!-- 3. INVENTORY -->
+  <div class="a-card">
+    <div class="a-card-head"><div class="a-card-num">3</div><h6 class="a-card-title">Inventory</h6></div>
+    <div class="a-card-body">
+      <div class="row-2">
+        <div><label class="f-label">Stock Count</label><input type="number" name="stock" class="f-input" min="0" value="{{ product.stock }}"></div>
+        <div><label class="f-label">Delivery Info</label><input type="text" name="delivery_info" class="f-input" value="{{ product.delivery_info or 'Delivery in 2-4 working days' }}"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. SIZES & COLORS -->
+  <div class="a-card">
+    <div class="a-card-head"><div class="a-card-num">4</div><h6 class="a-card-title">Sizes &amp; Colors</h6></div>
+    <div class="a-card-body">
+      <div class="mb-3">
+        <label class="f-label">Size Type</label>
+        <div class="row-2" style="margin-bottom:14px;">
+          <label class="type-radio-card" id="typeStandardLabel">
+            <input type="radio" name="product_type" value="standard" {% if product.product_type != 'slot' %}checked{% endif %} onchange="switchProductType('standard')" style="accent-color:var(--brand);">
+            <div><div style="font-size:.83rem;font-weight:700;color:var(--dark);">👟 Shoe / Clothing</div><div style="font-size:.68rem;color:#aaa;">e.g. 39, 40 or S, M, L</div></div>
+          </label>
+          <label class="type-radio-card" id="typeSlotLabel">
+            <input type="radio" name="product_type" value="slot" {% if product.product_type == 'slot' %}checked{% endif %} onchange="switchProductType('slot')" style="accent-color:var(--brand);">
+            <div><div style="font-size:.83rem;font-weight:700;color:var(--dark);">📦 Dimensions</div><div style="font-size:.68rem;color:#aaa;">Length × Width × Depth (cm)</div></div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Standard Sizes -->
+      <div id="shoeSizesGroup" class="mb-4">
+        <label class="f-label">Available Sizes</label>
+        <div class="size-presets">
+          {% set existing_sizes = product.sizes | map('string') | list if product.sizes else [] %}
+          {% for s in ['36','37','38','39','40','41','42','43','44','45','S','M','L','XL','XXL'] %}
+          <button type="button" class="sz-btn {% if s in existing_sizes %}active{% endif %}" onclick="toggleSize(this)">{{ s }}</button>
+          {% endfor %}
+        </div>
+        <input type="text" name="sizes" id="sizesInput" class="f-input"
+               value="{{ product.sizes | join(', ') if product.sizes else '' }}"
+               placeholder="Or type: 39, 40, 41, 42">
+        <div class="f-hint">Click presets or type comma-separated sizes</div>
+      </div>
+
+      <!-- Slot Dimensions -->
+      <div id="slotSizesGroup" style="display:none;" class="mb-4">
+        <div class="row-2 mb-3">
+          <div><label class="f-label">Length (cm)</label><input type="number" name="slot_length" class="f-input" step="0.1" min="0" value="{{ product.slot_length or '' }}" placeholder="e.g. 30"></div>
+          <div><label class="f-label">Width (cm)</label><input type="number" name="slot_width" class="f-input" step="0.1" min="0" value="{{ product.slot_width or '' }}" placeholder="e.g. 20"></div>
+        </div>
+        <div><label class="f-label">Depth (cm)</label><input type="number" name="slot_depth" class="f-input" step="0.1" min="0" value="{{ product.slot_depth or '' }}" placeholder="e.g. 15"><div class="f-hint">Physical dimensions of the product in centimetres</div></div>
+      </div>
+
+      <!-- Colors -->
+      <div>
+        <label class="f-label">Available Colors</label>
+        {% set existing_colors = product.colors | map('lower') | list if product.colors else [] %}
+        <div class="clr-swatches">
+          {% for name, hex in [('Black','#1a1a1a'),('White','#f5f5f5'),('Red','#ef4444'),('Blue','#3b82f6'),('Green','#22c55e'),('Yellow','#eab308'),('Pink','#ec4899'),('Brown','#92400e'),('Gray','#6b7280'),('Navy','#1e3a5f'),('Orange','#f97316'),('Purple','#8b5cf6')] %}
+          <div class="clr-dot {% if name | lower in existing_colors %}active{% endif %}" style="background:{{ hex }};" title="{{ name }}" onclick="toggleColor(this,'{{ name }}')"></div>
+          {% endfor %}
+        </div>
+        <input type="text" name="colors" id="colorsInput" class="f-input"
+               value="{{ product.colors | join(', ') if product.colors else '' }}"
+               placeholder="Or type: Black, White, Red">
+        <div class="f-hint">Click swatches or type comma-separated colors</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. IMAGES -->
+  <div class="a-card">
+    <div class="a-card-head"><div class="a-card-num">5</div><h6 class="a-card-title">Product Images</h6></div>
+    <div class="a-card-body">
+      {% if product.images %}
+      <label class="f-label" style="margin-bottom:8px;">Current Images — hover to remove</label>
+      <div class="img-exist-grid">
+        {% for img in product.images %}
+        <div class="img-exist-item">
+          {% if img.startswith('http') %}
+            <img src="{{ img }}" alt="">
+          {% else %}
+            <img src="{{ url_for('static', filename='shoes/' + img) }}" alt="">
+          {% endif %}
+          <div class="img-exist-overlay">
+            <label class="img-remove-lbl">
+              <input type="checkbox" name="remove_images" value="{{ img }}">
+              <span>🗑️ Remove</span>
+            </label>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <label class="f-label" style="margin-bottom:8px;">Add More Images</label>
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('imgInput').click()">
+        <i class="bi bi-cloud-upload"></i>
+        <p>Drag &amp; drop or <strong>click to browse</strong></p>
+        <p style="font-size:.68rem;">JPG, PNG, WEBP</p>
+      </div>
+      <input type="file" name="new_images" id="imgInput" multiple accept="image/*" style="display:none;">
+      <div class="img-prev-grid" id="imgPreview"></div>
+    </div>
+  </div>
+
+  <!-- SAVE / DELETE BAR -->
+  <div class="submit-bar">
+    <form method="POST" action="{{ url_for('vendor_delete_product', product_id=product.id) }}" onsubmit="return confirm('Permanently delete this product?')">
+      <button type="submit" class="btn-delete"><i class="bi bi-trash3"></i> Delete Product</button>
+    </form>
+    <div class="submit-bar-right">
+      <a href="{{ url_for('vendor_dashboard') }}" class="btn-discard">Discard</a>
+      <button type="submit" class="btn-submit"><i class="bi bi-check-circle"></i> Save Changes</button>
+    </div>
+  </div>
 </form>
 
 <script>
+// Category
+document.getElementById('catSel').addEventListener('change', function () {
+  const c = document.getElementById('catCustom');
+  c.style.display = this.value === 'custom' ? 'block' : 'none';
+  if (this.value !== 'custom') c.value = '';
+});
+document.getElementById('editForm').addEventListener('submit', function () {
+  const s = document.getElementById('catSel'), c = document.getElementById('catCustom');
+  if (s.value === 'custom' && c.value.trim()) s.value = c.value.trim();
+});
+
+// Size type
 function switchProductType(type) {
   document.getElementById('shoeSizesGroup').style.display = type === 'standard' ? 'block' : 'none';
   document.getElementById('slotSizesGroup').style.display = type === 'slot' ? 'block' : 'none';
   document.getElementById('typeStandardLabel').style.borderColor = type === 'standard' ? 'var(--brand)' : 'var(--border)';
-  document.getElementById('typeStandardLabel').style.background = type === 'standard' ? 'var(--brand-light)' : '#fafbfc';
+  document.getElementById('typeStandardLabel').style.background  = type === 'standard' ? 'var(--brand-light)' : '#fff';
   document.getElementById('typeSlotLabel').style.borderColor = type === 'slot' ? 'var(--brand)' : 'var(--border)';
-  document.getElementById('typeSlotLabel').style.background = type === 'slot' ? 'var(--brand-light)' : '#fafbfc';
+  document.getElementById('typeSlotLabel').style.background  = type === 'slot' ? 'var(--brand-light)' : '#fff';
 }
 switchProductType('{{ product.product_type or "standard" }}');
+
+// Sizes
+function toggleSize(btn) {
+  btn.classList.toggle('active');
+  document.getElementById('sizesInput').value = [...document.querySelectorAll('.sz-btn.active')].map(b => b.textContent.trim()).join(', ');
+}
+// Colors
+function toggleColor(dot, name) {
+  dot.classList.toggle('active');
+  document.getElementById('colorsInput').value = [...document.querySelectorAll('.clr-dot.active')].map(d => d.title).join(', ');
+}
+
+// Drag & drop new images
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); const dt = new DataTransfer(); [...e.dataTransfer.files].forEach(f => dt.items.add(f)); document.getElementById('imgInput').files = dt.files; previewImgs(dt.files); });
+document.getElementById('imgInput').addEventListener('change', e => previewImgs(e.target.files));
+function previewImgs(files) {
+  const grid = document.getElementById('imgPreview'); grid.innerHTML = '';
+  [...files].forEach((f, i) => { const r = new FileReader(); r.onload = e => { const w = document.createElement('div'); w.className = 'img-prev-wrap'; w.innerHTML = `<img src="${e.target.result}" style="width:68px;height:68px;border-radius:8px;object-fit:cover;border:2px solid var(--brand-light);">`; grid.appendChild(w); }; r.readAsDataURL(f); });
+}
+
+// Tags
+const tagField = document.getElementById('tagField');
+tagField.addEventListener('keydown', function(e) { if (e.key==='Enter'||e.key===',') { e.preventDefault(); const v=this.value.trim().replace(',',''); if(v){addTag(v);this.value='';} } });
+function addTag(t) { const p=document.createElement('span'); p.className='tag-pill'; p.innerHTML=`${t}<button type="button" onclick="this.parentElement.remove();updateTags()">×</button>`; document.getElementById('tagsWrap').insertBefore(p,tagField); updateTags(); }
+function updateTags() { document.getElementById('tagsHidden').value=[...document.querySelectorAll('.tag-pill')].map(p=>p.childNodes[0].textContent.trim()).join(','); }
+
+document.getElementById('onSaleToggle').addEventListener('change', function() { document.getElementById('salePriceInput').required = this.checked; });
 </script>
 {% endblock %}

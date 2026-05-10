@@ -80,6 +80,7 @@
 <div class="vd-header">
   <div class="vd-header-left">
     {% if vendor.logo %}
+      <!-- Consistent http guard matching all other templates -->
       {% if vendor.logo.startswith('http') %}
         <img src="{{ vendor.logo }}" alt="{{ vendor.shop_name }}" class="vd-logo">
       {% else %}
@@ -237,8 +238,11 @@
           <div style="font-size:.75rem;color:#aaa;">{{ order.email }}</div>
         </td>
         <td>
-          {% for item in order.vendor_items %}
-            <div style="font-size:.8rem;">{{ item.name }} × {{ item.get('quantity',1) }}</div>
+          <!-- FIX 4: Safe access — default to empty list if vendor_items key is missing -->
+          {% for item in order.get('vendor_items', []) %}
+            <div style="font-size:.8rem;">{{ item.name }} × {{ item.get('quantity', 1) }}</div>
+          {% else %}
+            <div style="font-size:.8rem;color:#bbb;">—</div>
           {% endfor %}
         </td>
         <td><strong style="color:var(--brand);">GH₵{{ "%.2f"|format(order.vendor_earnings) }}</strong></td>
@@ -250,10 +254,24 @@
           {% endif %}
         </td>
         <td>
-          {% if order.status == 'Delivered' %}<span class="vd-badge vd-badge-green">Delivered</span>
-          {% elif order.status == 'Cancelled' %}<span class="vd-badge vd-badge-red">Cancelled</span>
-          {% elif order.status == 'Paid' %}<span class="vd-badge vd-badge-blue">Processing</span>
-          {% else %}<span class="vd-badge vd-badge-gray">{{ order.status }}</span>{% endif %}
+          {% if order.status == 'Delivered' %}
+            <span class="vd-badge vd-badge-green">Delivered</span>
+          {% elif order.status == 'Cancelled' %}
+            <span class="vd-badge vd-badge-red">Cancelled</span>
+          {% elif order.status == 'Shipped' %}
+            <span class="vd-badge vd-badge-purple">Shipped</span>
+          {% elif order.status == 'Paid' %}
+            <span class="vd-badge vd-badge-blue">Processing</span>
+            <!-- FIX 5: Added hidden CSRF token field for Flask-WTF protection -->
+            <form method="POST" action="{{ url_for('vendor_mark_shipped', order_id=order.id) }}" style="margin-top:6px;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="vd-btn-sm" style="background:#ede9fe;color:#5b21b6;">
+                📦 Mark Shipped
+              </button>
+            </form>
+          {% else %}
+            <span class="vd-badge vd-badge-gray">{{ order.status }}</span>
+          {% endif %}
         </td>
       </tr>
       {% endfor %}

@@ -47,6 +47,11 @@
 .btn-outline-vb { border: 1.5px solid var(--border); color: var(--mid); border-radius: 10px; padding: 11px 24px; font-size: .88rem; text-decoration: none; transition: border-color .2s; }
 .btn-outline-vb:hover { border-color: var(--brand); color: var(--brand); }
 
+/* FIX: Polling status indicator */
+.poll-status { font-size: .72rem; color: #bbb; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.poll-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand); animation: pollBlink 1.4s ease-in-out infinite; }
+@keyframes pollBlink { 0%,100%{opacity:.3} 50%{opacity:1} }
+
 @media(max-width:500px){ .pending-card { padding: 36px 24px; } }
 </style>
 
@@ -80,6 +85,49 @@
       <a href="{{ url_for('home') }}" class="btn-home">Back to Shop</a>
       <a href="{{ url_for('profile') }}" class="btn-outline-vb">My Profile</a>
     </div>
+
+    <!-- FIX: Live polling indicator — checks approval status every 20s and redirects automatically -->
+    <div class="poll-status" id="pollStatus">
+      <span class="poll-dot"></span>
+      <span id="pollText">Checking approval status…</span>
+    </div>
   </div>
 </div>
+
+<script>
+(function () {
+  // Poll the vendor status endpoint every 20 seconds.
+  // Your backend should expose a lightweight JSON endpoint at this URL:
+  //   GET /vendor/status  →  { "approved": true/false }
+  // If approved, redirect straight to the dashboard.
+  const POLL_INTERVAL_MS = 20000;
+  const STATUS_URL = "{{ url_for('vendor_status_check') }}";
+  const DASHBOARD_URL = "{{ url_for('vendor_dashboard') }}";
+
+  let attempts = 0;
+
+  async function checkStatus() {
+    attempts++;
+    try {
+      const resp = await fetch(STATUS_URL, { credentials: 'same-origin' });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (data.approved) {
+        document.getElementById('pollText').textContent = 'Approved! Redirecting to your dashboard…';
+        document.querySelector('.poll-dot').style.background = '#198754';
+        setTimeout(() => { window.location.href = DASHBOARD_URL; }, 1200);
+        return; // stop polling
+      }
+      document.getElementById('pollText').textContent =
+        'Still pending — checked ' + attempts + ' time' + (attempts === 1 ? '' : 's') + '.';
+    } catch (_) {
+      // Network error — silently retry next interval
+    }
+    setTimeout(checkStatus, POLL_INTERVAL_MS);
+  }
+
+  // Start first check after one interval so page feels instant on load
+  setTimeout(checkStatus, POLL_INTERVAL_MS);
+})();
+</script>
 {% endblock %}
