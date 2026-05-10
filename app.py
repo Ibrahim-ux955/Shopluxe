@@ -2617,6 +2617,17 @@ def contact():
         flash("❌ Something went wrong. Please try WhatsApp instead.")
 
     return redirect(url_for('support'))  
+  
+@app.route('/vendor/status')
+def vendor_status_check():
+    if not session.get('user_id'):
+        return jsonify({'approved': False})
+    vendor = Vendor.query.filter_by(user_id=session['user_id']).first()
+    if vendor and vendor.is_approved and not vendor.is_banned:
+        session['vendor_id'] = vendor.id
+        session['shop_name'] = vendor.shop_name
+        return jsonify({'approved': True})
+    return jsonify({'approved': False})  
 # ============================================================
 # DB INIT & RUN
 # ============================================================
