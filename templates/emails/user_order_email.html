@@ -143,8 +143,20 @@
     <div class="delivery-box">
       <h3>🚚 Delivery Information</h3>
       <div class="delivery-row">
+        <span>🚛</span>
+        <span><strong>Delivery Method:</strong> {{ delivery_method or '🚚 Standard Delivery (2–4 working days)' }}</span>
+      </div>
+      <div class="delivery-row">
         <span>⏱️</span>
-        <span><strong>Estimated Delivery:</strong> 2–4 working days</span>
+        <span><strong>Estimated Delivery:</strong>
+          {% if delivery_method and 'Express' in delivery_method %}
+            Tomorrow by 6pm
+          {% elif delivery_method and 'Pickup' in delivery_method %}
+            Ready in 1–2 hours
+          {% else %}
+            2–4 working days
+          {% endif %}
+        </span>
       </div>
       <div class="delivery-row">
         <span>📍</span>
@@ -155,7 +167,7 @@
         <span>Our team will contact you before delivery</span>
       </div>
     </div>
-
+    
     <!-- HELP -->
     <div class="help-box">
       <strong>Need help?</strong><br>
