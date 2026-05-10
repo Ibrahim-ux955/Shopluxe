@@ -402,18 +402,23 @@ def normalize_timestamps(products):
 
 
 def send_email(to, subject, html):
-    try:
-        with app.app_context():
-            msg = Message(
-                subject=subject,
-                recipients=[to],
-                html=html,
-                sender=("ShopLuxe", app.config['MAIL_USERNAME'])
-            )
-            mail.send(msg)
-            logging.info(f"✅ Email sent to {to}")
-    except Exception as e:
-        logging.error(f"❌ Email failed to {to}: {e}")
+    def _send():
+        try:
+            with app.app_context():
+                msg = Message(
+                    subject=subject,
+                    recipients=[to],
+                    html=html,
+                    sender=("ShopLuxe", app.config['MAIL_USERNAME'])
+                )
+                mail.send(msg)
+                logging.info(f"✅ Email sent to {to}")
+        except Exception as e:
+            logging.error(f"❌ Email failed to {to}: {e}")
+
+    thread = threading.Thread(target=_send)
+    thread.daemon = True
+    thread.start()
 
 # ============================================================
 # TEMPLATE FILTER
