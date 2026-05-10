@@ -1,0 +1,531 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --brand:#198754;--brand-dark:#146c43;--brand-light:#e8f5e9;
+  --dark:#1a1a2e;--mid:#555570;--light:#f4f6f9;--card:#ffffff;
+  --border:#eef0f5;--radius:16px;--shadow:0 4px 24px rgba(0,0,0,0.07);
+  --accent:#ff6600;--gold:#f59e0b;
+}
+
+/* ── PAGE WRAP ── */
+.vg-wrap { max-width: 860px; margin: 0 auto; padding-bottom: 60px; font-family: 'DM Sans', sans-serif; }
+
+/* ── HERO ── */
+.vg-hero {
+  background: linear-gradient(135deg, var(--dark) 0%, #1a3a2a 60%, #0d6e3a 100%);
+  border-radius: 24px; padding: 52px 44px 44px; margin-bottom: 32px;
+  position: relative; overflow: hidden; text-align: center;
+}
+.vg-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(25,135,84,.35) 0%, transparent 65%);
+}
+.vg-hero::after {
+  content: '🛍️'; position: absolute; right: -10px; bottom: -20px;
+  font-size: 9rem; opacity: .06; line-height: 1;
+}
+.vg-hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.8); font-size: .72rem; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 5px 14px; border-radius: 50px; margin-bottom: 18px;
+  position: relative; z-index: 1;
+}
+.vg-hero h1 {
+  font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem);
+  color: #fff; margin: 0 0 14px; position: relative; z-index: 1; line-height: 1.2;
+}
+.vg-hero p {
+  color: rgba(255,255,255,.6); font-size: .95rem; max-width: 520px;
+  margin: 0 auto 28px; line-height: 1.7; position: relative; z-index: 1;
+}
+.vg-hero-pills { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
+.vg-pill {
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  color: rgba(255,255,255,.75); font-size: .78rem; font-weight: 600;
+  padding: 6px 14px; border-radius: 50px; display: flex; align-items: center; gap: 5px;
+}
+
+/* ── QUICK STATS ── */
+.vg-qstats { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 28px; }
+.vg-qstat {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
+  padding: 20px; text-align: center; box-shadow: var(--shadow);
+  border-top: 3px solid var(--qs-color);
+}
+.vg-qstat-icon { font-size: 1.8rem; margin-bottom: 8px; display: block; }
+.vg-qstat-num { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--qs-color); }
+.vg-qstat-label { font-size: .72rem; color: #aaa; margin-top: 3px; text-transform: uppercase; letter-spacing: .8px; }
+
+/* ── SECTION CARD ── */
+.vg-card {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  margin-bottom: 18px; overflow: hidden;
+}
+.vg-card-head {
+  padding: 18px 24px; border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, var(--light), #fff);
+  display: flex; align-items: center; gap: 12px;
+}
+.vg-card-icon {
+  width: 40px; height: 40px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem; flex-shrink: 0;
+}
+.vg-card-head h2 { font-size: .95rem; font-weight: 800; color: var(--dark); margin: 0; }
+.vg-card-head p { font-size: .75rem; color: #aaa; margin: 2px 0 0; }
+.vg-card-body { padding: 24px; }
+
+/* ── STEPS ── */
+.vg-steps { display: flex; flex-direction: column; gap: 0; }
+.vg-step {
+  display: flex; gap: 18px; align-items: flex-start;
+  padding: 18px 0; border-bottom: 1px solid var(--border); position: relative;
+}
+.vg-step:last-child { border-bottom: none; padding-bottom: 0; }
+.vg-step-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.vg-step-num {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand), #0d6efd);
+  color: #fff; font-size: .8rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(25,135,84,.3); flex-shrink: 0;
+}
+.vg-step-line {
+  width: 2px; flex: 1; background: linear-gradient(to bottom, var(--border), transparent);
+  margin-top: 6px; min-height: 20px;
+}
+.vg-step:last-child .vg-step-line { display: none; }
+.vg-step-content { flex: 1; padding-top: 6px; }
+.vg-step-content h3 { font-size: .92rem; font-weight: 700; color: var(--dark); margin: 0 0 5px; }
+.vg-step-content p { font-size: .83rem; color: var(--mid); line-height: 1.65; margin: 0; }
+.vg-step-tag {
+  display: inline-block; background: var(--brand-light); color: var(--brand);
+  font-size: .65rem; font-weight: 800; padding: 2px 8px; border-radius: 4px;
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px;
+}
+
+/* ── RULES LIST ── */
+.vg-rules { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.vg-rule {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px 16px; border-radius: 11px; border: 1.5px solid var(--border); background: #fafbfc;
+}
+.vg-rule-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+.vg-rule strong { display: block; font-size: .85rem; color: var(--dark); margin-bottom: 2px; }
+.vg-rule span { font-size: .78rem; color: #999; line-height: 1.5; }
+.vg-rule.danger { border-color: #fecaca; background: #fff5f5; }
+.vg-rule.warning { border-color: #fde68a; background: #fffbeb; }
+.vg-rule.success { border-color: #a7f3d0; background: #f0fdf4; }
+
+/* ── FEE BOX ── */
+.vg-fee-box {
+  background: linear-gradient(135deg, #f0fdf4, #e8f5e9);
+  border: 1.5px solid #a7f3d0; border-radius: 14px; padding: 22px 24px; margin-bottom: 16px;
+}
+.vg-fee-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,.06); font-size: .85rem; }
+.vg-fee-row:last-child { border-bottom: none; font-weight: 700; font-size: .92rem; }
+.vg-fee-row span:first-child { color: var(--mid); }
+.vg-fee-row span:last-child { color: var(--dark); }
+.vg-fee-row.total span { color: var(--brand); }
+
+/* ── TIPS GRID ── */
+.vg-tips { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.vg-tip {
+  padding: 16px; border-radius: 12px; border: 1.5px solid var(--border);
+  background: #fafbfc; transition: border-color .2s, transform .2s;
+}
+.vg-tip:hover { border-color: var(--brand); transform: translateY(-2px); }
+.vg-tip-icon { font-size: 1.4rem; margin-bottom: 8px; display: block; }
+.vg-tip strong { display: block; font-size: .83rem; color: var(--dark); margin-bottom: 4px; }
+.vg-tip span { font-size: .75rem; color: #aaa; line-height: 1.5; }
+
+/* ── FAQ ── */
+.vg-faq { display: flex; flex-direction: column; gap: 8px; }
+.vg-faq-item { border: 1.5px solid var(--border); border-radius: 11px; overflow: hidden; }
+.vg-faq-q {
+  padding: 14px 18px; font-size: .87rem; font-weight: 700; color: var(--dark);
+  cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+  background: #fafbfc; user-select: none; transition: background .15s;
+}
+.vg-faq-q:hover { background: var(--brand-light); }
+.vg-faq-q .arrow { transition: transform .25s; color: #ccc; font-size: .7rem; }
+.vg-faq-item.open .vg-faq-q .arrow { transform: rotate(180deg); color: var(--brand); }
+.vg-faq-a { padding: 0 18px; max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .3s; font-size: .83rem; color: var(--mid); line-height: 1.7; }
+.vg-faq-item.open .vg-faq-a { max-height: 200px; padding: 14px 18px; border-top: 1px solid var(--border); }
+
+/* ── CTA ── */
+.vg-cta {
+  background: linear-gradient(135deg, var(--dark), #0d3320);
+  border-radius: 20px; padding: 36px; text-align: center;
+  position: relative; overflow: hidden;
+}
+.vg-cta::before { content: '✨'; position: absolute; left: 20px; top: 20px; font-size: 2rem; opacity: .15; }
+.vg-cta::after { content: '🚀'; position: absolute; right: 20px; bottom: 20px; font-size: 2rem; opacity: .15; }
+.vg-cta h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: #fff; margin: 0 0 10px; }
+.vg-cta p { color: rgba(255,255,255,.55); font-size: .88rem; margin-bottom: 22px; }
+.vg-cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn-vg-primary {
+  background: linear-gradient(135deg, var(--brand), #0d6efd);
+  color: #fff; border: none; border-radius: 10px; padding: 12px 28px;
+  font-size: .88rem; font-weight: 700; text-decoration: none;
+  font-family: 'DM Sans', sans-serif; transition: opacity .2s; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-vg-primary:hover { opacity: .9; color: #fff; }
+.btn-vg-outline {
+  background: rgba(255,255,255,.08); color: rgba(255,255,255,.75);
+  border: 1.5px solid rgba(255,255,255,.2); border-radius: 10px; padding: 12px 24px;
+  font-size: .88rem; font-weight: 600; text-decoration: none;
+  font-family: 'DM Sans', sans-serif; transition: background .2s;
+}
+.btn-vg-outline:hover { background: rgba(255,255,255,.14); color: #fff; }
+
+/* ── BACK BTN ── */
+.vg-back { display: inline-flex; align-items: center; gap: 6px; color: var(--mid); text-decoration: none; font-size: .82rem; font-weight: 600; margin-bottom: 18px; transition: color .2s; }
+.vg-back:hover { color: var(--brand); }
+
+@media(max-width:640px) {
+  .vg-hero { padding: 36px 24px 32px; }
+  .vg-qstats { grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .vg-tips { grid-template-columns: 1fr; }
+  .vg-card-body { padding: 18px; }
+}
+</style>
+
+<div class="vg-wrap">
+  <a href="{{ url_for('vendor_dashboard') if session.get('vendor_id') else url_for('become_vendor') }}" class="vg-back">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
+
+  <!-- HERO -->
+  <div class="vg-hero">
+    <div class="vg-hero-badge">📖 Vendor Knowledge Base</div>
+    <h1>Everything You Need to<br><em>Sell on ShopLuxe</em></h1>
+    <p>Your complete guide to managing products, understanding payouts, and growing your store on Ghana's premier online marketplace.</p>
+    <div class="vg-hero-pills">
+      <span class="vg-pill">✅ Free to list</span>
+      <span class="vg-pill">💳 Paid via Paystack</span>
+      <span class="vg-pill">📦 You handle shipping</span>
+      <span class="vg-pill">🏦 10% platform fee</span>
+    </div>
+  </div>
+
+  <!-- QUICK STATS -->
+  <div class="vg-qstats">
+    <div class="vg-qstat" style="--qs-color:#198754;">
+      <span class="vg-qstat-icon">🆓</span>
+      <div class="vg-qstat-num">Free</div>
+      <div class="vg-qstat-label">To list products</div>
+    </div>
+    <div class="vg-qstat" style="--qs-color:#f59e0b;">
+      <span class="vg-qstat-icon">💰</span>
+      <div class="vg-qstat-num">90%</div>
+      <div class="vg-qstat-label">You keep of every sale</div>
+    </div>
+    <div class="vg-qstat" style="--qs-color:#3b82f6;">
+      <span class="vg-qstat-icon">⚡</span>
+      <div class="vg-qstat-num">24hr</div>
+      <div class="vg-qstat-label">Approval turnaround</div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="vg-card">
+    <div class="vg-card-head">
+      <div class="vg-card-icon" style="background:#d1fae5;">🗺️</div>
+      <div>
+        <h2>How It Works — Step by Step</h2>
+        <p>From application to your first sale</p>
+      </div>
+    </div>
+    <div class="vg-card-body">
+      <div class="vg-steps">
+        <div class="vg-step">
+          <div class="vg-step-left"><div class="vg-step-num">1</div><div class="vg-step-line"></div></div>
+          <div class="vg-step-content">
+            <span class="vg-step-tag">Done ✓</span>
+            <h3>Apply as a Vendor</h3>
+            <p>You submitted your shop name, description, phone, and bank details. Our team reviews applications within 24 hours and sends you an approval email.</p>
+          </div>
+        </div>
+        <div class="vg-step">
+          <div class="vg-step-left"><div class="vg-step-num">2</div><div class="vg-step-line"></div></div>
+          <div class="vg-step-content">
+            <span class="vg-step-tag">After Approval</span>
+            <h3>Access Your Dashboard</h3>
+            <p>Once approved, log in and you'll see your Vendor Dashboard automatically. From there you manage all products, view orders, and track your earnings.</p>
+          </div>
+        </div>
+        <div class="vg-step">
+          <div class="vg-step-left"><div class="vg-step-num">3</div><div class="vg-step-line"></div></div>
+          <div class="vg-step-content">
+            <span class="vg-step-tag">Key Action</span>
+            <h3>List Your Products</h3>
+            <p>Click <strong>"Add Product"</strong> and fill in: name, category, description, price, stock count, sizes, colors, and photos. The more detail you provide, the better your sales. Upload up to 10 photos per product — clear, well-lit images convert best.</p>
+          </div>
+        </div>
+        <div class="vg-step">
+          <div class="vg-step-left"><div class="vg-step-num">4</div><div class="vg-step-line"></div></div>
+          <div class="vg-step-content">
+            <span class="vg-step-tag">Automatic</span>
+            <h3>Customers Find & Buy</h3>
+            <p>Your products are live on ShopLuxe. Customers browse, add to cart, and pay securely via Paystack. You get notified by email when an order comes in. Your dashboard shows all incoming orders instantly.</p>
+          </div>
+        </div>
+        <div class="vg-step">
+          <div class="vg-step-left"><div class="vg-step-num">5</div><div class="vg-step-line"></div></div>
+          <div class="vg-step-content">
+            <span class="vg-step-tag">Your Responsibility</span>
+            <h3>Ship the Order</h3>
+            <p>When a paid order arrives, package the item and arrange delivery to the customer. Once shipped, go to your Dashboard → Orders and click <strong>"Mark Shipped"</strong>. The customer gets notified automatically.</p>
+          </div>
+        </div>
+        <div class="vg-step">
+          <div class="vg-step-left"><div class="vg-step-num">6</div><div class="vg-step-line"></div></div>
+          <div class="vg-step-content">
+            <span class="vg-step-tag">Payday 🎉</span>
+            <h3>Receive Your Payout</h3>
+            <p>After the order is delivered and confirmed, ShopLuxe processes your payout to the bank account you provided. You keep <strong>90%</strong> of the sale price — 10% is ShopLuxe's platform fee.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADDING PRODUCTS GUIDE -->
+  <div class="vg-card">
+    <div class="vg-card-head">
+      <div class="vg-card-icon" style="background:#dbeafe;">📦</div>
+      <div>
+        <h2>Adding & Managing Products</h2>
+        <p>What each field means and how to fill it in</p>
+      </div>
+    </div>
+    <div class="vg-card-body">
+      <ul class="vg-rules">
+        <li class="vg-rule success">
+          <span class="vg-rule-icon">🏷️</span>
+          <div><strong>Product Name</strong><span>Use a clear, descriptive name. Include brand, model, and key detail — e.g. "Nike Air Force 1 Low White" beats "White Sneaker". Customers search by name.</span></div>
+        </li>
+        <li class="vg-rule success">
+          <span class="vg-rule-icon">📂</span>
+          <div><strong>Category</strong><span>Pick the most relevant category (Men, Women, Sneakers, Appliances, etc.). This controls which filtered page your product appears on. You can also type a custom category.</span></div>
+        </li>
+        <li class="vg-rule success">
+          <span class="vg-rule-icon">💬</span>
+          <div><strong>Description</strong><span>Write at least 2–3 sentences. Mention material, style, what makes it special, and care instructions. Longer, honest descriptions reduce returns and boost trust.</span></div>
+        </li>
+        <li class="vg-rule success">
+          <span class="vg-rule-icon">💵</span>
+          <div><strong>Price & Sale Price</strong><span>Set your regular price. If you want to run a promotion, enter a Sale Price and toggle "On Sale" — customers will see the old price crossed out. Sale Price must be lower than regular price.</span></div>
+        </li>
+        <li class="vg-rule success">
+          <span class="vg-rule-icon">📊</span>
+          <div><strong>Stock Count</strong><span>Enter the exact quantity you have available. When a customer buys, stock drops automatically. If it hits zero, the product shows "Out of Stock" and blocks new purchases until you restock.</span></div>
+        </li>
+        <li class="vg-rule success">
+          <span class="vg-rule-icon">📏</span>
+          <div><strong>Sizes</strong><span>Click the preset buttons (36–45, S–XXL) or type your own comma-separated sizes. For non-clothing items (appliances, books, etc.) switch to "Dimensions" mode and enter Length × Width × Depth in cm.</span></div>
+        </li>
+        <li class="vg-rule success">
+          <span class="vg-rule-icon">🎨</span>
+          <div><strong>Colors</strong><span>Click the color swatches or type color names separated by commas. This helps customers filter and know exactly what variants are available before buying.</span></div>
+        </li>
+        <li class="vg-rule success">
+          <span class="vg-rule-icon">📸</span>
+          <div><strong>Photos</strong><span>Upload multiple high-quality images. Click any thumbnail to set the main (cover) photo. Use natural lighting, white or clean backgrounds. Show the product from different angles. Photos are the #1 factor in purchase decisions.</span></div>
+        </li>
+        <li class="vg-rule warning">
+          <span class="vg-rule-icon">⭐</span>
+          <div><strong>Featured & New Arrival toggles</strong><span>"New Arrival" auto-expires after 30 days. "Featured" shows your product in the homepage carousel — use this for your best sellers. These are managed by you but may be adjusted by ShopLuxe admins.</span></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- FEES & PAYOUTS -->
+  <div class="vg-card">
+    <div class="vg-card-head">
+      <div class="vg-card-icon" style="background:#fef3c7;">💳</div>
+      <div>
+        <h2>Fees & Payouts</h2>
+        <p>Exactly how much you earn per sale</p>
+      </div>
+    </div>
+    <div class="vg-card-body">
+      <div class="vg-fee-box">
+        <div class="vg-fee-row"><span>Customer pays</span><span>GH₵ 200.00</span></div>
+        <div class="vg-fee-row"><span>ShopLuxe platform fee (10%)</span><span>– GH₵ 20.00</span></div>
+        <div class="vg-fee-row total"><span>💰 You receive</span><span>GH₵ 180.00</span></div>
+      </div>
+      <ul class="vg-rules">
+        <li class="vg-rule">
+          <span class="vg-rule-icon">🏦</span>
+          <div><strong>Bank details required</strong><span>Make sure your bank name and account number are correct in your application. ShopLuxe transfers payouts manually after order delivery confirmation.</span></div>
+        </li>
+        <li class="vg-rule">
+          <span class="vg-rule-icon">⏱️</span>
+          <div><strong>Payout timing</strong><span>Payouts are processed after an order is marked "Delivered". You can track payout status (Pending / Paid) in your Dashboard under each order.</span></div>
+        </li>
+        <li class="vg-rule warning">
+          <span class="vg-rule-icon">⚠️</span>
+          <div><strong>Cancelled orders</strong><span>If an order is cancelled before shipping, no payout is generated. If cancelled after shipping, contact ShopLuxe support to discuss resolution.</span></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- VENDOR RULES -->
+  <div class="vg-card">
+    <div class="vg-card-head">
+      <div class="vg-card-icon" style="background:#fee2e2;">📋</div>
+      <div>
+        <h2>Vendor Rules & Policies</h2>
+        <p>Read carefully — violations can result in account suspension</p>
+      </div>
+    </div>
+    <div class="vg-card-body">
+      <ul class="vg-rules">
+        <li class="vg-rule danger">
+          <span class="vg-rule-icon">🚫</span>
+          <div><strong>No counterfeit or illegal products</strong><span>Listing fake branded goods, pirated software, prohibited items, or anything illegal is grounds for immediate permanent ban.</span></div>
+        </li>
+        <li class="vg-rule danger">
+          <span class="vg-rule-icon">🚫</span>
+          <div><strong>Accurate stock is required</strong><span>Never accept orders for items you don't have. Keep your stock count updated at all times. Repeated unfulfilled orders will result in suspension.</span></div>
+        </li>
+        <li class="vg-rule danger">
+          <span class="vg-rule-icon">🚫</span>
+          <div><strong>No misleading product information</strong><span>Photos and descriptions must accurately represent the product. Selling something that doesn't match the listing violates our policy and harms your ratings.</span></div>
+        </li>
+        <li class="vg-rule warning">
+          <span class="vg-rule-icon">⚡</span>
+          <div><strong>Ship within 48 hours of a paid order</strong><span>Customers expect fast delivery. Mark items as shipped promptly. Consistent delays will affect your store's standing on ShopLuxe.</span></div>
+        </li>
+        <li class="vg-rule warning">
+          <span class="vg-rule-icon">📞</span>
+          <div><strong>Respond to support requests</strong><span>If ShopLuxe support contacts you about an order dispute or customer complaint, respond within 24 hours.</span></div>
+        </li>
+        <li class="vg-rule success">
+          <span class="vg-rule-icon">✅</span>
+          <div><strong>Reviews are honest & public</strong><span>Customers can leave reviews on your products. Do not attempt to manipulate reviews. Good products and service earn great ratings naturally.</span></div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PRO TIPS -->
+  <div class="vg-card">
+    <div class="vg-card-head">
+      <div class="vg-card-icon" style="background:#ede9fe;">🚀</div>
+      <div>
+        <h2>Pro Tips to Boost Your Sales</h2>
+        <p>What top ShopLuxe vendors do differently</p>
+      </div>
+    </div>
+    <div class="vg-card-body">
+      <div class="vg-tips">
+        <div class="vg-tip">
+          <span class="vg-tip-icon">📸</span>
+          <strong>Invest in photos</strong>
+          <span>Products with 4+ clear photos get 3× more clicks. Natural light on a clean background beats filters every time.</span>
+        </div>
+        <div class="vg-tip">
+          <span class="vg-tip-icon">🏷️</span>
+          <strong>Use the Sale toggle</strong>
+          <span>Running a sale creates urgency. Even a small discount with a crossed-out original price significantly improves conversion.</span>
+        </div>
+        <div class="vg-tip">
+          <span class="vg-tip-icon">🔍</span>
+          <strong>Add tags</strong>
+          <span>Tags help customers find your product via search. Add synonyms, occasions, and related terms — "gift", "birthday", "office", etc.</span>
+        </div>
+        <div class="vg-tip">
+          <span class="vg-tip-icon">📦</span>
+          <strong>Keep stock accurate</strong>
+          <span>Out-of-stock products frustrate buyers and hurt your store reputation. Restock regularly and update counts daily.</span>
+        </div>
+        <div class="vg-tip">
+          <span class="vg-tip-icon">⭐</span>
+          <strong>Earn 5-star reviews</strong>
+          <span>Ship fast, package carefully, and deliver exactly what's shown. Happy customers leave reviews — and reviews drive more sales.</span>
+        </div>
+        <div class="vg-tip">
+          <span class="vg-tip-icon">✨</span>
+          <strong>Use "New Arrival"</strong>
+          <span>New products get homepage visibility for 30 days. Toggle "New Arrival" when you list something fresh to maximise early exposure.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="vg-card">
+    <div class="vg-card-head">
+      <div class="vg-card-icon" style="background:#fff3cd;">❓</div>
+      <div>
+        <h2>Frequently Asked Questions</h2>
+        <p>Common vendor questions answered</p>
+      </div>
+    </div>
+    <div class="vg-card-body">
+      <div class="vg-faq">
+        <div class="vg-faq-item">
+          <div class="vg-faq-q" onclick="toggleFaq(this)">Can I list products from any category? <span class="arrow">▼</span></div>
+          <div class="vg-faq-a">Yes — ShopLuxe supports shoes, clothing, appliances, software, books, accessories, and more. If your category isn't in the dropdown, use the "Other (custom)" option when adding a product.</div>
+        </div>
+        <div class="vg-faq-item">
+          <div class="vg-faq-q" onclick="toggleFaq(this)">How do I update my bank details? <span class="arrow">▼</span></div>
+          <div class="vg-faq-a">Currently bank details are set at application time. To update them, contact ShopLuxe support via the Support page and we'll update your payout account manually.</div>
+        </div>
+        <div class="vg-faq-item">
+          <div class="vg-faq-q" onclick="toggleFaq(this)">What happens if a customer wants a refund? <span class="arrow">▼</span></div>
+          <div class="vg-faq-a">Contact ShopLuxe support. We review refund requests case by case. If the product was as described and properly shipped, refunds are typically not issued. If it was misrepresented, the vendor may bear the cost.</div>
+        </div>
+        <div class="vg-faq-item">
+          <div class="vg-faq-q" onclick="toggleFaq(this)">Can I have multiple shops / vendor accounts? <span class="arrow">▼</span></div>
+          <div class="vg-faq-a">One vendor account per user account. If you need to sell under a different brand, contact support. Creating duplicate accounts to bypass policy will result in a ban.</div>
+        </div>
+        <div class="vg-faq-item">
+          <div class="vg-faq-q" onclick="toggleFaq(this)">How do I delete a product? <span class="arrow">▼</span></div>
+          <div class="vg-faq-a">Go to your Vendor Dashboard → find the product → click Edit → scroll to the bottom and click "Delete Product". This is permanent. If you just want to hide it temporarily, set stock to 0 instead.</div>
+        </div>
+        <div class="vg-faq-item">
+          <div class="vg-faq-q" onclick="toggleFaq(this)">Who handles delivery / logistics? <span class="arrow">▼</span></div>
+          <div class="vg-faq-a">You do. ShopLuxe is the marketplace — you are responsible for packaging and arranging delivery to the customer. Coordinate directly with the customer if needed, using the contact details in the order.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="vg-cta">
+    <h2>Ready to Start Selling?</h2>
+    <p>Your dashboard is waiting. List your first product and reach thousands of shoppers across Ghana.</p>
+    <div class="vg-cta-btns">
+      {% if session.get('vendor_id') %}
+      <a href="{{ url_for('vendor_add_product') }}" class="btn-vg-primary"><i class="bi bi-plus-lg"></i> Add Your First Product</a>
+      <a href="{{ url_for('vendor_dashboard') }}" class="btn-vg-outline">Go to Dashboard</a>
+      {% else %}
+      <a href="{{ url_for('become_vendor') }}" class="btn-vg-primary"><i class="bi bi-shop"></i> Apply as a Vendor</a>
+      <a href="{{ url_for('support') }}" class="btn-vg-outline">Contact Support</a>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleFaq(el) {
+  const item = el.closest('.vg-faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.vg-faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+</script>
+{% endblock %}

@@ -68,11 +68,32 @@
 .vd-empty .emoji { font-size: 2.5rem; margin-bottom: 12px; }
 .vd-empty p { color: #bbb; font-size: .88rem; margin-bottom: 16px; }
 
+/* GUIDE BANNER */
+.vd-guide-banner {
+  background: linear-gradient(135deg, #1e3a5f, #0d3320);
+  border-radius: 14px; padding: 18px 22px; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.vd-guide-banner-icon { font-size: 2rem; flex-shrink: 0; }
+.vd-guide-banner-text strong { display: block; color: #fff; font-size: .9rem; font-weight: 700; margin-bottom: 3px; }
+.vd-guide-banner-text span { font-size: .76rem; color: rgba(255,255,255,.5); }
+.btn-vd-guide {
+  margin-left: auto; background: rgba(255,255,255,.12); color: rgba(255,255,255,.85);
+  border: 1px solid rgba(255,255,255,.2); border-radius: 8px; padding: 8px 18px;
+  font-size: .8rem; font-weight: 700; text-decoration: none;
+  font-family: 'DM Sans', sans-serif; transition: background .2s; white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-vd-guide:hover { background: rgba(255,255,255,.2); color: #fff; }
+
 @media(max-width:900px){ .vd-stats { grid-template-columns: repeat(2,1fr); } }
 @media(max-width:600px){
   .vd-stats { grid-template-columns: 1fr 1fr; }
   .vd-header { padding: 20px; }
   .vd-table-card { overflow-x: auto; }
+  .vd-guide-banner { flex-direction: column; text-align: center; }
+  .btn-vd-guide { margin-left: 0; }
 }
 </style>
 
@@ -80,7 +101,6 @@
 <div class="vd-header">
   <div class="vd-header-left">
     {% if vendor.logo %}
-      <!-- Consistent http guard matching all other templates -->
       {% if vendor.logo.startswith('http') %}
         <img src="{{ vendor.logo }}" alt="{{ vendor.shop_name }}" class="vd-logo">
       {% else %}
@@ -95,10 +115,25 @@
     </div>
   </div>
   <div class="vd-header-actions">
+    <a href="{{ url_for('vendor_guide') }}" class="btn-vd-store">📖 Vendor Guide</a>
     <a href="{{ url_for('vendor_storefront', vendor_id=vendor.id) }}" class="btn-vd-store" target="_blank">🏪 View Store</a>
     <a href="{{ url_for('vendor_add_product') }}" class="btn-vd-add"><i class="bi bi-plus-lg"></i> Add Product</a>
   </div>
 </div>
+
+<!-- GUIDE BANNER (shown only if vendor has no products yet — helpful nudge for new vendors) -->
+{% if stats.total_products == 0 %}
+<div class="vd-guide-banner">
+  <div class="vd-guide-banner-icon">📖</div>
+  <div class="vd-guide-banner-text">
+    <strong>New to ShopLuxe? Read the Vendor Guide first!</strong>
+    <span>Learn how to list products, get paid, and grow your store — all in one place.</span>
+  </div>
+  <a href="{{ url_for('vendor_guide') }}" class="btn-vd-guide">
+    <i class="bi bi-book"></i> Read Guide →
+  </a>
+</div>
+{% endif %}
 
 <!-- STATS -->
 <div class="vd-stats">
@@ -206,7 +241,10 @@
   <div class="vd-empty">
     <div class="emoji">📦</div>
     <p>No products yet. Start listing to make sales!</p>
-    <a href="{{ url_for('vendor_add_product') }}" class="btn-vd-add" style="display:inline-flex;">+ Add First Product</a>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <a href="{{ url_for('vendor_add_product') }}" class="btn-vd-add" style="display:inline-flex;">+ Add First Product</a>
+      <a href="{{ url_for('vendor_guide') }}" class="btn-vd-add" style="display:inline-flex;background:rgba(25,135,84,.12);color:var(--brand);border:1.5px solid var(--brand);">📖 Read Guide</a>
+    </div>
   </div>
 </div>
 {% endif %}
@@ -238,7 +276,6 @@
           <div style="font-size:.75rem;color:#aaa;">{{ order.email }}</div>
         </td>
         <td>
-          <!-- FIX 4: Safe access — default to empty list if vendor_items key is missing -->
           {% for item in order.get('vendor_items', []) %}
             <div style="font-size:.8rem;">{{ item.name }} × {{ item.get('quantity', 1) }}</div>
           {% else %}
@@ -262,9 +299,7 @@
             <span class="vd-badge vd-badge-purple">Shipped</span>
           {% elif order.status == 'Paid' %}
             <span class="vd-badge vd-badge-blue">Processing</span>
-            <!-- FIX 5: Added hidden CSRF token field for Flask-WTF protection -->
             <form method="POST" action="{{ url_for('vendor_mark_shipped', order_id=order.id) }}" style="margin-top:6px;">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="vd-btn-sm" style="background:#ede9fe;color:#5b21b6;">
                 📦 Mark Shipped
               </button>

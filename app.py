@@ -2630,6 +2630,10 @@ def vendor_status_check():
         session['shop_name'] = vendor.shop_name
         return jsonify({'approved': True})
     return jsonify({'approved': False})  
+  
+@app.route('/vendor/guide')
+def vendor_guide():
+    return render_template('vendor_guide.html')  
 # ============================================================
 # DB INIT & RUN
 # ============================================================

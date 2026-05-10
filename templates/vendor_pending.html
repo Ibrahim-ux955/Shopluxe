@@ -47,12 +47,36 @@
 .btn-outline-vb { border: 1.5px solid var(--border); color: var(--mid); border-radius: 10px; padding: 11px 24px; font-size: .88rem; text-decoration: none; transition: border-color .2s; }
 .btn-outline-vb:hover { border-color: var(--brand); color: var(--brand); }
 
-/* FIX: Polling status indicator */
+/* GUIDE TEASER */
+.guide-teaser {
+  background: linear-gradient(135deg, #1a1a2e, #0d3320);
+  border-radius: 14px; padding: 18px 20px; margin-top: 24px;
+  display: flex; align-items: center; gap: 14px; text-align: left;
+  border: 1px solid rgba(255,255,255,.07);
+}
+.guide-teaser-icon { font-size: 1.8rem; flex-shrink: 0; }
+.guide-teaser-text strong { display: block; color: #fff; font-size: .85rem; font-weight: 700; margin-bottom: 3px; }
+.guide-teaser-text span { font-size: .74rem; color: rgba(255,255,255,.45); line-height: 1.5; display: block; }
+.btn-guide-teaser {
+  margin-left: auto; flex-shrink: 0;
+  background: rgba(255,255,255,.1); color: rgba(255,255,255,.8);
+  border: 1px solid rgba(255,255,255,.18); border-radius: 8px;
+  padding: 8px 16px; font-size: .78rem; font-weight: 700;
+  text-decoration: none; font-family: 'DM Sans', sans-serif;
+  transition: background .2s; white-space: nowrap;
+}
+.btn-guide-teaser:hover { background: rgba(255,255,255,.18); color: #fff; }
+
+/* POLL */
 .poll-status { font-size: .72rem; color: #bbb; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .poll-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand); animation: pollBlink 1.4s ease-in-out infinite; }
 @keyframes pollBlink { 0%,100%{opacity:.3} 50%{opacity:1} }
 
-@media(max-width:500px){ .pending-card { padding: 36px 24px; } }
+@media(max-width:500px){
+  .pending-card { padding: 36px 24px; }
+  .guide-teaser { flex-direction: column; text-align: center; }
+  .btn-guide-teaser { margin-left: 0; }
+}
 </style>
 
 <div class="pending-wrap">
@@ -86,7 +110,17 @@
       <a href="{{ url_for('profile') }}" class="btn-outline-vb">My Profile</a>
     </div>
 
-    <!-- FIX: Live polling indicator — checks approval status every 20s and redirects automatically -->
+    <!-- GUIDE TEASER — use the wait time productively -->
+    <div class="guide-teaser">
+      <div class="guide-teaser-icon">📖</div>
+      <div class="guide-teaser-text">
+        <strong>Use this time wisely!</strong>
+        <span>Read the Vendor Guide while you wait — learn how to add products, get paid, and grow your store from day one.</span>
+      </div>
+      <a href="{{ url_for('vendor_guide') }}" class="btn-guide-teaser">Read →</a>
+    </div>
+
+    <!-- Live polling indicator -->
     <div class="poll-status" id="pollStatus">
       <span class="poll-dot"></span>
       <span id="pollText">Checking approval status…</span>
@@ -96,14 +130,9 @@
 
 <script>
 (function () {
-  // Poll the vendor status endpoint every 20 seconds.
-  // Your backend should expose a lightweight JSON endpoint at this URL:
-  //   GET /vendor/status  →  { "approved": true/false }
-  // If approved, redirect straight to the dashboard.
   const POLL_INTERVAL_MS = 20000;
   const STATUS_URL = "{{ url_for('vendor_status_check') }}";
   const DASHBOARD_URL = "{{ url_for('vendor_dashboard') }}";
-
   let attempts = 0;
 
   async function checkStatus() {
@@ -116,17 +145,14 @@
         document.getElementById('pollText').textContent = 'Approved! Redirecting to your dashboard…';
         document.querySelector('.poll-dot').style.background = '#198754';
         setTimeout(() => { window.location.href = DASHBOARD_URL; }, 1200);
-        return; // stop polling
+        return;
       }
       document.getElementById('pollText').textContent =
         'Still pending — checked ' + attempts + ' time' + (attempts === 1 ? '' : 's') + '.';
-    } catch (_) {
-      // Network error — silently retry next interval
-    }
+    } catch (_) {}
     setTimeout(checkStatus, POLL_INTERVAL_MS);
   }
 
-  // Start first check after one interval so page feels instant on load
   setTimeout(checkStatus, POLL_INTERVAL_MS);
 })();
 </script>
