@@ -1420,9 +1420,11 @@ def profile():
     user_orders = Order.query.filter_by(email=user.email).all()
     user_reviews = Review.query.filter_by(user_email=user.email).all()
     user_stats = {
-        "orders": len(user_orders),
-        "reviews": len(user_reviews),
-        "spent": sum(o.total or 0 for o in user_orders)
+         "orders": len(user_orders),
+         "reviews": len(user_reviews),
+         "spent": sum(o.total or 0 for o in user_orders),
+         "wishlist": len(session.get('wishlist', [])),   # ← add
+         "addresses": 1 if user.address else 0,          # ← add
     }
 
     if request.method == 'POST':

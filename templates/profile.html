@@ -117,24 +117,32 @@
 <div class="pf-wrap">
 
   <!-- HERO -->
-  <div class="pf-hero-stats">
-  <div class="pf-hstat">
-    <div class="pf-hstat-num">{{ stats.orders }}</div>
-    <div class="pf-hstat-label">Orders</div>
+  <div class="pf-hero">
+    <div class="pf-avatar">{{ user.name[0].upper() }}</div>
+    <div class="pf-hero-info">
+      <div class="pf-hello">Welcome back</div>
+      <div class="pf-name">{{ user.name }}</div>
+      <div class="pf-email">{{ user.email }}</div>
+    </div>
+    <div class="pf-hero-stats">
+      <div class="pf-hstat">
+        <div class="pf-hstat-num">{{ stats.orders }}</div>
+        <div class="pf-hstat-label">Orders</div>
+      </div>
+      <div class="pf-hstat">
+        <div class="pf-hstat-num">{{ stats.wishlist }}</div>
+        <div class="pf-hstat-label">Wishlist</div>
+      </div>
+      <div class="pf-hstat">
+        <div class="pf-hstat-num">{{ stats.addresses }}</div>
+        <div class="pf-hstat-label">Addresses</div>
+      </div>
+      <div class="pf-hstat">
+        <div class="pf-hstat-num">GH₵{{ "%.0f"|format(stats.spent) }}</div>
+        <div class="pf-hstat-label">Spent</div>
+      </div>
+    </div>
   </div>
-  <div class="pf-hstat">
-    <div class="pf-hstat-num">{{ stats.wishlist }}</div>
-    <div class="pf-hstat-label">Wishlist</div>
-  </div>
-  <div class="pf-hstat">
-    <div class="pf-hstat-num">{{ stats.addresses }}</div>
-    <div class="pf-hstat-label">Addresses</div>
-  </div>
-  <div class="pf-hstat">
-    <div class="pf-hstat-num">GH₵{{ "%.0f"|format(stats.spent) }}</div>
-    <div class="pf-hstat-label">Spent</div>
-  </div>
-</div>
 
   <!-- VENDOR BANNER -->
   <div style="margin-bottom:16px;">
