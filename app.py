@@ -69,6 +69,7 @@ MAX_ATTEMPTS = 5
 LOCKOUT_DURATION = timedelta(minutes=5)
 PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
 PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY")
+PLATFORM_FEE_PERCENT = 10  # ← move here
 
 
 
@@ -1997,7 +1998,6 @@ def become_vendor():
     existing = Vendor.query.filter_by(user_id=session['user_id']).first()
     if existing:
         if existing.is_approved and not existing.is_banned:
-            # ✅ Refresh session in case they were approved after login
             session['vendor_id'] = existing.id
             session['shop_name'] = existing.shop_name
             return redirect(url_for('vendor_dashboard'))
@@ -2009,62 +2009,125 @@ def become_vendor():
             return render_template('vendor_pending.html')
 
     if request.method == 'POST':
-        shop_name = request.form.get('shop_name', '').strip()
-        shop_description = request.form.get('shop_description', '').strip()
-        phone = request.form.get('phone', '').strip()
-        bank_name = request.form.get('bank_name', '').strip()
-        bank_account = request.form.get('bank_account', '').strip()
+        # Store form data in session temporarily — payment happens next
+        session['vendor_application'] = {
+            'shop_name': request.form.get('shop_name', '').strip(),
+            'shop_description': request.form.get('shop_description', '').strip(),
+            'phone': request.form.get('phone', '').strip(),
+            'bank_name': request.form.get('bank_name', '').strip(),
+            'bank_account': request.form.get('bank_account', '').strip(),
+        }
 
-        if not shop_name:
+        if not session['vendor_application']['shop_name']:
             flash("❌ Shop name is required.")
             return redirect(url_for('become_vendor'))
 
-        logo_filename = ''
-        logo = request.files.get('logo')
-        if logo and logo.filename:
-            logo_filename = secure_filename(logo.filename)
-            logo.save(os.path.join(app.config['UPLOAD_FOLDER'], logo_filename))
+        # Initialize Paystack payment for GH₵100 registration fee
+        headers = {
+            "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "email": session['user_email'],
+            "amount": 10000,  # GH₵100 in pesewas
+            "currency": "GHS",
+            "callback_url": url_for('vendor_registration_callback', _external=True),
+            "metadata": {
+                "type": "vendor_registration",
+                "user_id": session['user_id'],
+            }
+        }
+        response = requests.post(
+            "https://api.paystack.co/transaction/initialize",
+            json=payload, headers=headers
+        ).json()
 
-        new_vendor = Vendor(
-            id=str(uuid4()),
-            user_id=session['user_id'],
-            shop_name=shop_name,
-            shop_description=shop_description,
-            phone=phone,
-            bank_name=bank_name,
-            bank_account=bank_account,
-            logo=logo_filename,
-            is_approved=False,
-            timestamp=datetime.now(timezone.utc).isoformat()
-        )
-        db.session.add(new_vendor)
-        db.session.commit()
-
-        try:
-            send_email(
-                "shopluxe374@gmail.com",
-                "🛍️ New Vendor Application — ShopLuxe",
-                f"""
-                <div style="font-family:sans-serif; padding:20px;">
-                    <h2>New Vendor Application</h2>
-                    <p><strong>Shop:</strong> {shop_name}</p>
-                    <p><strong>User:</strong> {session.get('user_name')} ({session.get('user_email')})</p>
-                    <p><strong>Phone:</strong> {phone}</p>
-                    <a href="https://www.shopluxe.online/admin/vendors"
-                       style="background:#198754;color:#fff;padding:10px 20px;
-                       border-radius:8px;text-decoration:none;">
-                       Review Application
-                    </a>
-                </div>
-                """
-            )
-        except Exception as e:
-            print("⚠️ Vendor application email failed:", e)
-
-        flash("✅ Application submitted! We'll review and get back to you.")
-        return render_template('vendor_pending.html')
+        if response.get('status'):
+            return redirect(response['data']['authorization_url'])
+        else:
+            flash("❌ Payment initialization failed. Please try again.")
+            return redirect(url_for('become_vendor'))
 
     return render_template('become_vendor.html')
+
+
+@app.route('/vendor/registration-callback')
+def vendor_registration_callback():
+    reference = request.args.get('reference')
+    if not reference:
+        flash("❌ Invalid payment reference.")
+        return redirect(url_for('become_vendor'))
+
+    # Verify payment with Paystack
+    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
+    result = requests.get(
+        f"https://api.paystack.co/transaction/verify/{reference}",
+        headers=headers
+    ).json()
+
+    payment = result.get('data', {})
+    if payment.get('status') != 'success':
+        flash("❌ Payment was not successful. Please try again.")
+        return redirect(url_for('become_vendor'))
+
+    # Check it's actually a vendor registration payment
+    metadata = payment.get('metadata', {})
+    if metadata.get('type') != 'vendor_registration':
+        flash("❌ Invalid payment type.")
+        return redirect(url_for('become_vendor'))
+
+    # Prevent duplicate vendor accounts
+    existing = Vendor.query.filter_by(user_id=session['user_id']).first()
+    if existing:
+        flash("⏳ Your application is already submitted.")
+        return render_template('vendor_pending.html')
+
+    # Retrieve stored form data from session
+    app_data = session.pop('vendor_application', {})
+    if not app_data:
+        flash("❌ Application data lost. Please reapply.")
+        return redirect(url_for('become_vendor'))
+
+    new_vendor = Vendor(
+        id=str(uuid4()),
+        user_id=session['user_id'],
+        shop_name=app_data['shop_name'],
+        shop_description=app_data['shop_description'],
+        phone=app_data['phone'],
+        bank_name=app_data['bank_name'],
+        bank_account=app_data['bank_account'],
+        logo='',
+        is_approved=False,
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+    db.session.add(new_vendor)
+    db.session.commit()
+
+    # Notify admin
+    try:
+        send_email(
+            "shopluxe374@gmail.com",
+            "🛍️ New Vendor Application (Paid) — ShopLuxe",
+            f"""
+            <div style="font-family:sans-serif; padding:20px;">
+                <h2>New Paid Vendor Application</h2>
+                <p><strong>Shop:</strong> {app_data['shop_name']}</p>
+                <p><strong>User:</strong> {session.get('user_name')} ({session.get('user_email')})</p>
+                <p><strong>Phone:</strong> {app_data['phone']}</p>
+                <p><strong>Registration Fee:</strong> GH₵100 ✅ Paid (ref: {reference})</p>
+                <a href="https://www.shopluxe.online/admin/vendors"
+                   style="background:#198754;color:#fff;padding:10px 20px;
+                   border-radius:8px;text-decoration:none;">
+                   Review Application
+                </a>
+            </div>
+            """
+        )
+    except Exception as e:
+        print("⚠️ Vendor application email failed:", e)
+
+    flash("✅ Payment received! Your application is now under review.")
+    return render_template('vendor_pending.html')
 
 @app.route('/admin/payouts')
 def admin_payouts():
@@ -2098,8 +2161,6 @@ def mark_payout_paid(payout_id):
   # ============================================================
 # VENDOR ROUTES
 # ============================================================
-
-PLATFORM_FEE_PERCENT = 10
 
 from functools import wraps
 
@@ -2170,23 +2231,37 @@ def vendor_dashboard():
     for order in all_orders:
         items = json.loads(order.products or '[]')
         vendor_items = [i for i in items if i.get('vendor_id') == vendor.id]
-        if vendor_items:
-            subtotal = sum(float(i.get('price', 0)) * int(i.get('quantity', 1)) for i in vendor_items)
-            fee = round(subtotal * PLATFORM_FEE_PERCENT / 100, 2)
-            earnings = round(subtotal - fee, 2)
+        if not vendor_items:
+            continue
+
+        subtotal = sum(
+            float(i.get('price', 0)) * int(i.get('quantity', 1))
+            for i in vendor_items
+        )
+        fee = round(subtotal * PLATFORM_FEE_PERCENT / 100, 2)
+        earnings = round(subtotal - fee, 2)
+
+        # ✅ Only count earnings from paid orders (not cancelled/expired)
+        if order.payment_status == 'Paid' and order.status not in ('Cancelled', 'Expired'):
             total_earnings += earnings
 
-            payout = Payout.query.filter_by(vendor_id=vendor.id, order_id=order.id).first()
-            if not payout or payout.status == 'Pending':
-                pending_payout += earnings
+        payout = Payout.query.filter_by(
+            vendor_id=vendor.id, order_id=order.id
+        ).first()
 
-            vendor_orders.append({
-                **order.to_dict(),
-                'vendor_items': vendor_items,
-                'vendor_subtotal': subtotal,
-                'vendor_earnings': earnings,
-                'payout_status': payout.status if payout else 'Pending'
-            })
+        # ✅ Pending payout = only Paid orders whose payout hasn't been sent yet
+        if (order.payment_status == 'Paid'
+                and order.status not in ('Cancelled', 'Expired')
+                and (not payout or payout.status == 'Pending')):
+            pending_payout += earnings
+
+        vendor_orders.append({
+            **order.to_dict(),
+            'vendor_items': vendor_items,
+            'vendor_subtotal': round(subtotal, 2),
+            'vendor_earnings': earnings,
+            'payout_status': payout.status if payout else 'Pending'
+        })
 
     stats = {
         'total_products': len(products),
@@ -2232,8 +2307,10 @@ def vendor_add_product():
         else:
             sizes = json.dumps([])
 
-        # ✅ Set 30-day new arrival expiry
-        new_arrival_until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat() if new_arrival else ''
+        # ✅ Set new_arrival_until to 30 days from now if new_arrival is ticked
+        new_arrival_until = ''
+        if new_arrival:
+            new_arrival_until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
         images = request.files.getlist('images')
         image_filenames = []
@@ -2242,11 +2319,6 @@ def vendor_add_product():
                 upload_result = cloudinary.uploader.upload(img)
                 image_filenames.append(upload_result['secure_url'])
 
-        # ✅ Set new_arrival_until to 30 days from now if new_arrival is ticked
-        new_arrival_until = ''
-        if new_arrival:
-            new_arrival_until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
-
         new_product = Product(
             name=name, price=price, on_sale=on_sale, sale_price=sale_price,
             featured=featured, category=category, description=description,
@@ -2254,11 +2326,12 @@ def vendor_add_product():
             images=json.dumps(image_filenames),
             brand=brand, sku=sku, tags=tags,
             delivery_info=delivery_info, new_arrival=new_arrival,
-            new_arrival_until=new_arrival_until,  # ✅ no leading space
+            new_arrival_until=new_arrival_until,
             product_type=product_type,
             slot_length=slot_length,
             slot_width=slot_width,
             slot_depth=slot_depth,
+            vendor_id=vendor.id,  # ✅ THIS WAS MISSING — links product to vendor
             timestamp=datetime.now(timezone.utc).isoformat()
         )
         db.session.add(new_product)
