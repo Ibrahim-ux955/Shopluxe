@@ -545,6 +545,7 @@ def search():
         new_products=new_products,
         featured_products=featured_products,
         sale_products=sale_products,
+        recently_viewed=recently_viewed,
         active_page='home'
     )
 
@@ -1043,6 +1044,33 @@ def admin():
               for p in Promo.query.order_by(Promo.created_at.desc()).all()}
     events = [e.to_dict() for e in Event.query.order_by(Event.created_at.desc()).all()]
     return render_template('admin.html', products=products, orders=orders, promos=promos, events=events, active_page='admin')
+  
+@app.route('/admin/revenue')
+def admin_revenue():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+
+    all_payouts = Payout.query.all()
+    total_platform_fees = round(sum(p.platform_fee for p in all_payouts), 2)
+    total_vendor_payouts = round(sum(p.amount for p in all_payouts), 2)
+    total_gmv = round(total_platform_fees + total_vendor_payouts, 2)
+    paid_out = round(sum(p.amount for p in all_payouts if p.status == 'Paid'), 2)
+    pending_payouts = round(sum(p.amount for p in all_payouts if p.status == 'Pending'), 2)
+
+    # Registration fees
+    reg_fee_count = Vendor.query.count()
+    reg_fee_total = reg_fee_count * 100  # GH₵100 each
+
+    return render_template('admin_revenue.html',
+        total_platform_fees=total_platform_fees,
+        total_vendor_payouts=total_vendor_payouts,
+        total_gmv=total_gmv,
+        paid_out=paid_out,
+        pending_payouts=pending_payouts,
+        reg_fee_count=reg_fee_count,
+        reg_fee_total=reg_fee_total,
+        payouts=sorted(all_payouts, key=lambda p: p.timestamp, reverse=True)
+    )  
   
 @app.route('/delete/<product_id>', methods=['POST'])
 def delete(product_id):
@@ -2009,13 +2037,24 @@ def become_vendor():
             return render_template('vendor_pending.html')
 
     if request.method == 'POST':
-        # Store form data in session temporarily — payment happens next
+        # ✅ Upload logo to Cloudinary BEFORE Paystack redirect
+        # (files can't survive a redirect, but Cloudinary URLs can)
+        logo_url = ''
+        logo = request.files.get('logo')
+        if logo and logo.filename:
+            try:
+                upload_result = cloudinary.uploader.upload(logo)
+                logo_url = upload_result['secure_url']
+            except Exception as e:
+                print("⚠️ Logo upload failed:", e)
+
         session['vendor_application'] = {
             'shop_name': request.form.get('shop_name', '').strip(),
             'shop_description': request.form.get('shop_description', '').strip(),
             'phone': request.form.get('phone', '').strip(),
             'bank_name': request.form.get('bank_name', '').strip(),
             'bank_account': request.form.get('bank_account', '').strip(),
+            'logo': logo_url,  # ✅ store Cloudinary URL, not the file
         }
 
         if not session['vendor_application']['shop_name']:
@@ -2076,6 +2115,15 @@ def vendor_registration_callback():
         flash("❌ Invalid payment type.")
         return redirect(url_for('become_vendor'))
 
+    
+    # ✅ Recover user_id from metadata if session expired during Paystack redirect
+    if not session.get('user_id'):
+        user_id = metadata.get('user_id')
+        if not user_id:
+            flash("❌ Session expired. Please log in and reapply.")
+            return redirect(url_for('login'))
+        session['user_id'] = user_id
+
     # Prevent duplicate vendor accounts
     existing = Vendor.query.filter_by(user_id=session['user_id']).first()
     if existing:
@@ -2096,7 +2144,7 @@ def vendor_registration_callback():
         phone=app_data['phone'],
         bank_name=app_data['bank_name'],
         bank_account=app_data['bank_account'],
-        logo='',
+        logo=app_data.get('logo', ''),  # ✅ Cloudinary URL now saved correctly
         is_approved=False,
         timestamp=datetime.now(timezone.utc).isoformat()
     )
@@ -2155,7 +2203,50 @@ def mark_payout_paid(payout_id):
     if payout:
         payout.status = 'Paid'
         db.session.commit()
-        flash("✅ Payout marked as paid.")
+
+        # ✅ Notify vendor their payout has been sent
+        vendor = Vendor.query.get(payout.vendor_id)
+        if vendor:
+            user = User.query.get(vendor.user_id)
+            if user:
+                try:
+                    send_email(
+                        user.email,
+                        "💰 Your ShopLuxe Payout Has Been Sent!",
+                        f"""
+                        <div style="font-family:sans-serif;padding:20px;max-width:500px;">
+                            <h2 style="color:#198754;">💰 Payout Sent!</h2>
+                            <p>Hi <strong>{user.name}</strong>, your payout from ShopLuxe has been processed.</p>
+                            <div style="background:#f0fdf4;border:1.5px solid #a7f3d0;border-radius:12px;padding:16px;margin:16px 0;">
+                                <div style="font-size:.85rem;color:#555;margin-bottom:6px;">Payout Details</div>
+                                <div style="font-size:1.4rem;font-weight:800;color:#198754;">GH₵ {payout.amount:.2f}</div>
+                                <div style="font-size:.78rem;color:#aaa;margin-top:4px;">Order ref: {payout.order_id[:12]}...</div>
+                                <div style="font-size:.78rem;color:#aaa;">Platform fee deducted: GH₵ {payout.platform_fee:.2f}</div>
+                            </div>
+                            <p style="font-size:.85rem;color:#555;">
+                                The amount has been sent to your registered bank account
+                                <strong>{vendor.bank_name}</strong> ending in
+                                <strong>****{vendor.bank_account[-4:] if vendor.bank_account else '????'}</strong>.
+                            </p>
+                            <p style="font-size:.85rem;color:#555;">
+                                Please allow 1–2 business days for the transfer to reflect.
+                            </p>
+                            <a href="https://www.shopluxe.online/vendor/dashboard"
+                               style="display:inline-block;background:#198754;color:#fff;
+                               padding:11px 24px;border-radius:10px;text-decoration:none;
+                               font-weight:700;margin-top:8px;">
+                               View Dashboard
+                            </a>
+                            <p style="color:#aaa;font-size:.72rem;margin-top:20px;">
+                                Thank you for selling on ShopLuxe 🛍️
+                            </p>
+                        </div>
+                        """
+                    )
+                except Exception as e:
+                    print("⚠️ Payout email failed:", e)
+
+        flash("✅ Payout marked as paid and vendor notified.")
     return redirect(url_for('admin_payouts'))
   
   # ============================================================
@@ -2532,6 +2623,34 @@ def load_promos():
 def save_promos(promos):
     with open(PROMO_FILE, 'w') as f:
         json.dump(promos, f, indent=2)
+        
+@app.route('/vendor/settings', methods=['GET', 'POST'])
+@vendor_required
+def vendor_settings():
+    vendor = Vendor.query.get(session['vendor_id'])
+
+    if request.method == 'POST':
+        vendor.shop_name = request.form.get('shop_name', '').strip() or vendor.shop_name
+        vendor.shop_description = request.form.get('shop_description', '').strip()
+        vendor.phone = request.form.get('phone', '').strip()
+        vendor.bank_name = request.form.get('bank_name', '').strip()
+        vendor.bank_account = request.form.get('bank_account', '').strip()
+
+        # ✅ Logo update
+        logo = request.files.get('logo')
+        if logo and logo.filename:
+            try:
+                upload_result = cloudinary.uploader.upload(logo)
+                vendor.logo = upload_result['secure_url']
+            except Exception as e:
+                print("⚠️ Logo upload failed:", e)
+
+        db.session.commit()
+        session['shop_name'] = vendor.shop_name
+        flash("✅ Shop settings updated!")
+        return redirect(url_for('vendor_settings'))
+
+    return render_template('vendor_settings.html', vendor=vendor.to_dict())        
 
 # DELETE the old load_promos() and save_promos() functions entirely
 # Then update all 4 routes:
@@ -2706,7 +2825,55 @@ def vendor_status_check():
   
 @app.route('/vendor/guide')
 def vendor_guide():
-    return render_template('vendor_guide.html')  
+    return render_template('vendor_guide.html') 
+  
+import hmac
+import hashlib
+
+@app.route('/paystack/webhook', methods=['POST'])
+def paystack_webhook():
+    # ✅ Verify the request is genuinely from Paystack
+    secret = PAYSTACK_SECRET_KEY.encode('utf-8')
+    signature = request.headers.get('X-Paystack-Signature', '')
+    payload = request.get_data()
+    expected = hmac.new(secret, payload, hashlib.sha512).hexdigest()
+
+    if signature != expected:
+        logging.warning("⚠️ Invalid Paystack webhook signature")
+        return jsonify({'status': 'invalid signature'}), 400
+
+    event = request.get_json()
+    if not event:
+        return jsonify({'status': 'no data'}), 400
+
+    event_type = event.get('event')
+    data = event.get('data', {})
+
+    if event_type == 'charge.success':
+        reference = data.get('reference')
+        metadata = data.get('metadata', {})
+        payment_type = metadata.get('type')
+
+        logging.info(f"✅ Webhook: charge.success for {reference} type={payment_type}")
+
+        # ✅ Handle vendor registration payment
+        if payment_type == 'vendor_registration':
+            user_id = metadata.get('user_id')
+            if user_id:
+                existing = Vendor.query.filter_by(user_id=user_id).first()
+                if not existing:
+                    logging.info(f"⚠️ Webhook: vendor registration payment received but no session data to create vendor for user {user_id}")
+                    # Can't create vendor here without form data — just log it
+                    # The callback route handles actual creation
+
+        # ✅ Handle order payment (backup if user closed tab)
+        elif payment_type != 'vendor_registration':
+            if not Order.query.get(reference):
+                logging.info(f"⚠️ Webhook: order {reference} paid but not yet in DB — may have been missed")
+                # The verify_payment callback handles full order creation
+                # Webhook just logs the gap for manual follow-up
+
+    return jsonify({'status': 'ok'}), 200   
 # ============================================================
 # DB INIT & RUN
 # ============================================================

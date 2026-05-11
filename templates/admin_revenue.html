@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+.rev-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+.rev-header h1 { font-family:'Playfair Display',serif; font-size:1.6rem; color:var(--dark); margin:0; }
+.rev-back { font-size:.85rem; color:#aaa; text-decoration:none; display:flex; align-items:center; gap:5px; }
+.rev-back:hover { color:var(--brand); }
+.rev-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin-bottom:28px; }
+.rev-stat { background:var(--card); border:1.5px solid var(--border); border-radius:14px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,.04); border-top:3px solid var(--sc); }
+.rev-stat-label { font-size:10px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:#aaa; margin-bottom:8px; }
+.rev-stat-value { font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:700; color:var(--sc); }
+.rev-stat-sub { font-size:.72rem; color:#bbb; margin-top:4px; }
+.rev-table-card { background:var(--card); border:1.5px solid var(--border); border-radius:16px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,.04); }
+.rev-table-card table { width:100%; border-collapse:collapse; }
+.rev-table-card thead { background:var(--light); }
+.rev-table-card th { padding:12px 18px; text-align:left; font-size:10px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:#aaa; }
+.rev-table-card td { padding:13px 18px; border-top:1px solid var(--border); font-size:.84rem; vertical-align:middle; }
+.rev-badge { display:inline-flex; align-items:center; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:700; }
+.rev-badge-green { background:#d1fae5; color:#065f46; }
+.rev-badge-orange { background:#fff3cd; color:#856404; }
+</style>
+
+<div class="rev-header">
+  <h1>💰 Revenue & Payouts</h1>
+  <a href="{{ url_for('admin') }}" class="rev-back"><i class="bi bi-arrow-left"></i> Back to Admin</a>
+</div>
+
+<div class="rev-stats">
+  <div class="rev-stat" style="--sc:#198754;">
+    <div class="rev-stat-label">Total GMV</div>
+    <div class="rev-stat-value">GH₵{{ "%.0f"|format(total_gmv) }}</div>
+    <div class="rev-stat-sub">Gross merchandise value</div>
+  </div>
+  <div class="rev-stat" style="--sc:#3b82f6;">
+    <div class="rev-stat-label">Platform Fees (10%)</div>
+    <div class="rev-stat-value">GH₵{{ "%.0f"|format(total_platform_fees) }}</div>
+    <div class="rev-stat-sub">ShopLuxe earnings</div>
+  </div>
+  <div class="rev-stat" style="--sc:#f59e0b;">
+    <div class="rev-stat-label">Registration Fees</div>
+    <div class="rev-stat-value">GH₵{{ "%.0f"|format(reg_fee_total) }}</div>
+    <div class="rev-stat-sub">{{ reg_fee_count }} vendor{{ 's' if reg_fee_count != 1 }} × GH₵100</div>
+  </div>
+  <div class="rev-stat" style="--sc:#8b5cf6;">
+    <div class="rev-stat-label">Total Earned</div>
+    <div class="rev-stat-value">GH₵{{ "%.0f"|format(total_platform_fees + reg_fee_total) }}</div>
+    <div class="rev-stat-sub">Fees + registrations</div>
+  </div>
+  <div class="rev-stat" style="--sc:#198754;">
+    <div class="rev-stat-label">Paid Out to Vendors</div>
+    <div class="rev-stat-value">GH₵{{ "%.0f"|format(paid_out) }}</div>
+    <div class="rev-stat-sub">Completed payouts</div>
+  </div>
+  <div class="rev-stat" style="--sc:#ef4444;">
+    <div class="rev-stat-label">Pending Payouts</div>
+    <div class="rev-stat-value">GH₵{{ "%.0f"|format(pending_payouts) }}</div>
+    <div class="rev-stat-sub">Awaiting transfer</div>
+  </div>
+</div>
+
+<div class="rev-table-card">
+  <table>
+    <thead>
+      <tr>
+        <th>Order</th>
+        <th>Vendor</th>
+        <th>Vendor Amount</th>
+        <th>Platform Fee</th>
+        <th>Status</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in payouts %}
+      {% set vendor = p.vendor_id %}
+      <tr>
+        <td style="font-family:monospace;font-size:.78rem;color:#aaa;">#{{ p.order_id[:12] }}...</td>
+        <td>
+          {% set v = p.vendor_id %}
+          <span style="font-weight:600;">{{ v }}</span>
+        </td>
+        <td><strong style="color:var(--brand);">GH₵{{ "%.2f"|format(p.amount) }}</strong></td>
+        <td><strong style="color:#3b82f6;">GH₵{{ "%.2f"|format(p.platform_fee) }}</strong></td>
+        <td>
+          {% if p.status == 'Paid' %}
+            <span class="rev-badge rev-badge-green">✓ Paid</span>
+          {% else %}
+            <span class="rev-badge rev-badge-orange">⏳ Pending</span>
+          {% endif %}
+        </td>
+        <td style="font-size:.78rem;color:#aaa;">{{ p.timestamp[:10] if p.timestamp else '—' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="text-align:center;padding:40px;color:#bbb;">No payout records yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

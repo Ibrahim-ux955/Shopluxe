@@ -87,7 +87,11 @@
           <td>
             <div class="av-vendor-cell">
               {% if v.logo %}
-                <img src="{{ url_for('static', filename='shoes/' + v.logo) }}" class="av-logo" alt="">
+                {% if v.logo.startswith('http') %}
+                  <img src="{{ v.logo }}" class="av-logo" alt="">
+                {% else %}
+                  <img src="{{ url_for('static', filename='shoes/' + v.logo) }}" class="av-logo" alt="">
+                {% endif %}
               {% else %}
                 <div class="av-logo-ph">🏪</div>
               {% endif %}

@@ -402,6 +402,11 @@
        title="Admin">
       <i class="bi bi-gear-fill"></i>
     </a>
+    <a href="{{ url_for('admin_revenue') }}"
+       class="nav-icon-btn d-md-none"
+       title="Revenue">
+      <i class="bi bi-cash-coin"></i>
+    </a>
     {% endif %}
 
     <!-- ══ DESKTOP-ONLY NAV ITEMS ══ -->
@@ -409,6 +414,9 @@
     {% if session.get('admin_logged_in') %}
     <a href="{{ url_for('admin') }}" class="nav-btn d-none d-md-flex">
       <i class="bi bi-gear"></i> Admin
+    </a>
+    <a href="{{ url_for('admin_revenue') }}" class="nav-btn d-none d-md-flex">
+      <i class="bi bi-cash-coin"></i> Revenue
     </a>
     {% endif %}
 
