@@ -512,15 +512,22 @@ def home():
         if show:
             active_events.append(e.to_dict())
 
+    recently_viewed_ids = session.get('recently_viewed', [])
+    recently_viewed = []
+    for pid in recently_viewed_ids[:6]:
+        p = Product.query.get(pid)
+        if p:
+            recently_viewed.append(p.to_dict())
+
     return render_template('index.html',
         popular_products=popular_products,
         new_products=new_products,
         featured_products=featured_products,
         sale_products=sale_products,
-        active_events=active_events,  # ✅ NEW
+        active_events=active_events,
+        recently_viewed=recently_viewed,
         active_page='home'
     )
-
 
 @app.route('/search')
 def search():
@@ -545,7 +552,7 @@ def search():
         new_products=new_products,
         featured_products=featured_products,
         sale_products=sale_products,
-        recently_viewed=recently_viewed,
+        recently_viewed=[],
         active_page='home'
     )
 

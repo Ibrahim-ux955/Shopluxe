@@ -1,3 +1,4 @@
+
 {% extends 'base.html' %}
 {% block content %}
 <style>
@@ -243,8 +244,6 @@
   background: #eee; color: #aaa; cursor: not-allowed;
 }
 
-
-
 /* ── EMPTY STATE ── */
 .empty-state {
   text-align: center; padding: 60px 20px;
@@ -289,61 +288,43 @@
   text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px;
 }
 
-
 @media(max-width:600px){
-  /* Force vertical stacking */
   #heroCarousel .carousel-item > div {
     flex-direction: column !important;
     min-height: unset !important;
   }
-
-  /* Text panel — compact */
   #heroCarousel .carousel-item > div > div:first-child {
     flex: unset !important;
     min-height: unset !important;
     padding: 14px 16px 10px !important;
   }
-
-  /* Image panel — short */
   #heroCarousel .carousel-item > div > div:last-child {
     flex: unset !important;
     height: 155px !important;
     min-height: 155px !important;
     max-height: 155px !important;
   }
-
-  /* Smaller heading */
   #heroCarousel h2 {
     font-size: .95rem !important;
     margin-bottom: 4px !important;
     line-height: 1.3 !important;
   }
-
-  /* Smaller price */
   #heroCarousel span[style*="1.8rem"],
   #heroCarousel span[style*="1.3rem"] {
     font-size: 1rem !important;
   }
-
-  /* Compact CTA button */
   #heroCarousel a[style*="Shop Now"],
   #heroCarousel a[style*="inline-flex"] {
     padding: 7px 14px !important;
     font-size: .76rem !important;
   }
-
-  /* Hide brand + delivery line to save space */
   #heroCarousel div[style*="letter-spacing:.5px"],
   #heroCarousel div[style*="bi-truck"] {
     display: none !important;
   }
-
-  /* Fix price row wrapping */
   #heroCarousel div[style*="gap:6px"] {
     flex-wrap: wrap !important;
   }
-
-  /* Hide low-stock warning on mobile */
   #heroCarousel div[style*="fca5a5"] {
     display: none !important;
   }
@@ -387,8 +368,6 @@
       {% set img_url = img if img and img.startswith('http') else url_for('static', filename='shoes/' ~ (img or 'placeholder.jpg')) %}
 
       <div class="carousel-item {{ 'active' if loop.first else '' }}">
-
-        <!-- Entire slide is one div — no absolute children that break sliding -->
         <div style="
           height: 165px;
           background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
@@ -399,12 +378,8 @@
           display: flex;
           align-items: center;
         ">
-          <!-- Dark overlay so text is readable -->
           <div style="position:absolute;inset:0;background:linear-gradient(to right, rgba(10,10,30,.92) 45%, rgba(10,10,30,.3) 100%);"></div>
-
-          <!-- Left text content -->
           <div style="position:relative;z-index:2;padding:16px 18px;max-width:65%;">
-
             <span style="
               display:inline-block;
               background:{{ '#ff6600' if badge_type=='sale' else '#198754' if badge_type=='new' else '#ef4444' if badge_type=='hot' else '#8b5cf6' }};
@@ -443,10 +418,8 @@
                ">
               <i class="bi bi-bag-fill"></i> Shop Now
             </a>
-
           </div>
         </div>
-
       </div>
       {% endfor %}
     </div>
@@ -524,6 +497,7 @@ document.getElementById('heroCarousel')?.addEventListener('slide.bs.carousel', f
   {% endfor %}
 </div>
 {% endif %}
+
 <!-- ── EMPTY STATE ── -->
 {% if not (popular_products or new_products or featured_products or sale_products or products) %}
 <div class="empty-state">
@@ -546,6 +520,7 @@ document.getElementById('heroCarousel')?.addEventListener('slide.bs.carousel', f
 </div>
 
 {% else %}
+
 <!-- ── MOST POPULAR ── -->
 {% if popular_products %}
 <div class="section-head">
@@ -582,23 +557,21 @@ document.getElementById('heroCarousel')?.addEventListener('slide.bs.carousel', f
       </a>
     </div>
     <div class="p-card-body">
-  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
-  {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
-  <div class="p-card-price">
-    <span class="p-price">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
-    {% if product.on_sale and product.sale_price %}
-    <span class="p-price-orig">GH₵ {{ product.price }}</span>
-    {% endif %}
-  </div>
-  <div style="font-size:.7rem; margin-top:4px;">
-    {% if product.stock == 0 %}
-      <span style="color:#ef4444; font-weight:600;">⚠️ Out of stock</span>
-    {% elif product.stock < 5 %}
-      <span style="color:#f97316; font-weight:600;">🔥 Only {{ product.stock }} left!</span>
-    {% endif %}
-  </div>
-</div>
-    
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
+      {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <div class="p-card-price">
+        <span class="p-price">GH₵ {{ product.sale_price if product.on_sale and product.sale_price else product.price }}</span>
+        {% if product.on_sale and product.sale_price %}
+        <span class="p-price-orig">GH₵ {{ product.price }}</span>
+        {% endif %}
+      </div>
+      <div style="font-size:.7rem; margin-top:4px;">
+        {% if product.stock == 0 %}
+          <span style="color:#ef4444; font-weight:600;">⚠️ Out of stock</span>
+        {% elif product.stock < 5 %}
+          <span style="color:#f97316; font-weight:600;">🔥 Only {{ product.stock }} left!</span>
+        {% endif %}
+      </div>
     </div>
     <div class="p-card-footer">
       {% if product.stock > 0 %}
@@ -614,7 +587,6 @@ document.getElementById('heroCarousel')?.addEventListener('slide.bs.carousel', f
   {% endfor %}
 </div>
 {% endif %}
-
 
 <!-- ── PROMO BANNERS ── -->
 {% if sale_products and new_products %}
@@ -648,6 +620,7 @@ document.getElementById('heroCarousel')?.addEventListener('slide.bs.carousel', f
 
 </div>
 {% endif %}
+
 <!-- ── NEW ARRIVALS ── -->
 {% if new_products %}
 <div class="section-head">
@@ -685,58 +658,45 @@ document.getElementById('heroCarousel')?.addEventListener('slide.bs.carousel', f
       {% endif %}
     </div>
     <div class="p-card-body">
-  {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
-  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
-
-  <!-- Stars -->
-  {% if product.rating %}
-  <div style="display:flex;align-items:center;gap:4px;margin:4px 0;">
-    <span class="p-stars">
-      {% for i in range(1,6) %}{{ '★' if i <= product.rating|int else '☆' }}{% endfor %}
-    </span>
-    <span class="p-review-count">({{ product.review_count or 0 }})</span>
-  </div>
-  {% endif %}
-
-  <!-- Price -->
-  <div class="p-card-price" style="margin-top:6px;">
-    {% if product.on_sale and product.sale_price %}
-    <div>
-      <span style="font-size:.72rem;color:#555;">Was </span>
-      <span class="p-price-orig">GH₵ {{ product.price }}</span>
+      {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
+      {% if product.rating %}
+      <div style="display:flex;align-items:center;gap:4px;margin:4px 0;">
+        <span class="p-stars">{% for i in range(1,6) %}{{ '★' if i <= product.rating|int else '☆' }}{% endfor %}</span>
+        <span class="p-review-count">({{ product.review_count or 0 }})</span>
+      </div>
+      {% endif %}
+      <div class="p-card-price" style="margin-top:6px;">
+        {% if product.on_sale and product.sale_price %}
+        <div>
+          <span style="font-size:.72rem;color:#555;">Was </span>
+          <span class="p-price-orig">GH₵ {{ product.price }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="p-price" style="color:#dc3545;">GH₵ {{ product.sale_price }}</span>
+          {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
+          <span class="p-discount">-{{ disc }}%</span>
+        </div>
+        {% else %}
+        <span class="p-price">GH₵ {{ product.price }}</span>
+        {% endif %}
+      </div>
+      <div class="p-prime"><i class="bi bi-truck"></i> {{ product.delivery_info or 'Free delivery · 2–4 days' }}</div>
+      {% if product.stock == 0 %}
+        <div class="p-stock-warn" style="color:#dc3545;">Out of stock</div>
+      {% elif product.stock < 5 %}
+        <div class="p-stock-warn" style="color:#f97316;">Only {{ product.stock }} left — order soon!</div>
+      {% endif %}
     </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span class="p-price" style="color:#dc3545;">GH₵ {{ product.sale_price }}</span>
-      {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
-      <span class="p-discount">-{{ disc }}%</span>
+    <div class="p-card-footer">
+      {% if product.stock > 0 %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
+        <i class="bi bi-bag-plus"></i> Add to Cart
+      </a>
+      {% else %}
+      <span class="p-card-btn oos">Out of Stock</span>
+      {% endif %}
     </div>
-    {% else %}
-    <span class="p-price">GH₵ {{ product.price }}</span>
-    {% endif %}
-  </div>
-
-  <!-- Prime/Free delivery -->
-  <div class="p-prime">
-    <i class="bi bi-truck"></i>
-    {{ product.delivery_info or 'Free delivery · 2–4 days' }}
-  </div>
-
-  <!-- Stock warning -->
-  {% if product.stock == 0 %}
-    <div class="p-stock-warn" style="color:#dc3545;">Out of stock</div>
-  {% elif product.stock < 5 %}
-    <div class="p-stock-warn" style="color:#f97316;">Only {{ product.stock }} left — order soon!</div>
-  {% endif %}
-</div>
-<div class="p-card-footer">
-  {% if product.stock > 0 %}
-  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
-    <i class="bi bi-bag-plus"></i> Add to Cart
-  </a>
-  {% else %}
-  <span class="p-card-btn oos">Out of Stock</span>
-  {% endif %}
-</div>
   </div>
   {% endif %}
   {% endfor %}
@@ -780,58 +740,45 @@ document.getElementById('heroCarousel')?.addEventListener('slide.bs.carousel', f
       {% endif %}
     </div>
     <div class="p-card-body">
-  {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
-  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
-
-  <!-- Stars -->
-  {% if product.rating %}
-  <div style="display:flex;align-items:center;gap:4px;margin:4px 0;">
-    <span class="p-stars">
-      {% for i in range(1,6) %}{{ '★' if i <= product.rating|int else '☆' }}{% endfor %}
-    </span>
-    <span class="p-review-count">({{ product.review_count or 0 }})</span>
-  </div>
-  {% endif %}
-
-  <!-- Price -->
-  <div class="p-card-price" style="margin-top:6px;">
-    {% if product.on_sale and product.sale_price %}
-    <div>
-      <span style="font-size:.72rem;color:#555;">Was </span>
-      <span class="p-price-orig">GH₵ {{ product.price }}</span>
+      {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
+      {% if product.rating %}
+      <div style="display:flex;align-items:center;gap:4px;margin:4px 0;">
+        <span class="p-stars">{% for i in range(1,6) %}{{ '★' if i <= product.rating|int else '☆' }}{% endfor %}</span>
+        <span class="p-review-count">({{ product.review_count or 0 }})</span>
+      </div>
+      {% endif %}
+      <div class="p-card-price" style="margin-top:6px;">
+        {% if product.on_sale and product.sale_price %}
+        <div>
+          <span style="font-size:.72rem;color:#555;">Was </span>
+          <span class="p-price-orig">GH₵ {{ product.price }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="p-price" style="color:#dc3545;">GH₵ {{ product.sale_price }}</span>
+          {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
+          <span class="p-discount">-{{ disc }}%</span>
+        </div>
+        {% else %}
+        <span class="p-price">GH₵ {{ product.price }}</span>
+        {% endif %}
+      </div>
+      <div class="p-prime"><i class="bi bi-truck"></i> {{ product.delivery_info or 'Free delivery · 2–4 days' }}</div>
+      {% if product.stock == 0 %}
+        <div class="p-stock-warn" style="color:#dc3545;">Out of stock</div>
+      {% elif product.stock < 5 %}
+        <div class="p-stock-warn" style="color:#f97316;">Only {{ product.stock }} left — order soon!</div>
+      {% endif %}
     </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span class="p-price" style="color:#dc3545;">GH₵ {{ product.sale_price }}</span>
-      {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
-      <span class="p-discount">-{{ disc }}%</span>
+    <div class="p-card-footer">
+      {% if product.stock > 0 %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
+        <i class="bi bi-bag-plus"></i> Add to Cart
+      </a>
+      {% else %}
+      <span class="p-card-btn oos">Out of Stock</span>
+      {% endif %}
     </div>
-    {% else %}
-    <span class="p-price">GH₵ {{ product.price }}</span>
-    {% endif %}
-  </div>
-
-  <!-- Prime/Free delivery -->
-  <div class="p-prime">
-    <i class="bi bi-truck"></i>
-    {{ product.delivery_info or 'Free delivery · 2–4 days' }}
-  </div>
-
-  <!-- Stock warning -->
-  {% if product.stock == 0 %}
-    <div class="p-stock-warn" style="color:#dc3545;">Out of stock</div>
-  {% elif product.stock < 5 %}
-    <div class="p-stock-warn" style="color:#f97316;">Only {{ product.stock }} left — order soon!</div>
-  {% endif %}
-</div>
-<div class="p-card-footer">
-  {% if product.stock > 0 %}
-  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
-    <i class="bi bi-bag-plus"></i> Add to Cart
-  </a>
-  {% else %}
-  <span class="p-card-btn oos">Out of Stock</span>
-  {% endif %}
-</div>
   </div>
   {% endif %}
   {% endfor %}
@@ -875,58 +822,45 @@ document.getElementById('heroCarousel')?.addEventListener('slide.bs.carousel', f
       {% endif %}
     </div>
     <div class="p-card-body">
-  {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
-  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
-
-  <!-- Stars -->
-  {% if product.rating %}
-  <div style="display:flex;align-items:center;gap:4px;margin:4px 0;">
-    <span class="p-stars">
-      {% for i in range(1,6) %}{{ '★' if i <= product.rating|int else '☆' }}{% endfor %}
-    </span>
-    <span class="p-review-count">({{ product.review_count or 0 }})</span>
-  </div>
-  {% endif %}
-
-  <!-- Price -->
-  <div class="p-card-price" style="margin-top:6px;">
-    {% if product.on_sale and product.sale_price %}
-    <div>
-      <span style="font-size:.72rem;color:#555;">Was </span>
-      <span class="p-price-orig">GH₵ {{ product.price }}</span>
+      {% if product.brand %}<div class="p-card-brand">{{ product.brand }}</div>{% endif %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-name">{{ product.name }}</a>
+      {% if product.rating %}
+      <div style="display:flex;align-items:center;gap:4px;margin:4px 0;">
+        <span class="p-stars">{% for i in range(1,6) %}{{ '★' if i <= product.rating|int else '☆' }}{% endfor %}</span>
+        <span class="p-review-count">({{ product.review_count or 0 }})</span>
+      </div>
+      {% endif %}
+      <div class="p-card-price" style="margin-top:6px;">
+        {% if product.on_sale and product.sale_price %}
+        <div>
+          <span style="font-size:.72rem;color:#555;">Was </span>
+          <span class="p-price-orig">GH₵ {{ product.price }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="p-price" style="color:#dc3545;">GH₵ {{ product.sale_price }}</span>
+          {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
+          <span class="p-discount">-{{ disc }}%</span>
+        </div>
+        {% else %}
+        <span class="p-price">GH₵ {{ product.price }}</span>
+        {% endif %}
+      </div>
+      <div class="p-prime"><i class="bi bi-truck"></i> {{ product.delivery_info or 'Free delivery · 2–4 days' }}</div>
+      {% if product.stock == 0 %}
+        <div class="p-stock-warn" style="color:#dc3545;">Out of stock</div>
+      {% elif product.stock < 5 %}
+        <div class="p-stock-warn" style="color:#f97316;">Only {{ product.stock }} left — order soon!</div>
+      {% endif %}
     </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span class="p-price" style="color:#dc3545;">GH₵ {{ product.sale_price }}</span>
-      {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
-      <span class="p-discount">-{{ disc }}%</span>
+    <div class="p-card-footer">
+      {% if product.stock > 0 %}
+      <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
+        <i class="bi bi-bag-plus"></i> Add to Cart
+      </a>
+      {% else %}
+      <span class="p-card-btn oos">Out of Stock</span>
+      {% endif %}
     </div>
-    {% else %}
-    <span class="p-price">GH₵ {{ product.price }}</span>
-    {% endif %}
-  </div>
-
-  <!-- Prime/Free delivery -->
-  <div class="p-prime">
-    <i class="bi bi-truck"></i>
-    {{ product.delivery_info or 'Free delivery · 2–4 days' }}
-  </div>
-
-  <!-- Stock warning -->
-  {% if product.stock == 0 %}
-    <div class="p-stock-warn" style="color:#dc3545;">Out of stock</div>
-  {% elif product.stock < 5 %}
-    <div class="p-stock-warn" style="color:#f97316;">Only {{ product.stock }} left — order soon!</div>
-  {% endif %}
-</div>
-<div class="p-card-footer">
-  {% if product.stock > 0 %}
-  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
-    <i class="bi bi-bag-plus"></i> Add to Cart
-  </a>
-  {% else %}
-  <span class="p-card-btn oos">Out of Stock</span>
-  {% endif %}
-</div>
   </div>
   {% endif %}
   {% endfor %}
@@ -934,21 +868,6 @@ document.getElementById('heroCarousel')?.addEventListener('slide.bs.carousel', f
 {% endif %}
 
 <!-- ── RECENTLY VIEWED ── -->
-# ✅ Recently viewed — fetch from DB directly
-recently_viewed_ids = session.get('recently_viewed', [])
-recently_viewed = []
-for pid in recently_viewed_ids[:6]:
-    p = Product.query.get(pid)
-    if p:
-        recently_viewed.append(p.to_dict())
-{% set viewed_products = [] %}
-{% for pid in viewed_ids %}
-  {% for p in (popular_products + new_products + featured_products + sale_products) %}
-    {% if p.id == pid and p not in viewed_products %}
-      {% do viewed_products.append(p) %}
-    {% endif %}
-  {% endfor %}
-{% endfor %}
 {% if recently_viewed %}
 <div class="section-head" style="margin-top:36px;">
   <div class="section-label">
@@ -1001,60 +920,9 @@ for pid in recently_viewed_ids[:6]:
 </div>
 {% endif %}
 
-  <!-- Stars -->
-  {% if product.rating %}
-  <div style="display:flex;align-items:center;gap:4px;margin:4px 0;">
-    <span class="p-stars">
-      {% for i in range(1,6) %}{{ '★' if i <= product.rating|int else '☆' }}{% endfor %}
-    </span>
-    <span class="p-review-count">({{ product.review_count or 0 }})</span>
-  </div>
-  {% endif %}
+{% endif %}{# end search/browse toggle #}
+{% endif %}{# end empty check #}
 
-  <!-- Price -->
-  <div class="p-card-price" style="margin-top:6px;">
-    {% if product.on_sale and product.sale_price %}
-    <div>
-      <span style="font-size:.72rem;color:#555;">Was </span>
-      <span class="p-price-orig">GH₵ {{ product.price }}</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span class="p-price" style="color:#dc3545;">GH₵ {{ product.sale_price }}</span>
-      {% set disc = ((product.price|float - product.sale_price|float) / product.price|float * 100)|int %}
-      <span class="p-discount">-{{ disc }}%</span>
-    </div>
-    {% else %}
-    <span class="p-price">GH₵ {{ product.price }}</span>
-    {% endif %}
-  </div>
-
-  <!-- Prime/Free delivery -->
-  <div class="p-prime">
-    <i class="bi bi-truck"></i>
-    {{ product.delivery_info or 'Free delivery · 2–4 days' }}
-  </div>
-
-  <!-- Stock warning -->
-  {% if product.stock == 0 %}
-    <div class="p-stock-warn" style="color:#dc3545;">Out of stock</div>
-  {% elif product.stock < 5 %}
-    <div class="p-stock-warn" style="color:#f97316;">Only {{ product.stock }} left — order soon!</div>
-  {% endif %}
-</div>
-<div class="p-card-footer">
-  {% if product.stock > 0 %}
-  <a href="{{ url_for('product_detail', product_id=product.id) }}" class="p-card-btn">
-    <i class="bi bi-bag-plus"></i> Add to Cart
-  </a>
-  {% else %}
-  <span class="p-card-btn oos">Out of Stock</span>
-  {% endif %}
-</div>
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
-{% endif %}
 <!-- ── SELL ON SHOPLUXE BANNER ── -->
 {% if not query %}
 <div style="
@@ -1070,7 +938,6 @@ for pid in recently_viewed_ids[:6]:
   position: relative;
   overflow: hidden;
 ">
-  <!-- Background decoration -->
   <div style="position:absolute;right:-20px;top:-20px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.04);"></div>
   <div style="position:absolute;right:60px;bottom:-40px;width:120px;height:120px;border-radius:50%;background:rgba(25,135,84,.08);"></div>
 
@@ -1084,8 +951,6 @@ for pid in recently_viewed_ids[:6]:
     <div style="font-size:.82rem;color:rgba(255,255,255,.6);max-width:420px;line-height:1.6;">
       Join hundreds of vendors selling on ShopLuxe. Free to start, fast delivery, secure payments via Paystack.
     </div>
-
-    <!-- Trust badges -->
     <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:rgba(255,255,255,.5);">
         <i class="bi bi-shield-check" style="color:#198754;"></i> Free to join
@@ -1099,52 +964,28 @@ for pid in recently_viewed_ids[:6]:
     </div>
   </div>
 
-  <!-- CTA Button -->
   <div style="position:relative;z-index:1;flex-shrink:0;">
     {% if session.get('user_id') %}
       {% if session.get('vendor_id') %}
         <a href="{{ url_for('vendor_dashboard') }}"
-           style="display:inline-flex;align-items:center;gap:8px;
-           background:#198754;color:#fff;
-           border-radius:12px;padding:14px 28px;
-           font-size:.9rem;font-weight:800;
-           text-decoration:none;
-           font-family:'DM Sans',sans-serif;
-           box-shadow:0 4px 20px rgba(25,135,84,.4);
-           transition:opacity .2s;">
+           style="display:inline-flex;align-items:center;gap:8px;background:#198754;color:#fff;border-radius:12px;padding:14px 28px;font-size:.9rem;font-weight:800;text-decoration:none;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(25,135,84,.4);transition:opacity .2s;">
           <i class="bi bi-shop"></i> My Dashboard
         </a>
       {% else %}
         <a href="{{ url_for('become_vendor') }}"
-           style="display:inline-flex;align-items:center;gap:8px;
-           background:#ff9900;color:#111;
-           border-radius:12px;padding:14px 28px;
-           font-size:.9rem;font-weight:800;
-           text-decoration:none;
-           font-family:'DM Sans',sans-serif;
-           box-shadow:0 4px 20px rgba(255,153,0,.3);
-           transition:opacity .2s;">
+           style="display:inline-flex;align-items:center;gap:8px;background:#ff9900;color:#111;border-radius:12px;padding:14px 28px;font-size:.9rem;font-weight:800;text-decoration:none;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(255,153,0,.3);transition:opacity .2s;">
           <i class="bi bi-rocket-takeoff"></i> Start Selling
         </a>
       {% endif %}
     {% else %}
       <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
         <a href="{{ url_for('signup') }}"
-           style="display:inline-flex;align-items:center;gap:8px;
-           background:#ff9900;color:#111;
-           border-radius:12px;padding:14px 28px;
-           font-size:.9rem;font-weight:800;
-           text-decoration:none;
-           font-family:'DM Sans',sans-serif;
-           box-shadow:0 4px 20px rgba(255,153,0,.3);">
+           style="display:inline-flex;align-items:center;gap:8px;background:#ff9900;color:#111;border-radius:12px;padding:14px 28px;font-size:.9rem;font-weight:800;text-decoration:none;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(255,153,0,.3);">
           <i class="bi bi-rocket-takeoff"></i> Start Selling
         </a>
         <div style="font-size:.72rem;color:rgba(255,255,255,.35);">
           Already have an account?
-          <a href="{{ url_for('login') }}"
-             style="color:rgba(255,255,255,.6);text-decoration:underline;">
-            Sign in →
-          </a>
+          <a href="{{ url_for('login') }}" style="color:rgba(255,255,255,.6);text-decoration:underline;">Sign in →</a>
         </div>
       </div>
     {% endif %}
@@ -1152,10 +993,7 @@ for pid in recently_viewed_ids[:6]:
 </div>
 {% endif %}
 
-{% endif %}{# end search/browse toggle #}
-{% endif %}{# end empty check #}
 {% endif %}{# end if not query #}
-
 
 <script>
 function applyEventPromo(code, el) {
